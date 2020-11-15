@@ -1,6 +1,3 @@
-
-
-
 SUBSYSTEM_DEF(name)
 	name = "Name Subsystem"
 	desc = "Stores random names in a list and keeps track of possibly duplicate names."
@@ -14,20 +11,25 @@ SUBSYSTEM_DEF(name)
 	var/list/adjectives = list()
 	var/list/verbs = list()
 
+	var/list/player_names = list()
+
 /subsystem/name/Initialize()
 
-	first_names_male = splittext(file2text('text/names/first_male.txt'),"\n")
-	first_names_female = splittext(file2text('text/names/first_female.txt'),"\n")
-	last_names = splittext(file2text('text/names/last.txt'),"\n")
+	first_names_male = splittext(rustg_file_read("text/names/first_male.txt"),"\n")
+	first_names_female = splittext(rustg_file_read("text/names/first_female.txt"),"\n")
+	last_names = splittext(rustg_file_read("text/names/last.txt"),"\n")
 
-	adjectives = splittext(file2text('text/names/adjectives.txt'),"\n")
-	verbs = splittext(file2text('text/names/verbs.txt'),"\n")
+	adjectives = splittext(rustg_file_read("text/names/adjectives.txt"),"\n")
+	verbs = splittext(rustg_file_read("text/names/verbs.txt"),"\n")
+
+	log_subsystem(name,"Found [length(adjectives)] adjectives.")
+	log_subsystem(name,"Found [length(verbs)] verbs.")
 
 	log_subsystem(name,"Found [length(first_names_male)] male first names.")
 	log_subsystem(name,"Found [length(first_names_female)] female first names.")
 	log_subsystem(name,"Found [length(last_names)] last names.")
 
-	return TRUE
+	return ..()
 
 /subsystem/name/proc/check_duplicate_name(var/name)
 	if(name_count[name])
@@ -36,3 +38,16 @@ SUBSYSTEM_DEF(name)
 	else
 		name_count[name] = rand(1,999) //One funny thing is that you can tell at least how many of this type exists by starting it at 1, so it's random.
 		return "[name] ([name_count[name]])"
+
+/subsystem/name/proc/check_duplicate_player_name(var/name,var/ckey)
+	var/length_of_name = length(player_names[name])
+	if(!length_of_name)
+		player_names[name] = list()
+	if(!isnum(player_names[name][ckey]))
+		player_names[name][ckey] = length_of_name
+	if(player_names[name][ckey] == 0)
+		return name
+	. = "[name] the [player_names[name][ckey]]\th"
+	SSlogging.log_chat("[name] ([ckey]) had their name forced to [.] due to duplication.")
+	return .
+

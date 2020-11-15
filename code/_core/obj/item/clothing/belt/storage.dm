@@ -1,6 +1,6 @@
 /obj/item/clothing/belt/storage
 	name = "utility belt"
-	icon = 'icons/obj/items/clothing/belts/tool.dmi'
+	icon = 'icons/obj/item/clothing/belts/tool.dmi'
 	desc = "Don't make me get the belt."
 	desc_extended = "Stores a robust amount of items that can easily and quickly be accessed."
 
@@ -12,7 +12,7 @@
 
 	container_max_size = SIZE_2
 
-	weight = WEIGHT_3
+
 
 	defense_rating = list(
 		BLADE = 15,
@@ -22,9 +22,7 @@
 
 	rarity = RARITY_UNCOMMON
 
-	value = 10
-
-
+	value = 40
 
 /obj/item/clothing/belt/storage/tool/full
 	name = "toolbelt"
@@ -40,7 +38,7 @@
 
 /obj/item/clothing/belt/storage/medical
 	name = "medical belt"
-	icon = 'icons/obj/items/clothing/belts/medical.dmi'
+	icon = 'icons/obj/item/clothing/belts/medical.dmi'
 	desc_extended = "Stores a robust amount of items that can easily and quickly be accessed. This one is medical themed."
 
 /obj/item/clothing/belt/storage/medical/filled/fill_inventory()

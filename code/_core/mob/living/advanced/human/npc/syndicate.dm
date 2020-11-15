@@ -1,41 +1,23 @@
 /mob/living/advanced/npc/syndicate
 	name = "syndicate operative"
-	enable_AI = TRUE
+	desc = "A member of the Syndicate crime organization."
 	ai = /ai/advanced/syndicate
-	class = "syndicate"
+	class = /class/syndicate_soldier
+	dialogue_id = /dialogue/npc/soldier
 
 	var/list/possible_outfits = list(
-		//"syndicate" = 100,
-		//"syndicate_soldier" = 75,
-		//"syndicate_hardsuit" = 50,
-		"syndicate_hardsuit_advanced" = 25,
-		"syndicate_hardsuit_elite" = 5
+		/loadout/syndicate/soldier = 90,
+		/loadout/syndicate/basic = 6,
+		/loadout/syndicate/advanced = 3,
+		/loadout/syndicate/elite = 1
 	)
 
 	var/loadout_to_level = list(
-		//"syndicate" = 1,
-		//"syndicate_soldier" = 2,
-		//"syndicate_hardsuit" = 4,
-		"syndicate_hardsuit_advanced" = 8,
-		"syndicate_hardsuit_elite" = 16
+		/loadout/syndicate/soldier = 2,
+		/loadout/syndicate/basic = 4,
+		/loadout/syndicate/advanced = 8,
+		/loadout/syndicate/elite = 16
 	)
-
-	var/map_spawn = FALSE
-
-/mob/living/advanced/npc/syndicate/Destroy()
-	if(SShorde)	SShorde.tracked_enemies -= src
-	return ..()
-
-/mob/living/advanced/npc/syndicate/Bump(var/atom/Obstacle)
-
-	if(istype(src,Obstacle) || istype(Obstacle,src))
-		return TRUE
-
-	return ..()
-
-/mob/living/advanced/npc/syndicate/post_death()
-	SShorde.on_killed_syndicate(src)
-	return ..()
 
 /mob/living/advanced/npc/syndicate/Initialize()
 
@@ -65,16 +47,16 @@
 
 	return .
 
-/mob/living/advanced/npc/syndicate/map
-	map_spawn = TRUE
-
-/mob/living/advanced/npc/syndicate/map/double
+/mob/living/advanced/npc/syndicate/double
 	level_multiplier = 2
 
-/mob/living/advanced/npc/syndicate/map/triple
+/mob/living/advanced/npc/syndicate/triple
 	level_multiplier = 3
 
-/mob/living/advanced/npc/syndicate/map/quadruple
-	level_multiplier = 3
+/mob/living/advanced/npc/syndicate/quadruple
+	level_multiplier = 4
 
 
+/mob/living/advanced/npc/syndicate/stress_test
+	name = "stress test"
+	ai = /ai/advanced/syndicate/stress_test

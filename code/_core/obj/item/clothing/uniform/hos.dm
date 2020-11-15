@@ -1,6 +1,8 @@
 /obj/item/clothing/uniform/hos
 	name = "\improper Head of Security's uniform"
-	icon = 'icons/obj/items/clothing/uniforms/hos.dmi'
+	desc = "Execute Order 66."
+	desc_extended = "The uniform of choice for dictatorial fascists and Heads of Security alike."
+	icon = 'icons/obj/item/clothing/uniforms/hos.dmi'
 
 	item_slot = SLOT_TORSO | SLOT_GROIN
 
@@ -11,15 +13,9 @@
 		BLUNT = 40,
 		PIERCE = 20,
 		LASER = 20,
-		MAGIC = -50,
-		HEAT = 0,
+		ARCANE = -50,
 		COLD = 20,
-		BOMB = 20,
-		BIO = 0,
-		RAD = 0,
-		HOLY = 0,
-		DARK = 0,
-		FATIGUE = 0
+		BOMB = 20
 	)
 
 	value = 180

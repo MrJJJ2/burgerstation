@@ -1,16 +1,5 @@
-obj/structure/scenery
-	var/has_transparency_marker = FALSE
-
-	var/list/crossed_objects = list()
-
+/obj/structure/scenery
 	mouse_opacity = 0
-
-obj/structure/scenery/New()
-	..()
-
-	if(has_transparency_marker)
-		var/obj/trigger/transparency_trigger/T1 = new(get_step(src,NORTH),src)
-		new/obj/trigger/transparency_trigger(get_step(T1,NORTH),src)
 
 obj/structure/scenery/grass_bush
 	name = "grassy bush"
@@ -31,7 +20,7 @@ obj/structure/scenery/flowers
 	name = "flowers"
 	icon = 'icons/obj/structure/flora/ausflora.dmi'
 	icon_state = "ywflowers_1"
-	layer = LAYER_GROUND_SCENERY
+	layer = LAYER_FLOOR_SCENERY
 
 obj/structure/scenery/flowers/New()
 	..()
@@ -47,7 +36,7 @@ obj/structure/scenery/grass
 	name = "uncut grass"
 	icon = 'icons/obj/structure/flora/ausflora.dmi'
 	icon_state = "sparsegrass_1"
-	layer = LAYER_GROUND_SCENERY
+	layer = LAYER_FLOOR_SCENERY
 
 obj/structure/scenery/grass/New()
 	..()
@@ -61,12 +50,13 @@ obj/structure/scenery/rocks
 	name = "rocks"
 	icon = 'icons/obj/structure/flora/rocks_new.dmi'
 	icon_state = "rock_1"
-	layer = LAYER_GROUND_SCENERY
+	layer = LAYER_FLOOR_SCENERY
 
 obj/structure/scenery/rocks/New()
 	..()
 	icon_state = "rock_[rand(1,10)]"
 
+/*
 obj/structure/scenery/evergreen
 	name = "evergreen tree"
 	icon = 'icons/obj/structure/flora/evergreen.dmi'
@@ -81,13 +71,12 @@ obj/structure/scenery/evergreen
 
 	mouse_opacity = 0
 
-	has_transparency_marker = TRUE
-
-	plane = PLANE_TREE
+	plane = PLANE_SCENERY
 
 obj/structure/scenery/evergreen/New()
 	..()
 	icon_state = "evergreen_[rand(1,3)]"
+*/
 
 
 
@@ -104,8 +93,6 @@ obj/structure/scenery/lolipop_tree
 	layer = LAYER_LARGE_OBJ
 
 	mouse_opacity = 0
-
-	has_transparency_marker = TRUE
 
 	var/top_color = "#FFFFFF"
 
@@ -143,7 +130,7 @@ obj/structure/scenery/peppermint
 	name = "red peppermint"
 	icon = 'icons/obj/structure/flora/peppermint.dmi'
 	icon_state = "peppermint_red"
-	layer = LAYER_GROUND_SCENERY
+	layer = LAYER_FLOOR_SCENERY
 
 
 obj/structure/scenery/peppermint/green

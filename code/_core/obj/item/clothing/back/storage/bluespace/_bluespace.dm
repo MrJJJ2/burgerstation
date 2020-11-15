@@ -2,36 +2,39 @@
 	name = "bag of holding"
 	desc = "Sticking your head in isn't recommended."
 	desc_extended = "A special backpack that creates its own pocket inside the bluespace dimension to store an absurd amount of items. It's extremely heavy, however, and only practical for hauling items over long distances."
-	icon = 'icons/obj/items/clothing/back/backpack/bluespace.dmi'
+	icon = 'icons/obj/item/clothing/back/backpack/bluespace.dmi'
 	rarity = RARITY_RARE
 
 
 	dynamic_inventory_count = MAX_INVENTORY_X*4
-	container_max_size = SIZE_6
+	container_max_size = SIZE_5
 
-	size = MAX_INVENTORY_X*4*SIZE_3
-	weight = WEIGHT_7
+	size = MAX_INVENTORY_X*4*SIZE_5
+
 
 	container_blacklist = list(
 		/obj/item/clothing/back/storage/backpack/bluespace,
 		/obj/item/clothing/back/storage/satchel/bluespace
 	)
 
-	value = 90
+	value = 3000
 
 /obj/item/clothing/back/storage/satchel/bluespace
 	name = "satchel of holding"
-	desc_extended = "A smaller version of the bag of holding."
+	desc = "Let me just get X from my inter-dimensional purse."
+	desc_extended = "A smaller version of the bag of holding. Very spacious despite that."
 
-	icon = 'icons/obj/items/clothing/back/satchel/bluespace.dmi'
+	icon = 'icons/obj/item/clothing/back/satchel/bluespace.dmi'
 
 	dynamic_inventory_count = MAX_INVENTORY_X*3
-	container_max_size = SIZE_6
+	container_max_size = SIZE_4
 
-	size = MAX_INVENTORY_X*4*SIZE_3
-	weight = WEIGHT_3
+	size = MAX_INVENTORY_X*4*SIZE_4
+
 
 	container_blacklist = list(
 		/obj/item/clothing/back/storage/backpack/bluespace,
 		/obj/item/clothing/back/storage/satchel/bluespace
 	)
+
+	value = 2500

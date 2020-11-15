@@ -1,6 +1,4 @@
 /obj/item/weapon/
-	//var/wielded = FALSE
-	//var/can_wield = FALSE
 	var/wield_only = FALSE //Set to true if you can only attack with this while wielded.
 
 
@@ -15,9 +13,6 @@
 	var/prefix_id //The weapon's prefix, if any.
 
 	quick_function_type = FLAG_QUICK_TOGGLE
-
-	attack_delay = 10
-	attack_delay_max = 10
 
 /obj/item/weapon/update_icon()
 
@@ -42,14 +37,16 @@
 
 /obj/item/weapon/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
-	if(wield_only && !wielded)
+	if(wield_only && !wielded && !is_inventory(object))
 		caller.to_chat(span("notice","You can only attack with this when wielded! (CTRL+CLICK)"))
 		return TRUE
 
 	return ..()
 
+/*
 /obj/item/weapon/click_self(var/mob/caller)
 	return TRUE
+*/
 
 /obj/item/weapon/on_drop(var/obj/hud/inventory/I)
 	wielded = FALSE
@@ -59,3 +56,13 @@
 		I.child_inventory = null
 	update_sprite()
 	return ..()
+
+/obj/item/weapon/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	if(length(polymorphs)) .["polymorphs"] = polymorphs
+	return .
+
+/obj/item/weapon/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	if(object_data["polymorphs"]) polymorphs = object_data["polymorphs"]
+	return .

@@ -1,6 +1,6 @@
 /obj/item/clothing/neck/mantle
 	name = "torn mantle"
-	icon = 'icons/obj/items/clothing/suit/mantle.dmi'
+	icon = 'icons/obj/item/clothing/suit/mantle.dmi'
 
 	desc = "Lizards like wearing this for some reason."
 	desc_extended = "A very poorly maintained mantle made from various animal hides and hairs."
@@ -13,15 +13,15 @@
 		BLADE = 5,
 		BLUNT = 5,
 		PIERCE = 5,
-		MAGIC = 25,
+		ARCANE = 25,
 		HEAT = 25,
 		COLD = 25,
 	)
 
 	size = SIZE_3
-	weight = WEIGHT_2
 
-	value = 5
+
+	value = 15
 
 	dyeable = TRUE
 
@@ -33,11 +33,13 @@
 /obj/item/clothing/neck/mantle/brown
 	color = "#603A20"
 
+/obj/item/clothing/neck/mantle/white
+	color = "#e9eef5"
 
 /obj/item/clothing/neck/mantle/daddy
 	name = "dad's bib"
 	rarity = RARITY_RARE
-	icon = 'icons/obj/items/clothing/suit/knight_daddy_bib.dmi'
+	icon = 'icons/obj/item/clothing/suit/knight_daddy_bib.dmi'
 
 	desc = "For eating ass."
 	desc_extended = "A near pristine bib."

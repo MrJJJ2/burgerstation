@@ -1,11 +1,13 @@
 /obj/item/magazine/lmg_762
 	name = "\improper 7.62mm drum magazine."
-	icon = 'icons/obj/items/magazine/762_lmg.dmi'
+	desc = "IT'S NOT A CLIP. IT'S A MAGAZINE."
+	desc_extended = "Contains ammunition for a ranged weapon. Make sure you're trying to use the right caliber."
+	icon = 'icons/obj/item/magazine/762_lmg.dmi'
 	icon_state = "lmg"
 	bullet_count_max = 40
 
 	weapon_whitelist = list(
-		/obj/item/weapon/ranged/bullet/magazine/rifle/nt_lmg = TRUE
+		/obj/item/weapon/ranged/bullet/magazine/rifle/lmg_nt = TRUE
 	)
 
 	ammo = /obj/item/bullet_cartridge/rifle_308/nato
@@ -19,8 +21,7 @@
 	bullet_diameter_max = 7.7
 
 	size = SIZE_3
-	weight = WEIGHT_3
 
-/obj/item/magazine/lmg_762/update_icon()
-	icon_state = "[initial(icon_state)]_[length(stored_bullets) ? 1 : 0]"
-	return ..()
+	icon_states = 1
+
+	value = 20

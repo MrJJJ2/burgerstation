@@ -7,6 +7,7 @@
 	plane = PLANE_MOB
 	collision_flags = FLAG_COLLISION_BARICADE
 	collision_bullet_flags = FLAG_COLLISION_BULLET_INORGANIC
+	density = TRUE
 
 	collision_dir = 0x0
 
@@ -16,9 +17,61 @@
 
 	flags_placement = FLAGS_PLACEMENT_DIRECTIONAL
 
-	health_base = 100
+	health_base = 300
 
-obj/structure/interactive/barricade/Initialize()
+	var/list/climbers = list()
+
+/obj/structure/interactive/barricade/Cross(atom/movable/O)
+	if(climbers[O])
+		return TRUE
+	return ..()
+
+/obj/structure/interactive/barricade/Uncross(atom/movable/O)
+	if(climbers[O])
+		return TRUE
+	return ..()
+
+/obj/structure/interactive/barricade/proc/can_climb_over(var/mob/caller)
+
+	INTERACT_CHECK
+	if(!is_living(caller))
+		return FALSE
+
+	var/mob/living/L = caller
+
+	if(L.horizontal)
+		caller.to_chat(span("warning","You need to be standing in order to climb over \the [src.name]!"))
+		return FALSE
+
+	return TRUE
+
+/obj/structure/interactive/barricade/proc/climb_over(var/mob/caller)
+
+	climbers[caller] = TRUE
+
+	if(caller.loc == src.loc)
+		caller.Move(get_step(src,src.dir))
+	else
+		caller.Move(src.loc)
+
+	climbers -= caller
+
+	return TRUE
+
+
+/obj/structure/interactive/barricade/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	var/atom/defer_object = object.defer_click_on_object(location,control,params)
+
+	if(is_advanced(caller) && is_inventory(defer_object) && can_climb_over(caller))
+		PROGRESS_BAR(caller,src,SECONDS_TO_DECISECONDS(2),.proc/climb_over,caller)
+		PROGRESS_BAR_CONDITIONS(caller,src,.proc/can_climb_over,caller)
+		caller.visible_message(span("warning","\The [caller.name] begins climbing over \the [src.name]."))
+		return TRUE
+
+	return ..()
+
+obj/structure/interactive/barricade/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .
@@ -67,7 +120,8 @@ obj/structure/interactive/barricade/Initialize()
 	return .
 
 
-/obj/structure/interactive/barricade/on_destruction(var/atom/caller,var/damage = FALSE)
-	create_destruction(get_turf(src),list(/obj/item/material/sheet/ = 2),"steel")
+/obj/structure/interactive/barricade/on_destruction(var/mob/caller,var/damage = FALSE)
+	create_destruction(get_turf(src),list(/obj/item/material/sheet/ = 2),/material/steel)
+	. = ..()
 	qdel(src)
-	return TRUE
+	return .

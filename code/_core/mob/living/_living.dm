@@ -1,5 +1,9 @@
 /mob/living/
 
+	health_base = 50
+	stamina_base = 50
+	mana_base = 50
+
 	var/list/experience/attribute/attributes
 	var/list/experience/skill/skills
 	var/list/faction/factions
@@ -8,10 +12,13 @@
 
 	icon_state = "directional"
 
-	var/class = "default"
+	var/class = /class/default
 
 	var/enable_AI = FALSE
 	var/ai/ai
+	//var/id //Boss ID
+
+	var/boss_icon_state
 
 	var/iff_tag
 	var/loyalty_tag
@@ -26,10 +33,21 @@
 
 	var/nutrition = 1000
 	var/hydration = 1000
+	var/nutrition_quality = 1000 //0 to 2000. 2000 means super health, 0 means absolutely fucking obese unfit and all that.
+	var/intoxication = 0
+	var/last_intoxication_message = 0
 
 	var/first_life = TRUE
 
-	var/health_regen_buffer = 0
+	var/brute_regen_buffer = 0
+	var/burn_regen_buffer = 0
+	var/tox_regen_buffer = 0
+
+	var/health_regen_delay = 0
+	var/stamina_regen_delay = 0
+	var/mana_regen_delay = 0
+	//Oxy not present as that is controlled via an organ.
+
 	var/mana_regen_buffer = 0
 	var/stamina_regen_buffer = 0
 
@@ -47,7 +65,7 @@
 
 	var/level_multiplier = 1 //Multiplier for enemies. Basically how much each stat is modified by.
 
-	var/stun_angle = 0
+	var/stun_angle = 90
 
 	var/boss = FALSE
 	var/boss_music
@@ -81,7 +99,7 @@
 		BLUNT = 0,
 		PIERCE = 0,
 		LASER = 0,
-		MAGIC = 0,
+		ARCANE = 0,
 		HEAT = 0,
 		COLD = 0,
 		BOMB = 0,
@@ -93,6 +111,8 @@
 	)
 
 	var/list/status_immune = list() //What status effects area they immune to?
+	//STATUS = TRUE //Means it's immune.
+	//STATUS = OTHERSTATUS //Means it will do OTHERSTATUS instead for half the duration.
 
 	var/damage_received_multiplier = 1
 
@@ -101,6 +121,7 @@
 
 	var/blood_type = /reagent/blood
 	var/blood_volume = BLOOD_LEVEL_DEFAULT
+	var/blood_volume_max = BLOOD_LEVEL_DEFAULT
 
 	var/obj/structure/buckled_object
 
@@ -109,19 +130,21 @@
 	var/image/medical_hud_image
 	var/image/security_hud_image
 	var/image/medical_hud_image_advanced
-	var/image/alert_hud_image
+
+
 
 	has_footsteps = TRUE
 
-	var/table_count = 0
+	var/climb_counter = 0
 
 	var/stand/stand
 
 	var/list/status_effects = list()
 
-	acceleration_mod = 0.5
-	acceleration = 25
-	deceleration = 1
+	acceleration_mod = 0.75
+	acceleration = 10
+	deceleration = 15
+	use_momentum = TRUE
 
 	var/list/obj/butcher_contents = list()
 
@@ -134,7 +157,99 @@
 
 	var/max_level = 500 //Max level for attributes of the mob.
 
+	var/is_typing = FALSE
+	var/talk_duration = 0
+	var/talk_type = 0
+
+	var/obj/effect/chat_overlay
+	var/obj/effect/alert_overlay
+	var/obj/effect/fire_overlay
+	var/obj/effect/shield_overlay
+
+	var/enable_medical_hud = TRUE
+	var/enable_security_hud = TRUE
+
+	var/footstep_mod = 2 //How many cycles required to make a footstep sound.
+	var/footstep_counter = 0 //Read only
+	var/footstep_left_right_counter = FALSE //Read only. For playing left/right footstep sounds. Good only for advanced but you never know.
+
+	var/on_fire = FALSE
+	var/fire_stacks = 0 //Fire remaining. Measured in deciseconds.
+
+	var/fatigue_from_block_mul = 1 //Multipier of fatigue damage given due to blocking projectiles with armor.
+
+	value = 250
+
+	var/mob/living/advanced/player/following = null
+
+	var/suicide = FALSE
+
+	var/mob/living/minion //This object's minion.
+	var/mob/living/master //This object's master.
+	var/minion_remove_time = 0
+
+	var/queue_health_update = FALSE //From automated processes like reagent and health updating. Should not be used for bullet impacts and whatnot.
+
+	known_emotes = list(
+		"laugh",
+		"cough",
+		"deathgasp",
+		"gasp",
+		"grenade",
+		"medic",
+		"pain",
+		"scream",
+		"dab",
+		"nod",
+		"shake",
+		"bow",
+		"fist",
+		"think",
+		"wave",
+		"shrug",
+		"cheer",
+		"beckon",
+		"yawn",
+		"cry",
+		"clap",
+		"salute",
+		"spin"
+	)
+
+	var/tabled = FALSE
+	var/currently_tabled = FALSE
+
+	density = 1
+
+	var/list/defense_bonuses = list() //From perks, powers, and whatever.
+
+	var/blocking = FALSE
+
+/mob/living/on_crush() //What happens when this object is crushed by a larger object.
+	. = ..()
+	play(pick('sound/effects/impacts/flesh_01.ogg','sound/effects/impacts/flesh_02.ogg','sound/effects/impacts/flesh_03.ogg'),get_turf(src))
+	visible_message(span("danger","\The [src.name] is violently crushed!"))
+	if(blood_type)
+		var/reagent/R = REAGENT(blood_type)
+		for(var/i=1,i<=9,i++)
+			create_blood(/obj/effect/cleanable/blood/splatter,get_turf(src),R.color,rand(-32,32),rand(-32,32))
+	death()
+	if(!qdeleting) qdel(src)
+	return .
+
+/mob/living/get_value()
+
+	. = ..()
+
+	if(!dead)
+		. += value * 3
+
+	return .
+
 /mob/living/get_debug_name()
+	return "[dead ? "(DEAD)" : ""][src.name]([src.client ? src.client : "NO CKEY"])([src.type])<a href='?spectate=1;x=[x];y=[y];z=[z]'>([x],[y],[z])</a>"
+
+/mob/living/get_log_name()
 	return "[dead ? "(DEAD)" : ""][src.name]([src.client ? src.client : "NO CKEY"])([src.type])([x],[y],[z])"
 
 /mob/living/do_mouse_wheel(object,delta_x,delta_y,location,control,params)
@@ -144,16 +259,32 @@
 
 	return TRUE
 
+/mob/living/proc/dust()
+	new /obj/effect/temp/death(src.loc,30)
+	qdel(src)
+
 /mob/living/Destroy()
 
-	//factions.Cut()
+	if(minion)
+		minion.master = null
+		minion = null
 
-	for(var/experience/E in attributes)
+	if(master)
+		master.minion = null
+		master = null
+
+	if(following)
+		following.followers -= src
+		following = null
+
+	for(var/k in attributes)
+		var/experience/E = attributes[k]
 		qdel(E)
 
 	attributes.Cut()
 
-	for(var/experience/E in skills)
+	for(var/k in skills)
+		var/experience/E = skills[k]
 		qdel(E)
 
 	skills.Cut()
@@ -161,7 +292,8 @@
 	QDEL_NULL(ai)
 
 	if(screen_blood)
-		for(var/obj/hud/screen_blood/S in screen_blood)
+		for(var/k in screen_blood)
+			var/obj/hud/screen_blood/S = k
 			qdel(S)
 
 		screen_blood.Cut()
@@ -175,13 +307,18 @@
 
 	if(boss)
 		SSbosses.tracked_bosses -= src
+		SSbosses.living_bosses -= src
 
 	players_fighting_boss.Cut()
+
+	QDEL_NULL(alert_overlay)
+	QDEL_NULL(chat_overlay)
+	QDEL_NULL(fire_overlay)
+	QDEL_NULL(shield_overlay)
 
 	QDEL_NULL(medical_hud_image)
 	QDEL_NULL(security_hud_image)
 	QDEL_NULL(medical_hud_image_advanced)
-	QDEL_NULL(alert_hud_image)
 
 	if(client)
 		CRASH_SAFE("[src.get_debug_name()] deleted itself while there was still a client ([client]) attached!")
@@ -195,12 +332,6 @@
 /mob/living/proc/get_burn_color()
 	return "#444444"
 
-/mob/living/Login()
-	. = ..()
-	client.update_stats = TRUE
-	client.statpanel = "Skills"
-	return .
-
 /mob/living/New(loc,desired_client,desired_level_multiplier)
 
 	if(desired_level_multiplier)
@@ -212,35 +343,25 @@
 	health_elements = list()
 	players_fighting_boss = list()
 
-	medical_hud_image = new/image('icons/hud/medihud.dmi',"0")
-	medical_hud_image.loc = src
-	medical_hud_image.layer = PLANE_HUD_VISION
-	medical_hud_image.pixel_y = 4
-	medical_hud_image.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
+	if(enable_medical_hud)
+		medical_hud_image = new/image('icons/hud/medihud.dmi',"0")
+		medical_hud_image.loc = src
+		medical_hud_image.layer = PLANE_HUD_VISION
+		medical_hud_image.pixel_y = 4
+		medical_hud_image.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
 
-	security_hud_image = new/image('icons/hud/sechud.dmi',"unknown")
-	security_hud_image.loc = src
-	security_hud_image.layer = PLANE_HUD_VISION
-	security_hud_image.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
+		medical_hud_image_advanced = new/image('icons/hud/damage_hud.dmi',"000")
+		medical_hud_image_advanced.loc = src
+		medical_hud_image_advanced.layer = PLANE_HUD_VISION
+		medical_hud_image_advanced.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
 
-	medical_hud_image_advanced = new/image('icons/hud/damage_hud.dmi',"000")
-	medical_hud_image_advanced.loc = src
-	medical_hud_image_advanced.layer = PLANE_HUD_VISION
-	medical_hud_image_advanced.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
+	if(enable_security_hud)
+		security_hud_image = new/image('icons/hud/sechud.dmi',"unknown")
+		security_hud_image.loc = src
+		security_hud_image.layer = PLANE_HUD_VISION
+		security_hud_image.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
 
 	. = ..()
-
-	if(client)
-		client.update_stats = TRUE
-		client.statpanel = "Skills"
-
-	if(ai)
-		ai = new ai(src)
-		alert_hud_image = new/image('icons/mob/living/advanced/overlays/stealth.dmi',"none")
-		alert_hud_image.loc = src
-		alert_hud_image.layer = PLANE_HUD_VISION
-		alert_hud_image.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
-		add_overlay(alert_hud_image)
 
 	if(desired_client)
 		screen_blood = list()
@@ -256,33 +377,70 @@
 
 /mob/living/Initialize()
 
+	if(ai) ai = new ai(src)
+
 	if(boss)
-		SSbosses.tracked_bosses[id] = src
+		SSbosses.tracked_bosses += src
+		SSbosses.living_bosses += src
 
 	initialize_attributes()
 	initialize_skills()
-	update_level()
+	update_level(TRUE)
 	set_intent(intent,TRUE)
 
 	. = ..()
 
+	chat_overlay = new(src.loc)
+	chat_overlay.layer = LAYER_EFFECT
+	chat_overlay.icon = 'icons/mob/living/advanced/overlays/talk.dmi'
+	chat_overlay.alpha = 0
+	//This is initialized somewhere else.
+
+	alert_overlay = new(src.loc)
+	alert_overlay.layer = LAYER_EFFECT
+	alert_overlay.icon = 'icons/mob/living/advanced/overlays/stealth.dmi'
+	alert_overlay.pixel_z = 20
+	//This is initialized somewhere else.
+
+	fire_overlay = new(src.loc)
+	fire_overlay.layer = LAYER_MOB_FIRE
+	fire_overlay.icon = 'icons/mob/living/advanced/overlays/fire.dmi'
+	fire_overlay.icon_state = "0"
+	//This is initialized somewhere else.
+
+	shield_overlay = new(src.loc)
+	shield_overlay.layer = LAYER_EFFECT
+	shield_overlay.icon = 'icons/obj/effects/combat.dmi'
+	shield_overlay.icon_state = "block"
+	shield_overlay.alpha = 0
+
+	return .
+
+/mob/living/PostInitialize()
+	. = ..()
 	if(health)
 		health.armor_base = armor_base
+	if(ai)
+		INITIALIZE(ai)
+		FINALIZE(ai)
+	set_loyalty_tag(loyalty_tag,TRUE)
+	set_iff_tag(iff_tag,TRUE)
+	setup_name()
+	return .
 
+/mob/living/Finalize()
+	. = ..()
 	if(boss)
 		for(var/mob/living/advanced/player/P in view(src,VIEW_RANGE))
 			for(var/obj/hud/button/boss_health/B in P.buttons)
-				B.target_boss = src
+				B.target_bosses |= src
 				B.update_stats()
-
-	setup_name()
-
 	return .
 
 /mob/living/proc/setup_name()
 	if(boss)
 		return FALSE
-	name = CHECK_NAME(name)
+	name = "[CHECK_NAME(name)] (LVL: [level])"
 	return TRUE
 
 /mob/living/proc/set_iff_tag(var/desired_iff_tag,var/force=FALSE)
@@ -311,34 +469,66 @@
 /mob/living/Logout()
 
 	if(health)
-		health.update_health()
+		health.update_health() //TODO: Find out what the fuck this is for.
 
 	return ..()
 
-/mob/living/act_explode(var/atom/owner,var/atom/source,var/atom/epicenter,var/magnitude)
+/mob/living/act_explode(var/atom/owner,var/atom/source,var/atom/epicenter,var/magnitude,var/desired_loyalty)
 
-	if(magnitude > 1)
+	if(loyalty_tag && desired_loyalty == loyalty_tag && owner != src)
+		return TRUE
 
+	if(magnitude > 6)
 		var/x_mod = src.x - epicenter.x
 		var/y_mod = src.y - epicenter.y
-
 		var/max = max(abs(x_mod),abs(y_mod))
-
 		if(!max)
 			x_mod = pick(-1,1)
 			y_mod = pick(-1,1)
 		else
 			x_mod *= 1/max
 			y_mod *= 1/max
+		throw_self(owner,null,null,null,x_mod*16,y_mod*16,steps_allowed = magnitude)
 
-		throw_self(owner,null,null,null,x_mod*magnitude,y_mod*magnitude)
+	else if(magnitude > 4)
+		add_status_effect(STUN,magnitude*3,magnitude*3)
 
-	for(var/i=1,i<=clamp(1+(magnitude*2),1,4),i++)
-		var/list/params = list()
-		params[PARAM_ICON_X] = rand(0,32)
-		params[PARAM_ICON_Y] = rand(0,32)
-		var/atom/object_to_damage = src.get_object_to_damage(owner,params,FALSE,TRUE)
-		var/damagetype/D = all_damage_types[/damagetype/explosion/]
-		D.do_damage(source,src,source,object_to_damage,owner,magnitude*0.5)
+	else if(magnitude > 2)
+		add_status_effect(STAGGER,magnitude,magnitude, source = epicenter)
+
+	if(health)
+		for(var/i=1,i<=clamp(2+(magnitude),1,5),i++)
+			var/list/params = list()
+			params[PARAM_ICON_X] = rand(0,32)
+			params[PARAM_ICON_Y] = rand(0,32)
+			var/atom/object_to_damage = src.get_object_to_damage(owner,source,params,FALSE,TRUE)
+			var/damagetype/D = all_damage_types[/damagetype/explosion/]
+			D.hit(source,src,source,object_to_damage,owner,magnitude)
+
+	return TRUE
+
+
+/mob/living/proc/draw_blood(var/mob/caller,var/atom/needle,var/amount=0,var/messages = TRUE)
+
+	if(!blood_type || !min(amount,blood_volume))
+		if(messages) caller?.to_chat(span("warning","There is nothing to draw!"))
+		return FALSE
+
+	var/amount_added = needle.reagents.add_reagent(blood_type,min(amount,blood_volume))
+	blood_volume -= amount_added
+	queue_health_update = TRUE
+
+	if(messages) caller?.to_chat(span("notice","You drew [amount_added]u of blood from \the [src.name]."))
+
+	return amount_added
+
+
+/mob/living/set_dir(var/desired_dir,var/force=FALSE)
+
+	if(client && client.is_zoomed)
+		return ..(client.is_zoomed,force)
+
+	if(attack_flags & ATTACK_HOLD)
+		return FALSE
 
 	return ..()

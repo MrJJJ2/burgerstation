@@ -3,12 +3,14 @@
 /obj/hud/inventory/
 	name = "Inventory Holder"
 	desc = "Inventory"
-	id = "BADINVENTORY"
+	var/id = "BADINVENTORY"
+
+	alpha = 225
 
 	//icon = 'icons/invisible.dmi'
 	//icon_state = "0"
 
-	icon = 'icons/hud/new.dmi'
+	icon = 'icons/hud/hud.dmi'
 	icon_state = "square"
 
 	plane = PLANE_HUD
@@ -20,13 +22,11 @@
 	var/atom/movable/grabbed_object
 
 	var/held_slots = 1 //How many items this object can hold.
-	var/max_weight = -1 //Maximum weight this inventory object can hold. -1 basically means it can't hold anything.
 	var/max_size = -1 //Maximum amount of size this object can hold. -1 basically means it can't hold anything.
 
 	var/worn_slots = 1 //How many items this object can wear
 	var/worn_allow_duplicate = FALSE //Can you wear more than one item of the same slot at once?
 
-	var/total_weight = 0 //Var storage value that is updated every time an item is changed.
 	var/total_size = 0 //Var storage value that is updated every time an item is changed.
 
 	var/item_slot = SLOT_NONE //Items that can be worn in this slot. Applies to clothing only.
@@ -38,7 +38,7 @@
 
 	var/list/obj/item/item_blacklist = list() //Items that can't go in this invetory.
 	var/list/obj/item/item_whitelist = list() //Items that can only go in this inventory.
-	var/list/obj/item/item_bypass = list() //Items that bypass any size and weight requirements.
+	var/list/obj/item/item_bypass = list() //Items that bypass any size requirements.
 
 	var/click_flags
 
@@ -76,6 +76,32 @@
 
 	var/allow_quick_equip = TRUE
 
+	interaction_flags = FLAG_INTERACTION_LIVING | FLAG_INTERACTION_NO_DISTANCE | FLAG_INTERACTION_NO_DISTANCE
+
+/obj/hud/inventory/proc/is_occupied(var/ignore_held = FALSE, var/ignore_worn = FALSE)
+
+	if(!ignore_held && get_top_held_object())
+		return TRUE
+
+	if(!ignore_worn && get_top_worn_object())
+		return TRUE
+
+	if(grabbed_object)
+		return TRUE
+
+	if(parent_inventory)
+		return TRUE
+
+	if(child_inventory)
+		return TRUE
+
+	if(is_advanced(owner))
+		var/mob/living/advanced/A = owner
+		if(A.handcuffed)
+			return TRUE
+
+	return FALSE
+
 /obj/hud/inventory/Destroy()
 
 	if(grabbed_object)
@@ -85,11 +111,13 @@
 
 	remove_from_owner()
 
-	for(var/obj/item/I in held_objects)
+	for(var/k in held_objects)
+		var/obj/item/I = k
 		qdel(I)
 	held_objects.Cut()
 
-	for(var/obj/item/I in worn_objects)
+	for(var/k in worn_objects)
+		var/obj/item/I = k
 		qdel(I)
 	worn_objects.Cut()
 
@@ -103,7 +131,7 @@
 
 /obj/hud/inventory/proc/show(var/should_show,var/speed)
 	if(should_show)
-		animate(src,alpha=255,time=SECONDS_TO_DECISECONDS(speed))
+		animate(src,alpha=initial(alpha),time=SECONDS_TO_DECISECONDS(speed))
 		src.mouse_opacity = 2
 	else
 		animate(src,alpha=0,time=SECONDS_TO_DECISECONDS(speed))
@@ -142,7 +170,8 @@
 	else
 		color = initial(color)
 
-	for(var/obj/item/I in held_objects)
+	for(var/k in held_objects)
+		var/obj/item/I = k
 		I.pixel_x = initial(I.pixel_x) + x_offset_initial + total_pixel_x*TILE_SIZE
 		I.pixel_y = initial(I.pixel_y) + y_offset_initial + total_pixel_y*TILE_SIZE
 
@@ -154,7 +183,8 @@
 
 		add_overlay(I)
 
-	for(var/obj/item/I in worn_objects)
+	for(var/k in worn_objects)
+		var/obj/item/I = k
 		I.pixel_x = initial(I.pixel_x) + x_offset_initial + total_pixel_x*TILE_SIZE
 		I.pixel_y = initial(I.pixel_y) + y_offset_initial + total_pixel_y*TILE_SIZE
 
@@ -177,9 +207,93 @@
 	var/mob/living/advanced/A = owner
 
 	var/icon/desired_icon = initial(item_to_update.icon)
-	var/list/states = icon_states(initial(item_to_update.icon))
 	var/desired_icon_state = null
-	if(id == BODY_HAND_LEFT)
+	var/desired_pixel_x = 0
+	var/desired_pixel_y = 0
+	var/desired_layer = LAYER_MOB_HELD
+	var/matrix/desired_transform = matrix()
+
+	var/list/states = icon_states(initial(item_to_update.icon))
+
+	if(item_to_update.dan_mode && (id == BODY_HAND_LEFT || id == BODY_HAND_RIGHT || id == BODY_TORSO_OB) )
+		if(id == BODY_TORSO_OB)
+			desired_icon_state = item_to_update.dan_icon_state_back
+		else
+			desired_icon_state = item_to_update.wielded ? item_to_update.dan_icon_state_wielded : item_to_update.dan_icon_state
+		switch(get_true_4dir(owner.dir))
+			if(NORTH)
+				if(id == BODY_TORSO_OB)
+					desired_layer = item_to_update.dan_layer_above
+				else
+					desired_layer = item_to_update.dan_layer_below
+					if(item_to_update.wielded)
+						if(click_flags & RIGHT_HAND)
+							desired_transform.Scale(-1,1)
+					else
+						if(click_flags & RIGHT_HAND)
+							desired_pixel_x = item_to_update.dan_offset_pixel_x[1]
+							desired_pixel_y = item_to_update.dan_offset_pixel_y[1]
+							desired_transform.Scale(-1,1)
+						else
+							desired_pixel_x = -item_to_update.dan_offset_pixel_x[1]
+							desired_pixel_y = -item_to_update.dan_offset_pixel_y[1]
+
+			if(EAST)
+				if(id == BODY_TORSO_OB)
+					desired_layer = item_to_update.dan_layer_below
+					desired_transform.Scale(-0.5,1)
+					desired_pixel_x = -4
+				else
+					if(item_to_update.wielded)
+						desired_layer = item_to_update.dan_layer_above
+						desired_pixel_x = 4
+					else
+						if(click_flags & RIGHT_HAND)
+							desired_pixel_x = item_to_update.dan_offset_pixel_x[2]
+							desired_pixel_y = item_to_update.dan_offset_pixel_y[2]
+							desired_layer = item_to_update.dan_layer_above
+						else
+							desired_pixel_x = -item_to_update.dan_offset_pixel_x[2] + 4
+							desired_pixel_y = -item_to_update.dan_offset_pixel_y[2]
+							desired_layer = item_to_update.dan_layer_below
+						desired_transform.Scale(-1,1)
+			if(SOUTH)
+				if(id == BODY_TORSO_OB)
+					desired_layer = item_to_update.dan_layer_below
+				else
+					desired_layer = item_to_update.dan_layer_above
+					if(item_to_update.wielded)
+						if(click_flags & LEFT_HAND)
+							desired_transform.Scale(-1,1)
+					else
+						if(click_flags & RIGHT_HAND)
+							desired_pixel_x = item_to_update.dan_offset_pixel_x[3]
+							desired_pixel_y = item_to_update.dan_offset_pixel_y[3]
+						else
+							desired_pixel_x = -item_to_update.dan_offset_pixel_x[3]
+							desired_pixel_y = -item_to_update.dan_offset_pixel_y[3]
+							desired_transform.Scale(-1,1)
+			if(WEST)
+				if(id == BODY_TORSO_OB)
+					desired_layer = item_to_update.dan_layer_below
+					desired_transform.Scale(0.5,1)
+					desired_pixel_x = 4
+				else
+					if(item_to_update.wielded)
+						desired_layer = item_to_update.dan_layer_above
+						desired_transform.Scale(-1,1)
+						desired_pixel_x = -4
+					else
+						if(click_flags & RIGHT_HAND)
+							desired_layer = item_to_update.dan_layer_below
+							desired_pixel_x = item_to_update.dan_offset_pixel_x[4] - 4
+							desired_pixel_y = item_to_update.dan_offset_pixel_y[4]
+						else
+							desired_layer = item_to_update.dan_layer_above
+							desired_pixel_x = -item_to_update.dan_offset_pixel_x[4]
+							desired_pixel_y = -item_to_update.dan_offset_pixel_y[4]
+
+	else if(id == BODY_HAND_LEFT)
 		desired_icon_state = item_to_update.icon_state_held_left
 	else if(id == BODY_HAND_RIGHT)
 		desired_icon_state = item_to_update.icon_state_held_right
@@ -201,15 +315,32 @@
 	else if(!(desired_icon_state in states))
 		return FALSE
 
-	A.remove_overlay(item_to_update)
-	A.add_tracked_overlay(
-		item_to_update,
-		desired_icon = desired_icon,
-		desired_icon_state = desired_icon_state,
-		desired_layer = LAYER_MOB_HELD,
-		desired_never_blend = TRUE,
-		desired_color = item_to_update.color
-	)
+	if(!A.overlays_assoc["\ref[item_to_update]"])
+		A.add_overlay_tracked(
+			"\ref[item_to_update]",
+			item_to_update,
+			desired_icon = desired_icon,
+			desired_icon_state = desired_icon_state,
+			desired_layer = desired_layer,
+			desired_never_blend = TRUE,
+			desired_color = item_to_update.color,
+			desired_pixel_x = desired_pixel_x,
+			desired_pixel_y = desired_pixel_y,
+			desired_transform = desired_transform
+		)
+	else
+		A.update_overlay_tracked(
+			"\ref[item_to_update]",
+			item_to_update,
+			desired_icon = desired_icon,
+			desired_icon_state = desired_icon_state,
+			desired_layer = desired_layer,
+			desired_never_blend = TRUE,
+			desired_color = item_to_update.color,
+			desired_pixel_x = desired_pixel_x,
+			desired_pixel_y = desired_pixel_y,
+			desired_transform = desired_transform
+		)
 
 	return TRUE
 
@@ -245,30 +376,32 @@
 
 /obj/hud/inventory/proc/add_object(var/obj/item/I,var/messages = TRUE,var/bypass=FALSE) //Prioritize wearing it, then holding it.
 
-	if((bypass || (!I.unremovable && I.can_be_worn())) && add_worn_object(I,messages,bypass))
+	if((bypass || I.can_be_worn()) && add_worn_object(I,messages,bypass))
 		return TRUE
 
-	if((bypass || (!I.unremovable && I.can_be_held())) && add_held_object(I,messages,bypass))
+	if((bypass || I.can_be_held()) && add_held_object(I,messages,bypass))
 		return TRUE
 
 	return FALSE
 
 /obj/hud/inventory/proc/add_held_object(var/obj/item/I,var/messages = TRUE,var/bypass_checks = FALSE)
 
+	if(!I)
+		return FALSE
+
+	if(bypass_checks && held_slots <= 0)
+		return FALSE
+
 	if(!bypass_checks && !can_hold_object(I,messages))
+		return FALSE
+
+	if(I.qdeleting)
+		I.drop_item(null)
 		return FALSE
 
 	var/atom/old_location = I.loc
 
-	if(is_inventory(I.loc))
-		var/obj/hud/inventory/I2 = I.loc
-		if(I2 == src)
-			return FALSE
-		I2.remove_object(I,get_turf(I))
-
-	undelete(I)
-
-	I.force_move(src)
+	I.drop_item(src)
 	I.plane = PLANE_HUD_OBJ
 	held_objects += I
 	I.pre_pickup(old_location,src)
@@ -278,7 +411,7 @@
 		if(should_add_held && is_advanced(owner))
 			var/mob/living/advanced/A = owner
 			A.held_objects += I
-			A.update_slowdown_mul()
+			A.update_items(should_update_eyes = FALSE, should_update_protection = FALSE, should_update_clothes = FALSE)
 			update_held_icon(I)
 
 	update_stats()
@@ -286,9 +419,19 @@
 	overlays.Cut()
 	update_overlays()
 
+	if(I.loc != src) //Something went wrong.
+		owner.to_chat(span("danger","Inventory glitch detected. Please report this bug on discord. Error Code: 01"))
+		I.drop_item(get_turf(src))
+
 	return TRUE
 
 /obj/hud/inventory/proc/add_worn_object(var/obj/item/I, var/messages = TRUE, var/bypass_checks = FALSE)
+
+	if(!I)
+		return FALSE
+
+	if(bypass_checks && worn_slots <= 0)
+		return FALSE
 
 	if(!bypass_checks && !can_wear_object(I,messages))
 		return FALSE
@@ -296,42 +439,33 @@
 	if(!is_advanced(owner))
 		return FALSE
 
+	if(I.qdeleting)
+		I.drop_item(null)
+		return FALSE
+
 	var/mob/living/advanced/A = owner
-
-	for(var/obj/item/C in A.worn_objects)
-		if(C.item_slot & I.item_slot && (!C.ignore_other_slots && !I.ignore_other_slots))
-			if(messages)
-				A.to_chat(span("notice","\The [C.name] prevents you from wearing \the [I.name]!"))
-			return FALSE
-
 	var/atom/old_location = I.loc
 
-	if(is_inventory(I.loc))
-		var/obj/hud/inventory/I2 = I.loc
-		if(I2 == src)
-			return FALSE
-		I2.remove_object(I,owner.loc)
-
-	undelete(I)
-
-	I.force_move(src)
+	I.drop_item(src)
 	I.plane = PLANE_HUD_OBJ
 	worn_objects += I
 	I.pre_pickup(old_location,src)
-	if(owner)
-		I.update_owner(owner)
+
+	if(A)
+		I.update_owner(A)
 		if(should_add_worn)
 			A.worn_objects += I
-			A.update_slowdown_mul()
-			A.update_protection()
-			A.update_eyes()
-			A.update_clothes()
+			A.update_items()
 			update_worn_icon(I)
 
 	update_stats()
 	I.on_pickup(old_location,src)
 	overlays.Cut()
 	update_overlays()
+
+	if(I.loc != src) //Something went wrong.
+		owner.to_chat(span("danger","Inventory glitch detected. Please report this bug on discord. Error Code: 02."))
+		I.drop_item(get_turf(src))
 
 	return TRUE
 
@@ -355,17 +489,18 @@
 			C.initialize_blends(desired_icon_state)
 
 	if(is_wings(item_to_update))
-		A.add_tracked_overlay(item_to_update,desired_layer = LAYER_MOB_WINGS_BEHIND, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_behind",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
-		A.add_tracked_overlay(item_to_update,desired_layer = LAYER_MOB_WINGS_FRONT, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_front",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
-		A.add_tracked_overlay(item_to_update,desired_layer = LAYER_MOB_WINGS_ADJACENT, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_adjacent",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
+		A.add_overlay_tracked("wings_behind",item_to_update,desired_layer = LAYER_MOB_WINGS_BEHIND, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_behind",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
+		A.add_overlay_tracked("wings_front",item_to_update,desired_layer = LAYER_MOB_WINGS_FRONT, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_front",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
+		A.add_overlay_tracked("wings_side",item_to_update,desired_layer = LAYER_MOB_WINGS_ADJACENT, desired_icon=initial(item_to_update.icon), desired_icon_state = "worn_adjacent",desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
 	else
-		A.add_tracked_overlay(item_to_update,desired_layer = item_to_update.worn_layer,desired_icon=initial(item_to_update.icon),desired_icon_state = desired_icon_state,desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
+		A.add_overlay_tracked("\ref[item_to_update]",item_to_update,desired_layer = item_to_update.worn_layer,desired_icon=initial(item_to_update.icon),desired_icon_state = desired_icon_state,desired_no_initial = item_to_update.no_initial_blend,desired_pixel_x = item_to_update.worn_pixel_x,desired_pixel_y = item_to_update.worn_pixel_y)
 
 	return TRUE
 
 /obj/hud/inventory/proc/drop_worn_objects(var/turf/T,var/exclude_soulbound=FALSE)
 	var/list/dropped_objects = list()
-	for(var/obj/item/I in worn_objects)
+	for(var/k in worn_objects)
+		var/obj/item/I = k
 		if(exclude_soulbound && I.soul_bound && I.soul_bound == owner.ckey)
 			continue
 		if(remove_object(I,T))
@@ -375,7 +510,8 @@
 
 /obj/hud/inventory/proc/drop_held_objects(var/turf/T,var/exclude_soulbound=FALSE)
 	var/list/dropped_objects = list()
-	for(var/obj/item/I in held_objects)
+	for(var/k in held_objects)
+		var/obj/item/I = k
 		if(exclude_soulbound && I.soul_bound && I.soul_bound == owner.ckey)
 			continue
 		if(remove_object(I,T))
@@ -384,14 +520,16 @@
 	return dropped_objects
 
 /obj/hud/inventory/proc/delete_held_objects()
-	for(var/obj/item/I in held_objects)
+	for(var/k in held_objects)
+		var/obj/item/I = k
+		I.delete_on_drop = TRUE
 		remove_object(I,owner.loc)
-		qdel(I)
 
 /obj/hud/inventory/proc/delete_worn_objects()
-	for(var/obj/item/I in worn_objects)
+	for(var/k in worn_objects)
+		var/obj/item/I = k
+		I.delete_on_drop = TRUE
 		remove_object(I,owner.loc)
-		qdel(I)
 
 /obj/hud/inventory/proc/drop_all_objects(var/turf/T,var/exclude_soulbound=FALSE)
 	var/list/dropped_objects = list()
@@ -403,17 +541,24 @@
 	delete_held_objects()
 	delete_worn_objects()
 
-/obj/hud/inventory/proc/remove_all_objects()
-	for(var/obj/item/I in worn_objects)
-		qdel(remove_object(I))
-	for(var/obj/item/I in held_objects)
-		qdel(remove_object(I))
+/obj/hud/inventory/proc/get_weight()
+
+	. = 0
+
+	for(var/k in held_objects)
+		var/obj/item/I = k
+		. += I.get_weight()
+
+	for(var/k in worn_objects)
+		var/obj/item/I = k
+		. += I.get_weight()
+
+	return .
 
 /obj/hud/inventory/proc/remove_object(var/obj/item/I,var/turf/drop_loc,var/pixel_x_offset=0,var/pixel_y_offset=0) //Removes the object from both worn and held objects, just in case.
 
 	var/was_worn = FALSE
 	//var/was_held = FALSE
-
 	var/was_removed = FALSE
 
 	if(I in held_objects)
@@ -436,7 +581,7 @@
 		was_worn = TRUE
 
 	if(was_removed)
-		I.force_move(drop_loc ? drop_loc : get_turf(src.loc))
+		I.force_move(drop_loc ? drop_loc : get_turf(src.loc)) //THIS SHOULD NOT BE ON DROP
 		I.pixel_x = pixel_x_offset
 		I.pixel_y = pixel_y_offset
 		I.plane = initial(I.plane)
@@ -446,32 +591,33 @@
 		update_stats()
 		if(owner && is_advanced(owner))
 			var/mob/living/advanced/A = owner
-			A.remove_overlay(I)
+			if(is_wings(I))
+				A.remove_overlay("wings_behind")
+				A.remove_overlay("wings_front")
+				A.remove_overlay("wings_side")
+			else
+				A.remove_overlay("\ref[I]")
 		if(owner)
 			I.set_dir(owner.dir)
 			if(is_advanced(owner))
 				var/mob/living/advanced/A = owner
-				A.update_slowdown_mul()
-				A.update_protection()
-				A.update_eyes()
-				if(was_worn)
-					A.update_clothes()
+				A.update_items(should_update_eyes = was_worn, should_update_protection = was_worn, should_update_clothes = was_worn)
+
 
 	return I
 
 /obj/hud/inventory/proc/update_stats()
-	total_weight = 0
 	total_size = 0
 
-	for(var/obj/item/O in held_objects)
-		total_weight += O.weight
+	for(var/k in held_objects)
+		var/obj/item/O = k
 		total_size += O.size
 
 	var/obj/item/I = get_top_object()
 	if(I)
 		name = I.name
 	else
-		name = "inventory"
+		name = initial(name)
 
 	if(src.loc && is_item(src.loc))
 		var/obj/item/I2 = src.loc
@@ -479,22 +625,28 @@
 
 /obj/hud/inventory/proc/can_hold_object(var/obj/item/I,var/messages = FALSE)
 
+	if(!I)
+		CRASH_SAFE("can_hold_object() called on a null object!")
+		return FALSE
+
 	if(loc && loc == I)
 		return FALSE
 
-	if(I.delete_on_drop)
+	if(held_slots <= 0)
 		return FALSE
 
-	if(I.anchored)
+	if(is_occupied(TRUE,TRUE))
+		if(messages && src.loc)
+			owner.to_chat(span("notice","\The [src.loc.name] is already occupied!"))
 		return FALSE
+
+	if(is_inventory(I.loc))
+		var/obj/hud/inventory/INV = I.loc
+		if((I in INV.worn_objects) && !INV.can_unwear_object(I,messages))
+			return FALSE
 
 	if(!I.can_be_held(owner,src))
-		return FALSE
-
-	if(parent_inventory)
-		return FALSE
-
-	if(held_slots <= 0)
+		if(messages) owner.to_chat(span("notice","\The [I] cannot be held!"))
 		return FALSE
 
 	if(length(item_blacklist))
@@ -517,19 +669,33 @@
 			return FALSE
 
 	if(length(held_objects) >= held_slots)
-		if(messages)
-			owner.to_chat(span("notice","You don't see how you can fit any more objects inside \the [src.loc.name]."))
+		if(messages) owner.to_chat(span("notice","You don't see how you can fit any more objects inside \the [src.loc.name]."))
 		return FALSE
 
-	if(!(I.type in item_bypass) && !(src.type in I.inventory_bypass) && (max_size >= 0 || max_weight >= 0))
+	if(!(I.type in item_bypass) && !(src.type in I.inventory_bypass) && max_size >= 0)
 		if(max_size >= 0 && I.size > max_size)
 			if(messages && src.loc)
 				owner.to_chat(span("notice","\The [I] is too large to be put in \the [src.loc.name]."))
 			return FALSE
 
-		if(max_weight >= 0 && I.weight > max_weight)
-			if(messages && src.loc)
-				owner.to_chat(span("notice","\The [I] is too heavy to be put in \the [src.loc.name]."))
+	return TRUE
+
+/obj/hud/inventory/proc/can_unwear_object(var/obj/item/I,var/messages = FALSE)
+
+	if(!I.item_slot)
+		return FALSE
+
+	if(!is_advanced(owner))
+		return TRUE
+
+	var/mob/living/advanced/A = owner
+	for(var/obj/item/clothing/C in A.worn_objects)
+		if(C == I)
+			continue
+		if(C.ignore_other_slots)
+			continue
+		if(C.loc != I.loc && C.blocks_clothing && (I.item_slot & C.blocks_clothing))
+			if(messages) owner.to_chat(span("notice","\The [C.name] prevents you from removing \the [I.name]!"))
 			return FALSE
 
 	return TRUE
@@ -539,22 +705,28 @@
 	if(loc && loc == I)
 		return FALSE
 
-	if(parent_inventory)
-		return FALSE
-
 	if(worn_slots <= 0)
 		return FALSE
 
-	if(I.anchored)
+	if(is_occupied(TRUE,TRUE))
+		if(messages && src.loc)
+			owner.to_chat(span("notice","\The [src.loc.name] is already occupied!"))
 		return FALSE
 
-	if(!I.can_be_worn(owner,src))
+	if(is_inventory(I.loc))
+		var/obj/hud/inventory/INV = I.loc
+		if((I in INV.worn_objects) && !INV.can_unwear_object(I,messages))
+			return FALSE
+
+	if(!I.can_be_held(owner,src) || !I.can_be_worn(owner,src))
+		if(messages) owner.to_chat(span("notice","\The [I] cannot be worn!"))
 		return FALSE
 
 	if(worn_allow_duplicate)
-		for(var/obj/item/I2 in worn_objects)
+		for(var/k in worn_objects)
+			var/obj/item/I2 = k
 			if(I.item_slot & I.item_slot)
-				owner.to_chat(span("notice","You cannot wear \the [I.name] and \the [I2.name] at the same time!"))
+				if(messages) owner.to_chat(span("notice","You cannot wear \the [I.name] and \the [I2.name] at the same time!"))
 				return FALSE
 
 	if(is_clothing(I))
@@ -562,7 +734,8 @@
 		if(is_advanced(owner))
 			var/mob/living/advanced/A = owner
 			if(C.flags_clothing)
-				for(var/obj/item/organ/O in A.organs)
+				for(var/k in A.organs)
+					var/obj/item/organ/O = k
 					if(C.flags_clothing & FLAG_CLOTHING_NOBEAST_FEET && O.flags_organ & FLAG_ORGAN_BEAST_FEET)
 						if(messages)
 							owner.to_chat(span("notice","Beast races cannot wear this!"))
@@ -571,10 +744,12 @@
 						if(messages)
 							owner.to_chat(span("notice","Beast races cannot wear this!"))
 						return FALSE
-			for(var/obj/item/clothing/C2 in A.worn_objects)
-				if(C2.blocks_clothing && I.item_slot && I.item_slot & C2.blocks_clothing)
-					owner.to_chat(span("notice","\The [C2.name] prevents you from wearing \the [C.name]!"))
-					return FALSE
+			if(C.item_slot)
+				var/list/list_to_check = C.ignore_other_slots ? src.worn_objects : A.worn_objects
+				for(var/obj/item/clothing/C2 in list_to_check)
+					if(C2.blocks_clothing && (C.item_slot & C2.blocks_clothing)) //DON'T LET YOUR EYES FOOL YOU AS THEY DID MINE.
+						if(messages) owner.to_chat(span("notice","\The [C2.name] prevents you from wearing \the [C.name]!"))
+						return FALSE
 
 
 	if(!(I.item_slot & item_slot))
@@ -594,11 +769,27 @@
 	if(!length(worn_objects))
 		return null
 
-	return worn_objects[length(worn_objects)]
+	var/obj/item/I = worn_objects[length(worn_objects)]
+	if(I.qdeleting)
+		worn_objects -= I
+		overlays.Cut()
+		update_overlays()
+		update_stats()
+		return null
+
+	return I
 
 /obj/hud/inventory/proc/get_top_held_object()
 
 	if(!length(held_objects))
 		return null
 
-	return held_objects[length(held_objects)]
+	var/obj/item/I = held_objects[length(held_objects)]
+	if(I.qdeleting)
+		held_objects -= I
+		overlays.Cut()
+		update_overlays()
+		update_stats()
+		return null
+
+	return I

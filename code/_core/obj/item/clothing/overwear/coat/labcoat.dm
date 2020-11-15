@@ -1,17 +1,21 @@
 /obj/item/clothing/overwear/coat/labcoat
 	name = "labcoat"
-	icon = 'icons/obj/items/clothing/suit/labcoat.dmi'
+	desc = "SCIENCE RULES!"
+	desc_extended = "Extra pockets not included."
+	icon = 'icons/obj/item/clothing/suit/labcoat.dmi'
+
+	protected_limbs = list(BODY_TORSO,BODY_GROIN,BODY_ARM_LEFT,BODY_ARM_RIGHT)
 
 	defense_rating = list(
 		LASER = 25,
-		MAGIC = 50,
+		ARCANE = 25,
 		HEAT = 25,
 		COLD = 25,
 		BIO = 25,
 	)
 
 	size = SIZE_3
-	weight = WEIGHT_2
+
 
 
 	polymorphs = list(
@@ -32,4 +36,10 @@
 /obj/item/clothing/overwear/coat/labcoat/medical
 	polymorphs = list(
 		"base" = COLOR_MEDICAL
+	)
+
+/obj/item/clothing/overwear/coat/labcoat/science
+	polymorphs = list(
+		"base" = COLOR_WHITE,
+		"shoulder" = COLOR_SCIENCE
 	)

@@ -27,14 +27,21 @@ body {
 	color: #921FAA;
 	font-weight: bold;
 }
+.vote{
+	color: #530FAD;
+	font-weight: bold;
+	font-size: 110%;
+}
 .notice{
 	color: blue;
 	font-style: italic;
 }
 .emote{
 	color: black;
+	font-weight: bold;
+	font-style: italic;
 }
-.debug_message{
+.subsystem{
 	color:blue;
 	font-weight: bold;
 	font-size: 10px;
@@ -45,6 +52,12 @@ body {
 }
 .danger{
 	color: red;
+	font-weight: bold;
+}
+.whisper{
+	font-style: italic;
+}
+.yell{
 	font-weight: bold;
 }
 .thought{
@@ -59,7 +72,7 @@ body {
 .bold{
 	font-weight: bold;
 }
-.centered {
+.center{
 	text-align: center;
 }
 .underlined{
@@ -121,15 +134,12 @@ body {
 	font-weight: bold;
 }
 .red{
-	font-size: 150%;
 	color: red;
 }
 .blue{
-	font-size: 150%;
 	color: blue;
 }
 .green{
-	font-size: 150%;
 	color: green;
 }
 .yellow{
@@ -138,6 +148,9 @@ body {
 }
 .error{
 	color:red;
+	font-family: Courier, Monaco, monospace;
+}
+.debug{
 	font-family: Courier, Monaco, monospace;
 }
 div.announcement p{

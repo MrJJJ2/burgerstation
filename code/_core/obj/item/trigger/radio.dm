@@ -3,7 +3,8 @@ var/global/list/obj/item/device/radio/all_radios = list()
 /obj/item/device/radio/
 	name = "radio"
 	desc = "Long distance communication. What could possibly go wrong?"
-	icon = 'icons/obj/items/radio_transmitter.dmi'
+	desc_extended = "A handheld radio."
+	icon = 'icons/obj/item/radio_transmitter.dmi'
 	icon_state = "inventory"
 
 	var/frequency = RADIO_FREQ_COMMON //The broadcasting frequency of the radio.
@@ -19,11 +20,23 @@ var/global/list/obj/item/device/radio/all_radios = list()
 
 	var/spam_fix_time = 0
 
-	var/radio_sound = 'sounds/items/radio.ogg'
+	var/radio_sound = 'sound/items/radio.ogg'
 
-	var/broadcasting_range = VIEW_RANGE
+	var/broadcasting_range = 5
 
-	value = 5
+	listener = TRUE
+
+	value = 20
+
+/obj/item/device/radio/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("frequency")
+	return .
+
+/obj/item/device/radio/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("frequency")
+	return .
 
 /obj/item/device/radio/click_self(var/mob/caller,location,control,params)
 	broadcasting = !broadcasting
@@ -31,6 +44,9 @@ var/global/list/obj/item/device/radio/all_radios = list()
 	return TRUE
 
 /obj/item/device/radio/clicked_on_by_object(var/mob/caller as mob,var/atom/object,location,control,params)
+
+	INTERACT_CHECK
+
 	if(!is_inventory(object))
 		return ..()
 	receiving = !receiving
@@ -38,6 +54,8 @@ var/global/list/obj/item/device/radio/all_radios = list()
 	return TRUE
 
 /obj/item/device/radio/on_mouse_wheel(var/mob/caller,delta_x,delta_y,location,control,params)
+
+	INTERACT_CHECK
 
 	var/fixed_delta = delta_y > 0 ? 1 : -1
 
@@ -85,7 +103,8 @@ list(
 /obj/item/device/radio/trigger(var/mob/caller,var/atom/source,var/signal_freq,var/signal_code)
 
 	if(signal_freq == -1) //Sent
-		for(var/obj/item/device/radio/S in all_radios)
+		for(var/k in all_radios)
+			var/obj/item/device/radio/S = k
 			if(S == src)
 				continue
 			S.trigger(caller,src,frequency,signal_code)
@@ -94,41 +113,13 @@ list(
 			loc.trigger(caller,src,signal_freq,signal_code)
 			return TRUE
 
-
-/obj/item/device/radio/proc/send_data(var/list/data = list())
-
-	if(!length(data))
+/obj/item/device/radio/on_listen(var/atom/speaker,var/datum/source,var/text,var/talk_type,var/frequency, var/language = LANGUAGE_BASIC,var/talk_range=TALK_RANGE)
+	if(talk_type == TEXT_RADIO) //Don't listen to other radio signals.
 		return FALSE
-
-	if(!data["frequency"])
-		data["frequency"] = frequency
-
-	var/speaker_ref = is_atom(data["speaker"]) ? "/ref[data["speaker"]]" : null
-
-	if(speaker_ref && all_unprocessed_radio_data[speaker_ref])
+	if(!broadcasting && !(frequency > 0)) //Dumb logic here, but it catches null as well as null (greater,less,equal) 0 is always 0.
 		return FALSE
-
-	all_unprocessed_radio_data[speaker_ref] = data
-
-	play(radio_sound,src)
-
-	return TRUE
-
-/obj/item/device/radio/proc/receive_data(var/list/data = list())
-
-	if(!length(data))
-		return FALSE
-
-	if(data["frequency"] != frequency && !(data["frequency"] in listening_frequencies))
-		return FALSE
-
-	var/turf/T = get_turf(src)
-	for(var/mob/M in range(broadcasting_range,T))
-		if(!M.client)
-			continue
-		M.to_chat_language(data["message"],CHAT_TYPE_RADIO,data["language"],data["message_language"])
-
-	return TRUE
+	use_radio(speaker,source,text,TEXT_RADIO,src.frequency,language,talk_range)
+	return ..()
 
 
 /obj/item/device/radio/nanotrasen
@@ -138,3 +129,13 @@ list(
 	frequency_max = RADIO_FREQ_SHIP + 2
 
 	value = 15
+
+/obj/item/device/radio/syndicate
+	name = "\improper NanoTrasen Radio"
+
+	frequency_min = RADIO_FREQ_SYNDICATE
+	frequency_max = RADIO_FREQ_COMMON
+
+	frequency = RADIO_FREQ_SYNDICATE
+
+	value = 100

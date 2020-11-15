@@ -1,7 +1,46 @@
 #define ICON_TO_HTML(icon,icon_state,width,height) ("<IMG CLASS=icon src=\ref[icon] ICONSTATE='[icon_state]' style='width:[width]px;height:[height]px'>")
 
+/proc/debug_args(var/proc_name,var/args)
+
+	. = "[proc_name]("
+
+	. += english_list(args,"null",",",",")
+
+	. += ")"
+
+	log_debug(.)
+
+	return TRUE
+
+
+
+/proc/scramble(var/text,var/strength = 50)
+
+	. = ""
+
+	for(var/word in splittext(text," "))
+		for(var/letter in splittext(word,""))
+			if(prob(strength))
+				. += pick("!","@","#","$","%","^","&","*","(",")")
+			else
+				. += letter
+
+	return .
+
+
+
 /proc/deunderscore(var/text)
 	return replacetextEx(text,"_"," ")
+
+/proc/remove_trailing_punctuation(var/text)
+
+	if(!text)
+		return text
+
+	var/regex/R = regex("\[!,.?\]+$")
+	text = R.Replace(text,"")
+
+	return text
 
 /proc/police_input(var/client/caller,var/input, var/max_length = MAX_MESSAGE_LEN, var/capitalize = FALSE, var/periodize = FALSE)
 
@@ -112,7 +151,7 @@
 		if(FEMALE)
 			return "she"
 
-	return "they"
+	return "it"
 
 /proc/proper_url_encode(var/input)
 	return url_encode(replacetextEx(input,"\n",""))

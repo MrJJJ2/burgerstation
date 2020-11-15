@@ -1,14 +1,12 @@
 /obj/item/material/shard
 	name = "shard"
 	desc = "I am error."
-	icon = 'icons/obj/items/material.dmi'
+	icon = 'icons/obj/item/material.dmi'
 	icon_state = "shard"
 
 	item_count_current = 1
 	item_count_max = 1
 	item_count_max_icon = 1
-
-	weight = 0.1
 
 	crafting_id = "shard"
 
@@ -20,4 +18,5 @@
 /obj/item/material/shard/glass
 	name = "glass shard"
 	desc = "A shard of glass."
-	material_id = "glass"
+	desc_extended = "Careful to not step on this barefoot."
+	material_id = /material/glass

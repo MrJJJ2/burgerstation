@@ -1,3 +1,5 @@
+//TODO: Move to living life.
+
 SUBSYSTEM_DEF(status)
 	name = "Status Effect Subsystem"
 	desc = "Controls the status effects of mobs."
@@ -14,4 +16,4 @@ SUBSYSTEM_DEF(status)
 			S = new k
 			all_status_effects[id] = S
 
-	return TRUE
+	return ..()

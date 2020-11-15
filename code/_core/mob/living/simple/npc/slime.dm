@@ -18,25 +18,38 @@
 
 	var/slime_color = "#000000"
 
+	value = 100
+
 	armor_base = list(
-		BLADE = 25,
-		BLUNT = 75,
-		PIERCE = -25,
-		LASER = -50,
-		MAGIC = -50,
-		HEAT = 50,
-		COLD = -100,
-		BOMB = -25,
+		BLADE = -25,
+		BLUNT = 100,
+		PIERCE = 75,
+		LASER = -25,
+		ARCANE = 50,
+		HEAT = 100,
+		COLD = -50,
+		BOMB = 0,
 		BIO = INFINITY,
 		RAD = INFINITY,
-		HOLY = INFINITY,
-		DARK = INFINITY,
-		FATIGUE = INFINITY
+		HOLY = 75,
+		DARK = 75,
+		FATIGUE = INFINITY,
+		ION = INFINITY
 	)
 
 	mob_size = MOB_SIZE_ANIMAL
 
-/mob/living/simple/npc/slime/Initialize()
+	damage_type = /damagetype/npc/slime
+
+	enable_medical_hud = FALSE
+	enable_security_hud = FALSE
+
+	iff_tag = "Slime"
+	loyalty_tag = "Slime"
+
+	stun_angle = 0
+
+/mob/living/simple/npc/slime/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .
@@ -49,12 +62,14 @@
 		var/obj/item/slime_core/SC = new(src.loc)
 		SC.color = slime_color
 		INITIALIZE(SC)
+		FINALIZE(SC)
 
 	for(var/i=1,i<=stored_slimes-1,i++)
 		var/mob/living/simple/npc/slime/S = new(get_turf(src))
 		S.slime_color = slime_color
 		S.stored_slimes = 1
 		INITIALIZE(S)
+		FINALIZE(S)
 
 		var/xvel = rand(-1,1)
 		var/yvel = rand(-1,1)

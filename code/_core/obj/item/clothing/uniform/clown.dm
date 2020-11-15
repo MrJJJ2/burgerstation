@@ -1,20 +1,22 @@
 /obj/item/clothing/uniform/clown
 	name = "clown uniform"
-	icon = 'icons/obj/items/clothing/uniforms/clown.dmi'
+	desc = "HONK!"
+	desc_extended = "If you see this, run as fast as you can."
+	icon = 'icons/obj/item/clothing/uniforms/clown.dmi'
 	item_slot = SLOT_TORSO | SLOT_GROIN
 
 	defense_rating = list(
 		BLADE = 15,
 		BLUNT = 10,
 		PIERCE = 10,
-		MAGIC = 75,
+		ARCANE = 75,
 		COLD = 15,
-		HOLY = 75,
+		HOLY = -75,
 		DARK = 75,
-		FATIGUE = -100
+		FATIGUE = 25
 	)
 
-	value = 100
+	value = 200
 
 /obj/item/clothing/uniform/clown/purple
 	name = "purple clown uniform"

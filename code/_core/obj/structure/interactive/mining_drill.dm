@@ -13,10 +13,17 @@
 
 	bullet_block_chance = 75
 
+	health = /health/construction
 
-/obj/structure/interactive/mining_drill/Initialize()
-	SShorde.possible_horde_targets += src
-	return ..()
+	health_base = 1000
+
+	density = TRUE
+
+/obj/structure/interactive/mining_drill/on_destruction(var/mob/caller,var/damage = FALSE)
+	create_destruction(get_turf(src),list(/obj/item/material/sheet/ = 10),/material/steel)
+	. = ..()
+	qdel(src)
+	return .
 
 /obj/structure/interactive/mining_drill/update_icon()
 
@@ -29,7 +36,7 @@
 
 	return ..()
 
-/obj/structure/interactive/mining_drill/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/structure/interactive/mining_drill/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	INTERACT_CHECK
 
@@ -40,38 +47,30 @@
 
 	return ..()
 
-/obj/structure/interactive/mining_drill/Move(var/atom/NewLoc,Dir=0,desired_step_x=0,desired_step_y=0,var/silent=FALSE)
-
-	. = ..()
-
-	if(.)
-		drill_depth = 0
-		found_deposit = null
-
+/obj/structure/interactive/mining_drill/post_move()
+	drill_depth = 0
+	found_deposit = null
 	return .
 
 /obj/structure/interactive/mining_drill/proc/activate(var/mob/caller)
-
 	if(!check_valid())
 		caller.to_chat("\The [src] doesn't seem to want to turn on!")
 		return FALSE
-
 	if(caller)
 		visible_message("\The [caller.name] activates \the [src.name].")
 	else
 		visible_message("\The [src.name] activates itself.")
-	anchored = TRUE
+	set_anchored(TRUE)
 	start_thinking(src)
 	update_sprite()
 	return TRUE
 
 /obj/structure/interactive/mining_drill/proc/deactivate(var/mob/caller)
-
 	if(caller)
 		visible_message("\The [caller.name] turns off \the [src.name].")
 	else
 		visible_message("\The [src.name] turns off on its own.")
-	anchored = FALSE
+	set_anchored(FALSE)
 	stop_thinking(src)
 	update_sprite()
 	return TRUE
@@ -81,14 +80,11 @@
 
 	var/valid_setup = FALSE
 	for(var/obj/structure/interactive/mining_brace/MB in orange(1,src))
-		if(!MB.anchored)
-			continue
-		if(get_step(MB,MB.dir) != src.loc)
+		if(!MB.anchored || get_step(MB,MB.dir) != src.loc)
 			continue
 		var/obj/structure/interactive/mining_brace/MB2 = locate() in get_step(src,MB.dir).contents
-		if(!MB2 || !MB.anchored)
+		if(!MB2 || !MB2.anchored || get_step(MB2,MB2.dir) != src.loc)
 			continue
-
 		valid_setup = TRUE
 		break
 
@@ -100,7 +96,7 @@
 	if(!found_deposit)
 		found_deposit = locate() in src.loc
 
-	 if(!anchored || !check_valid() || !found_deposit || found_deposit.ore_score <= 0)
+	 if(!anchored || !found_deposit || found_deposit.ore_score <= 0)
 	 	deactivate()
 	 	return FALSE
 
@@ -123,7 +119,27 @@
 
 	bullet_block_chance = 50
 
-/obj/structure/interactive/mining_brace/clicked_on_by_object(var/mob/caller,object,location,control,params)
+	health = /health/construction
+
+	health_base = 500
+
+	density = TRUE
+
+/obj/structure/interactive/mining_brace/on_destruction(var/mob/caller,var/damage = FALSE)
+	create_destruction(get_turf(src),list(/obj/item/material/sheet/ = 5),/material/steel)
+	. = ..()
+	qdel(src)
+	return .
+
+/obj/structure/interactive/mining_brace/Destroy()
+	var/obj/structure/interactive/mining_drill/MD = locate() in get_step(src,dir)
+	if(MD)
+		MD.check_valid()
+	return ..()
+
+/obj/structure/interactive/mining_brace/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	INTERACT_CHECK
 
 	if(caller.movement_flags & MOVEMENT_WALKING)
 		if(anchored)
@@ -138,7 +154,7 @@
 		caller.to_chat(span("warning","You need to disable the mining drill first before moving this!"))
 		return TRUE
 
-	anchored = !anchored
+	set_anchored(!anchored)
 
 	if(anchored)
 		caller.visible_message("\The [caller.name] secures \the [src.name].","You secure \the [src.name].")

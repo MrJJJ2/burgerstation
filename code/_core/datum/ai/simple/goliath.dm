@@ -1,48 +1,36 @@
 /ai/goliath
 
-	radius_find_enemy = 6
-
-	objective_delay = 10
-	attack_delay = 1
-
-	target_distribution_y = list(8,8,8,8,16,32)
-
-	stationary = FALSE
-
 	var/mob/living/simple/npc/goliath/owner_as_goliath
 
-	var/tentacle_attack_ticks = 0
-	var/tentacle_ttack_frequency = 100
+
+
+	attack_distance_max = 1
+
+	var/next_tentacle_attack = 100
 
 /ai/goliath/New(var/mob/living/desired_owner)
-
 	owner_as_goliath = desired_owner
+	return ..()
 
+/ai/goliath/Destroy()
+	owner_as_goliath = null
 	return ..()
 
 /ai/goliath/handle_attacking()
 
 	if(objective_attack)
+
 		if(get_dist(owner,objective_attack) <= attack_distance_max)
 			return ..()
-		else if(tentacle_attack_ticks < tentacle_ttack_frequency)
-			tentacle_attack_ticks++
-		else
-			owner_as_goliath.tentacle_attack(objective_attack)
-			tentacle_attack_ticks = 0
 
-	attack_ticks = 0
+		if(next_tentacle_attack <= world.time)
+			owner_as_goliath.do_tentacle_attack(objective_attack)
+			next_tentacle_attack = world.time + initial(next_tentacle_attack)
+			owner.attack_next = world.time + 40
 
 
 /ai/goliath/ancient
-	stationary = TRUE
-	radius_find_enemy = VIEW_RANGE
-	objective_delay = 10
-	attack_delay = 1
-	tentacle_ttack_frequency = 50
+	next_tentacle_attack = 40
 
 /ai/goliath/broodmother
-	radius_find_enemy = VIEW_RANGE + ZOOM_RANGE
-	objective_delay = 10
-	attack_delay = 1
-	tentacle_ttack_frequency = 50
+	next_tentacle_attack = 40

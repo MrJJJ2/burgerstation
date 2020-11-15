@@ -4,10 +4,8 @@
 	desc_extended = "Holds reagents."
 	crafting_id = "beaker"
 
-	icon = 'icons/obj/items/container/cup/beaker.dmi'
+	icon = 'icons/obj/item/container/cup/beaker.dmi'
 	icon_state = "beaker"
-
-
 
 	reagents = /reagent_container/beaker/
 
@@ -19,6 +17,14 @@
 	var/overide_icon = FALSE
 
 	value = 5
+
+	drop_sound = 'sound/items/drop/bottle.ogg'
+
+/obj/item/container/beaker/get_consume_verb()
+	return "drink"
+
+/obj/item/container/beaker/get_consume_sound()
+	return 'sound/items/consumables/drink.ogg'
 
 /obj/item/container/beaker/get_examine_list(var/mob/examiner)
 	return ..() + div("notice",reagents.get_contents_english())

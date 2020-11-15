@@ -2,6 +2,13 @@
 	open = FALSE
 	var/current_chamber = 1
 
+	var/can_shoot_while_open = FALSE
+
+	inaccuracy_modifer = 0.5
+
+	movement_spread_base = 0.02
+	movement_spread_mul = 0.05
+
 /obj/item/weapon/ranged/bullet/revolver/New(var/desired_loc)
 	. = ..()
 	stored_bullets = new/list(bullet_count_max)
@@ -9,6 +16,9 @@
 
 /obj/item/weapon/ranged/bullet/revolver/get_ranged_damage_type()
 	return stored_bullets[current_chamber] ? stored_bullets[current_chamber].damage_type : damage_type
+
+/obj/item/weapon/ranged/bullet/revolver/can_load_chamber(var/mob/caller,var/obj/item/bullet_cartridge/B)
+	return FALSE
 
 /obj/item/weapon/ranged/bullet/revolver/proc/rotate_cylinder(var/rotate_amount=1)
 
@@ -29,7 +39,7 @@
 	else
 		caller.to_chat(span("notice","You close \the [src]."))
 
-	play('sounds/weapons/revolver_click2.ogg',src)
+	play('sound/weapons/revolver_click2.ogg',src)
 
 	update_sprite()
 
@@ -45,15 +55,12 @@
 
 /obj/item/weapon/ranged/bullet/revolver/can_gun_shoot(var/mob/caller)
 
-	if(open)
+	if(!can_shoot_while_open && open)
 		return FALSE
 
 	return ..()
 
 /obj/item/weapon/ranged/bullet/revolver/clicked_on_by_object(var/mob/caller as mob,var/atom/object,location,control,params)
-
-	if(!object)
-		return TRUE
 
 	var/atom/defer_object = object.defer_click_on_object(location,control,params)
 
@@ -66,6 +73,7 @@
 		if(last_value)
 			var/obj/item/bullet_cartridge/B = eject_stored_bullet(caller,last_value,get_turf(src))
 			if(B)
+				caller?.to_chat(span("notice","You remove \the [B.name] from \the [src.name]."))
 				I.add_object(B)
 
 		return TRUE

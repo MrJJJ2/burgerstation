@@ -53,3 +53,22 @@ var/global/list/obj/item/organ/internal/implant/hand/left/iff/all_IFFs = list() 
 	desc = "Prevents friendly fire and collects your personal information."
 	desc_extended = "A special integrated friend or foe implant based on the civilian model that prevents the user from being targeted with weapons registered to Syndicate Operatives. Like the civilian counterpart, it also tracks movement and sents vitals data to nearby devices. Due to religious concenrs, it can only be implanted in the left hand."
 	iff_tag = "Syndicate"
+
+/obj/item/organ/internal/implant/hand/left/iff/revolutionary
+	name = "\improper Revolutionary IFF implant"
+	desc = "Prevents friendly fire and collects your personal information."
+	desc_extended = "A special integrated friend or foe implant based on the civilian model that prevents the user from being targeted with weapons registered to Revolutionaries. Like the civilian counterpart, it also tracks movement and sents vitals data to nearby devices. Due to religious concenrs, it can only be implanted in the left hand."
+	iff_tag = "Revolutionary"
+
+
+/obj/item/organ/internal/implant/hand/left/iff/deathsquad
+	name = "\improper Deathsquad IFF implant"
+	desc = "Prevents friendly fire and collects your personal information."
+	desc_extended = "A special integrated friend or foe implant based on the civilian model that prevents the user from being targeted with weapons registered to Deathsquad. Like the civilian counterpart, it also tracks movement and sents vitals data to nearby devices. Due to religious concenrs, it can only be implanted in the left hand."
+	iff_tag = "Deathsquad"
+
+/obj/item/organ/internal/implant/hand/left/iff/space_cop
+	name = "\improper Space Cop IFF implant"
+	desc = "Prevents friendly fire and collects your personal information."
+	desc_extended = "A special integrated friend or foe implant based on the civilian model that prevents the user from being targeted with weapons registered to the NanoTrasen Firearms Database. Like the civilian counterpart, it also tracks movement and sents vitals data to nearby devices. Due to religious concenrs, it can only be implanted in the left hand."
+	iff_tag = "Space Cop"

@@ -35,7 +35,7 @@
 
 	reagents = /reagent_container/limb
 
-	health_coefficient = 2
+	damage_coefficient = 2
 
 /obj/item/organ/head/initialize_blends()
 	add_blend("blush", desired_color = "#00FF00", desired_blend = ICON_MULTIPLY, desired_icon = 'icons/mob/living/advanced/species/human.dmi', desired_icon_state = "none", desired_type = ICON_BLEND_OVERLAY, desired_should_save = TRUE, desired_layer = worn_layer)
@@ -52,6 +52,8 @@
 	desc = "An organ."
 	flags_organ = FLAG_ORGAN_BEAST_HEAD
 
+	defense_rating = REPTILE_ARMOR
+
 /obj/item/organ/head/reptile/female
 	icon_state = BODY_HEAD_FEMALE
 
@@ -61,6 +63,8 @@
 	icon = 'icons/mob/living/advanced/species/reptile_advanced.dmi'
 	desc = "An organ."
 	flags_organ = FLAG_ORGAN_BEAST_HEAD
+
+	defense_rating = REPTILE_ARMOR
 
 /obj/item/organ/head/reptile_advanced/female
 	icon_state = BODY_HEAD_FEMALE
@@ -77,6 +81,8 @@
 	enable_glow = TRUE
 	enable_detail = TRUE
 
+	defense_rating = DIONA_ARMOR
+
 
 //cyborg
 /obj/item/organ/head/cyborg
@@ -84,9 +90,33 @@
 	icon = 'icons/mob/living/advanced/species/cyborg.dmi'
 	desc = "An organ."
 
+	defense_rating = CYBORG_ARMOR
+	health = /health/obj/item/organ/synthetic
+
 
 //beef
 /obj/item/organ/head/beefman
 	name = "beef head"
 	icon = 'icons/mob/living/advanced/species/beefman.dmi'
 	desc = "An organ."
+
+	defense_rating = MEATMEN_ARMOR
+
+
+//skeleton
+/obj/item/organ/head/skeleton
+	name = "skeleton head"
+	icon = 'icons/mob/living/advanced/species/skeleton.dmi'
+	desc = "An organ."
+
+	defense_rating = SKELETON_ARMOR
+
+
+//skeleton
+/obj/item/organ/head/monkey
+	name = "monkey head"
+	icon = 'icons/mob/living/advanced/species/monkey.dmi'
+	desc = "An organ."
+
+/obj/item/organ/head/monkey/female
+	icon_state = BODY_HEAD_FEMALE

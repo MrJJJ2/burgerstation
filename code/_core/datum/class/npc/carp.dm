@@ -1,5 +1,4 @@
 /class/carp
-	id = "carp"
 
 	//Limits:
 	//1 ATTRIBUTE_STARTING_PRIMARY
@@ -32,19 +31,19 @@
 	//22 total skills
 	skills = list(
 		SKILL_RANGED = 5,
-		SKILL_DODGE = 10,
+		//SKILL_DODGE  = 10,
 		SKILL_PRECISION = 10,
 		SKILL_SURVIVAL = 25,
 
 		SKILL_MELEE = 5,
-		SKILL_BLOCK = 10,
+		//SKILL_BLOCK = 10,
 		SKILL_UNARMED = 25,
 		SKILL_PRAYER = 5,
 
 		SKILL_MEDICINE = 5,
 		SKILL_MAGIC = 5,
 		SKILL_SORCERY = 5,
-		SKILL_PARRY = 5,
+		//SKILL_PARRY  = 5,
 
 		SKILL_ALCHEMY = 5,
 		SKILL_COOKING = 5,

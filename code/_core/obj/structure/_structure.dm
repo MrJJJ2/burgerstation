@@ -10,7 +10,7 @@
 	collision_bullet_flags = FLAG_COLLISION_NONE
 	collision_dir = NORTH | EAST | SOUTH | WEST
 
-	anchored = 1
+	anchored = TRUE
 
 	var/bullet_block_chance = 100 //Chance to block bullets, assuming that the object is solid.
 
@@ -21,6 +21,26 @@
 	var/light_sprite //The light sprite of the object, if any.
 
 	var/flags_placement = FLAGS_PLACEMENT_NONE
+	var/list/structure_blacklist = list() //Things that can't be constructed on the same turf that's occupying this.
+
+	interaction_flags = FLAG_INTERACTION_LIVING | FLAG_INTERACTION_NO_HORIZONTAL
+
+/obj/structure/on_crush()
+	. = ..()
+	loc.visible_message(span("warning","\The [src.name] is crushed under \the [src.loc.name]!"))
+	qdel(src)
+	return .
+
+/obj/structure/should_smooth_with(var/turf/T)
+
+	for(var/obj/structure/O in T.contents)
+		if(O.corner_category != corner_category)
+			continue
+		if(O.plane != plane)
+			continue
+		return TRUE
+
+	return FALSE
 
 /obj/structure/Initialize()
 
@@ -67,32 +87,25 @@
 	return TRUE
 
 
-/obj/structure/Cross(var/atom/movable/O,var/atom/NewLoc,var/atom/OldLoc)
+/obj/structure/Cross(atom/movable/O)
 
 	if(O.collision_flags & src.collision_flags)
-
-		var/direction = get_dir(OldLoc,NewLoc)
-
+		var/direction = O.move_dir
 		if(turn(direction,180) & collision_dir)
 			return FALSE
-
 		if(is_structure(O)) //Prevents infinite loops.
 			var/obj/structure/S = O
 			if(collision_dir & S.collision_dir)
 				return FALSE
 
-
 	return TRUE
 
-/obj/structure/Uncross(var/atom/movable/O,var/atom/NewLoc,var/atom/OldLoc)
+/obj/structure/Uncross(var/atom/movable/O)
 
 	if(O.collision_flags & src.collision_flags)
-
-		var/direction = get_dir(OldLoc,NewLoc)
-
+		var/direction = O.move_dir
 		if(collision_dir == (NORTH | SOUTH | EAST | WEST))
 			return TRUE //Prevents people from getting stuck in walls.
-
 		if(direction & collision_dir)
 			return FALSE
 

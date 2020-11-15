@@ -1,9 +1,11 @@
 /mob/living/advanced/npc/nanotrasen
-	name = "nanotrasen security force"
+	name = "nanotrasen security personnel"
+	desc = "A security team that actually follows orders!"
+	desc_extended = "A low-ranking NanoTrasen soldier tasked with defending the station and assisting with higher ranking NanoTrasen personnel with missions."
 	enable_AI = TRUE
 	ai = /ai/advanced/nanotrasen
-	class = "syndicate"
-	dialogue_id = "soldier_dialogue"
+	class = /class/syndicate_soldier
+	dialogue_id = /dialogue/npc/soldier/
 
 /mob/living/advanced/npc/nanotrasen/Initialize()
 
@@ -26,6 +28,6 @@
 
 	update_all_blends()
 
-	equip_loadout("nanotrasen")
+	equip_loadout(/loadout/nanotrasen/soldier)
 
 	return .

@@ -1,6 +1,6 @@
 /obj/item/crafting/alchemy
 	name = "portable alchemy table"
-	icon = 'icons/obj/items/ore.dmi'
+	icon = 'icons/obj/item/ore.dmi'
 	icon_state = "alchemy"
 
 	inventories = list(
@@ -12,6 +12,8 @@
 	)
 
 	crafting_id = "alchemy"
+
+	crafting_type = /recipe/alchemy/
 
 	value = 25
 
@@ -25,7 +27,7 @@
 			C = top_object
 			break
 
-	if(!C)
+	if(!C && !is_beaker(C))
 		caller.to_chat(span("notice","You're missing a valid container in the product slot!"))
 		return FALSE
 

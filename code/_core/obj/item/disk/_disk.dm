@@ -1,15 +1,31 @@
 /obj/item/disk/
 	name = "data disk"
-	icon = 'icons/obj/items/disk.dmi'
+	desc = "GET THAT FUKKEN D-- Oh, nevermind."
+	desc_extended = "Stores information. This one is blank, though."
+	icon = 'icons/obj/item/disk.dmi'
 	icon_state = "disk"
 
 	var/list/data = null
 
-	var/frame_color = "#FF0000"
+	var/frame_color = "#00FF00"
 	var/writing_color = "#FFFFFF"
 	var/metal_color = "#FFFFFF"
 
 	value = 20
+
+	drop_sound = 'sound/items/drop/card.ogg'
+
+	weight = 0.5
+
+/obj/item/disk/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("data")
+	return .
+
+/obj/item/disk/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("data")
+	return .
 
 /obj/item/disk/New(var/desired_loc)
 	. = ..()
@@ -36,6 +52,8 @@
 
 /obj/item/disk/rcd
 	name = "rcd data disk"
+	desc = "GET THAT FUKKEN D-- Oh, nevermind."
+	desc_extended = "Stores blueprints for use in an RCD."
 	frame_color = "#DEB63D"
 	writing_color = "#004A7F"
 	metal_color = "#BBC5C7"
@@ -48,6 +66,8 @@
 
 /obj/item/disk/rcd/metal_wall
 	name = "rcd data disk (steel wall)"
+	desc = "GET THAT FUKKEN D-- Oh, nevermind."
+	desc_extended = "Stores blueprints for use in an RCD. This one contains schematics for a steel wall."
 	data = list(
 		"name" = "steel_wall.turf",
 		"effect" = /obj/effect/temp/construction/wall,
@@ -57,6 +77,8 @@
 
 /obj/item/disk/rcd/glass_window
 	name = "rcd data disk (glass window)"
+	desc = "GET THAT FUKKEN D-- Oh, nevermind."
+	desc_extended = "Stores blueprints for use in an RCD. This one contains schematics for a glass window."
 	data = list(
 		"name" = "glass_window.spawner",
 		"effect" = /obj/effect/temp/sparkles,

@@ -1,6 +1,5 @@
 
 /class/ashwalker
-	id = "ashwalker"
 
 	//Limits:
 	//1 ATTRIBUTE_STARTING_PRIMARY
@@ -34,19 +33,19 @@
 	//22 total skills
 	skills = list(
 		SKILL_RANGED = 5,
-		SKILL_DODGE = 25,
+		//SKILL_DODGE  = 25,
 		SKILL_PRECISION = 25,
 		SKILL_SURVIVAL = 40,
 
 		SKILL_MELEE = 25,
-		SKILL_BLOCK = 20,
+		//SKILL_BLOCK = 20,
 		SKILL_UNARMED = 20,
 		SKILL_PRAYER = 20,
 
 		SKILL_MEDICINE = 15,
 		SKILL_MAGIC = 5,
 		SKILL_SORCERY = 20,
-		SKILL_PARRY = 20,
+		//SKILL_PARRY  = 20,
 
 		SKILL_ALCHEMY = 5,
 		SKILL_COOKING = 5,

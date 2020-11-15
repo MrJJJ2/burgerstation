@@ -1,16 +1,26 @@
 /obj/structure/interactive/smelter
 	name = "smelter"
 	desc = "A furnace used to smelt ores"
+	desc_extended = "Ore that goes from one side via conveyor comes out smelted into ingots out the other."
 	icon = 'icons/obj/structure/smelter.dmi'
 	icon_state = "furnace"
 
-	plane = PLANE_WALL_ATTACHMENTS
+	plane = PLANE_OBJ
 
 	pixel_y = 2
 
 	bullet_block_chance = 50
 
-/obj/structure/interactive/smelter/Initialize()
+	density = TRUE
+
+/obj/structure/interactive/smelter/PostInitialize()
+	. = ..()
+	update_sprite()
+	return .
+
+/obj/structure/interactive/smelter/update_overlays()
+
+	. = ..()
 
 	pixel_y = 6
 
@@ -23,7 +33,7 @@
 	add_overlay(I1)
 	add_overlay(I2)
 
-	return ..()
+	return .
 
 /obj/structure/interactive/smelter/proc/smelt(var/atom/movable/O)
 
@@ -36,10 +46,11 @@
 	S.material_id = I.material_id
 	INITIALIZE(S)
 	GENERATE(S)
+	FINALIZE(S)
 	qdel(I)
 
 	return
 
-/obj/structure/interactive/smelter/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+/obj/structure/interactive/smelter/Crossed(atom/movable/O)
 	smelt(O)
 	return ..()

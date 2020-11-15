@@ -1,24 +1,3 @@
-/client/verb/ooc(var/text_to_say as text)
-	set name = "OOC"
-	set category = "Communication"
-
-	if(!text_to_say)
-		return FALSE
-
-	if(!check_spam(src))
-		return FALSE
-
-	text_to_say = police_input(src,text_to_say)
-
-	if(!check_spam(src,text_to_say))
-		return FALSE
-
-	if(!text_to_say)
-		return FALSE
-
-	talk(src,src,text_to_say,TEXT_OOC)
-
-
 /client/proc/to_chat(var/text,var/chat_type=CHAT_TYPE_INFO)
 
 	if(!text || !chat_type)
@@ -42,7 +21,8 @@
 		output_target_list += "chat_combat.output"
 
 	if(chat_type & CHAT_TYPE_RADIO) //Prevents radio spam if you heard it already.
-		for(var/list/message_data in queued_chat_messages)
+		for(var/k in queued_chat_messages)
+			var/list/message_data = k
 			if(message_data["text"] == text)
 				return FALSE
 
@@ -54,30 +34,5 @@
 			)
 		)
 	)
-
-	return TRUE
-
-
-/client/verb/pm(var/client/C as null|anything in all_clients, var/text_to_say as text)
-
-	set name = "PM"
-	set category = "Communication"
-
-	if(!text_to_say || !C)
-		return FALSE
-
-	if(!check_spam(src))
-		return FALSE
-
-	text_to_say = police_input(src,text_to_say)
-
-	if(!check_spam(src,text_to_say))
-		return FALSE
-
-	if(!text_to_say)
-		return FALSE
-
-	to_chat(format_speech(src,src,text_to_say,TEXT_PM),CHAT_TYPE_PM)
-	C.to_chat(format_speech(src,src,text_to_say,TEXT_PM),CHAT_TYPE_PM)
 
 	return TRUE

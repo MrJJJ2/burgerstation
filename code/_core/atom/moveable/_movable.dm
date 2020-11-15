@@ -10,15 +10,16 @@
 
 	var/area/area //The object's area.
 
-	var/tmp/move_dir = 0
-	var/tmp/move_dir_last = 0 //Used for momentum.
+	var/tmp/move_dir = 0x0
+	var/tmp/move_dir_last = 0x0 //Used for momentum and speed.
+	var/tmp/first_move_dir = 0x0 //The first movement key pressed. Only used for mobs.
 	var/tmp/move_delay = 0
 
 	var/movement_delay = 4 //Measured in ticks.
 	var/anchored = TRUE
 	var/ghost = FALSE
 
-	var/damage_type_thrown = /damagetype/thrown //Damage type if the object is thrown. If none is provided, it will just use damage_type and double the damage.
+	var/damage_type_thrown //Damage type if the object is thrown. If none is provided, it will just use damage_type and double the damage.
 
 	var/change_dir_on_move = FALSE
 
@@ -30,9 +31,6 @@
 	var/can_rotate = FALSE
 
 	var/next_conveyor = 0 //For conveyors.
-
-	var/has_footsteps = FALSE
-	var/footstep_override_id //If this var is defined, it will always play these footstep sounds instead, regardless of the object's footstep id.
 
 	var/throwable = TRUE
 
@@ -51,7 +49,31 @@
 	var/acceleration_mod = 0
 	var/use_momentum = FALSE //Acceleration uses momentum.
 
+	var/has_footsteps = FALSE
 
+	var/value_last = 0//Last value calculated via calculation
+
+/atom/movable/proc/handle_footsteps(var/turf/T,var/list/footsteps_to_use,var/enter=TRUE)
+
+	if(!enter)
+		return FALSE //Only for advanced types
+
+	for(var/k in footsteps_to_use)
+		if(!k)
+			continue
+		var/footstep/F = SSfootstep.all_footsteps[k]
+		if(F.has_footprints)
+			var/type_to_use = enter ? /obj/effect/footprint/emboss/ : /obj/effect/footprint/emboss/exit
+			var/obj/effect/footprint/emboss/P = new type_to_use(T,src.dir,TRUE,TRUE)
+			P.color = F.footprint_color
+			P.alpha = F.footprint_alpha
+			INITIALIZE(P)
+			FINALIZE(P)
+		if(length(F.footstep_sounds))
+			play(pick(F.footstep_sounds), T, volume = 50, sound_setting = SOUND_SETTING_FOOTSTEPS, pitch = 1 + RAND_PRECISE(-F.variation_pitch,F.variation_pitch))
+
+/atom/movable/proc/get_footsteps(var/list/original_footsteps,var/enter=TRUE)
+	return original_footsteps
 
 /atom/movable/proc/update_collisions(var/normal,var/bullet,var/c_dir,var/a_dir,var/force = FALSE)
 
@@ -85,8 +107,21 @@
 
 	return .
 
-/atom/movable/proc/can_be_grabbed(var/atom/grabber)
-	return !anchored
+/atom/movable/proc/can_be_grabbed(var/atom/grabber,var/messages=TRUE)
+
+	if(grabber == src)
+		if(messages && is_living(grabber))
+			var/mob/living/L = grabber
+			L.to_chat(span("warning","You can't grab yourself! ERP is against the rules!"))
+		return FALSE
+
+	if(anchored)
+		if(messages && is_living(grabber))
+			var/mob/living/L = grabber
+			L.to_chat(span("warning","\The [src.name] is secured firmly to the ground!"))
+		return FALSE
+
+	return TRUE
 
 /atom/movable/Initialize()
 
@@ -96,7 +131,6 @@
 			area.Entered(src,null)
 		else
 			CRASH_SAFE("ERROR: [get_debug_name()] didn't have an area to initialize in! (Loc: [loc.get_debug_name()].)")
-
 		if(blocks_air && is_simulated(loc))
 			var/turf/simulated/T = loc
 			T.blocks_air |= blocks_air
@@ -113,8 +147,26 @@
 
 /proc/is_valid_dir(var/direction)
 
+	/*
 	if(!direction || (direction & EAST && direction & WEST) || (direction & NORTH && direction & SOUTH))
 		return FALSE
+	*/
+
+	if(direction - (NORTH + EAST + SOUTH + WEST) > 0)
+		return FALSE
+
+	return TRUE
+
+
+/atom/movable/proc/set_anchored(var/desired_anchored=TRUE)
+
+	if(anchored == desired_anchored)
+		return FALSE
+
+	anchored = desired_anchored
+
+	if(!anchored)
+		force_move(loc)
 
 	return TRUE
 

@@ -4,7 +4,11 @@ var/global/list/mob/living/advanced/player/all_players = list()
 	desc = "Seems a little smarter than most, you think."
 	desc_extended = "This is a player."
 
-	class = "default"
+	health_base = 200
+	stamina_base = 100
+	mana_base = 100
+
+	class = /class/player
 
 	var/dialogue_target_id
 	var/atom/dialogue_target
@@ -26,9 +30,10 @@ var/global/list/mob/living/advanced/player/all_players = list()
 
 	var/list/attack_logs = list()
 
-	var/currency = 1000
+	var/currency = 3000
 
-	var/savedata/client/mob/mobdata
+	var/insurance //How much insurance the user has. This amount is paid out in death, up to 8000 credits.
+	var/insurance_premiums //How much your insurance premiums are. This is taxed from your current amount each payday.
 
 	var/logout_time = 0
 
@@ -63,7 +68,7 @@ var/global/list/mob/living/advanced/player/all_players = list()
 
 	value = 0
 
-	damage_received_multiplier = 0.75
+	damage_received_multiplier = 1
 
 	queue_delete_on_death = FALSE
 
@@ -73,30 +78,45 @@ var/global/list/mob/living/advanced/player/all_players = list()
 		/cqc/sleeping_carp/gnashing_teeth
 	)
 
+	var/allow_save = TRUE
+
+	var/list/mob/living/followers = list()
+
+	var/save_id
+
+	//movement_delay = DECISECONDS_TO_TICKS(1.5)
+
+	var/ai_steps = 0 //Determining when the AI activates.
+
+	var/tutorial = FALSE
+
+	damage_received_multiplier = 0.75
+
 /mob/living/advanced/player/New(loc,desired_client,desired_level_multiplier)
-	. = ..()
 	click_and_drag_icon	= new(src)
 	INITIALIZE(click_and_drag_icon)
+	FINALIZE(click_and_drag_icon)
+	return ..()
+
+/mob/living/advanced/player/restore_inventory()
+
+	. = ..()
+
+	if(.)
+		client.screen += click_and_drag_icon
+
 	return .
 
 /mob/living/advanced/player/apply_mob_parts(var/teleport=TRUE,var/do_load=TRUE,var/update_blends=TRUE)
 
+	var/savedata/client/mob/mobdata = MOBDATA(ckey_last)
 
 	if(!mobdata || !length(mobdata.loaded_data["organs"]) || !do_load)
 		return ..()
 
 	add_species_languages()
 
-	mobdata.apply_data_to_mob(src,teleport,update_blends)
-
-	if(client)
-		add_species_buttons()
-		add_species_health_elements()
-
-	//BANDAID FIX
-	var/obj/item/organ/internal/implant/head/loyalty/L = locate() in contents
-	if(!L)
-		src.add_organ(/obj/item/organ/internal/implant/head/loyalty/nanotrasen)
+	set_mob_data(mobdata["loaded_data"],teleport,update_blends)
 
 	return TRUE
 
@@ -110,7 +130,7 @@ var/global/list/mob/living/advanced/player/all_players = list()
 	if(real_name == DEFAULT_NAME)
 		real_name = "[gender == MALE ? FIRST_NAME_MALE : FIRST_NAME_FEMALE] [LAST_NAME]"
 
-	name = "[real_name] ([client ? client : "NO CKEY"])"
+	name = SSname.check_duplicate_player_name(real_name,ckey_last)
 
 	return TRUE
 
@@ -121,17 +141,14 @@ var/global/list/mob/living/advanced/player/all_players = list()
 
 	dialogue_target = null
 
-	if(src in equipped_players)
-		equipped_players -= src
+	if(src in equipped_antags)
+		equipped_antags -= src
 
 	if(current_squad)
 		current_squad.remove_member(src)
 		current_squad = null
 
-	if(area && area.players_inside)
-		area.players_inside -= src
 	all_players -= src
-	QDEL_NULL(mobdata)
 	attack_logs.Cut()
 
 	active_device = null
@@ -147,7 +164,7 @@ mob/living/advanced/player/on_life_client()
 	spam_protection_command = max(0,spam_protection_command-TICKS_TO_SECONDS(1))
 	return .
 
-/mob/living/advanced/player/Move(var/atom/NewLoc,Dir=0,desired_step_x=0,desired_step_y=0,var/silent=FALSE)
+/mob/living/advanced/player/post_move(var/atom/old_loc)
 
 	. = ..()
 
@@ -163,17 +180,20 @@ mob/living/advanced/player/on_life_client()
 		if(active_device && get_dist(src,active_device) > 1)
 			set_device_unactive()
 
-		for(var/mob/living/advanced/npc/L in view(src,VIEW_RANGE))
-			if(!L.ai)
-				continue
-			var/ai/AI = L.ai
-			AI.enabled = TRUE
+		ai_steps++
 
-		for(var/mob/living/simple/npc/L in view(src,VIEW_RANGE))
-			if(!L.ai)
-				continue
-			var/ai/AI = L.ai
-			AI.enabled = TRUE
+		if(ai_steps >= VIEW_RANGE || (old_loc && src.loc && old_loc.z != src.loc.z))
+			for(var/k in SSai.inactive_ai)
+				var/ai/A = k
+				if(!A.owner)
+					to_chat("Warning! [A.get_debug_name()] had no owner!")
+					qdel(A)
+					continue
+				var/dist = get_dist(src,A.owner)
+				if(dist > VIEW_RANGE + ZOOM_RANGE)
+					continue
+				A.set_active(TRUE)
+			ai_steps = 0
 
 
 	return .

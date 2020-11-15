@@ -3,9 +3,48 @@
 
 	collision_bullet_flags = FLAG_COLLISION_BULLET_LIGHT
 
+	ignore_loyalty = FALSE
+	ignore_iff = TRUE
+
+
 /obj/projectile/magic/fireball
 	name = "fireball"
 	icon_state = "fireball"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
+
+/obj/projectile/magic/fireball/explosive
+	hit_target_turf = TRUE
+
+/obj/projectile/magic/fireball/explosive/post_on_hit(var/atom/hit_atom)
+
+	. = ..()
+
+	if(.)
+		explode(get_turf(hit_atom),1,owner,src,loyalty_tag)
+
+	return .
+
+
+/obj/projectile/magic/fireball/lava
+	hit_target_turf = TRUE
+
+/obj/projectile/magic/fireball/lava/post_on_hit(var/atom/hit_atom)
+
+	. = ..()
+
+	var/turf/T = get_turf(hit_atom)
+	if(T)
+		var/obj/effect/temp/hazard/lava/L = new(T,SECONDS_TO_DECISECONDS(30),owner)
+		INITIALIZE(L)
+		GENERATE(L)
+		FINALIZE(L)
+
+	return .
+
+
+
 
 /obj/projectile/magic/chaos
 	name = "chaos ball"
@@ -15,21 +54,74 @@
 	name = "magic missile"
 	icon_state = "missile"
 
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
+/obj/projectile/magic/blade
+	name = "magic blade"
+	icon_state = "blade"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
 /obj/projectile/magic/rift
 	name = "magic rift"
 	icon_state = "rift"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
+/obj/projectile/magic/rift/revive
+	name = "revival rift"
+	hit_laying = TRUE
+
+/obj/projectile/magic/rift/revive/post_on_hit(var/atom/hit_atom)
+
+	. = ..()
+
+	if(. && is_living(hit_atom))
+		var/mob/living/L = hit_atom
+		if(L.dead && L.loyalty_tag == src.loyalty_tag)
+			L.resurrect()
+
+	return .
+
+
 
 /obj/projectile/magic/lightning_bolt
 	name = "holy lightning bolt"
 	icon_state = "lightning"
 
-/obj/projectile/magic/crystal
+/obj/projectile/magic/crystal/primary
 	name = "magic crystal"
 	icon_state = "crystal"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
+/obj/projectile/magic/crystal/secondary
+	name = "magic crystal"
+	icon_state = "crystal"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
+
+/obj/projectile/magic/crystal/primary/update_projectile(var/tick_rate=1)
+
+	. = ..()
+
+	if(.)
+		vel_x *= 0.9
+		vel_y *= 0.9
+		alpha = clamp(alpha-5,0,255)
+
+		if(abs(vel_x) <= 1	&& abs(vel_y) <= 1)
+			on_hit(current_loc,TRUE)
+			return FALSE
+
+	return .
+
 
 /obj/projectile/magic/crystal/fire
 	name = "magic fire crystal"
 	icon_state = "crystal_fire"
+
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
 
 /obj/projectile/magic/shadow
 	name = "shadow ball"
@@ -39,38 +131,18 @@
 	name = "ice bolt"
 	icon_state = "crystal_ice"
 
-/*
-/obj/projectile/bullet/holy_summon
-	name = "holy summon"
-	icon = 'icons/obj/projectiles/holy.dmi'
-	icon_state = "summon"
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID
 
+/obj/projectile/bullet/summon
+	name = "summon"
+	icon = 'icons/obj/projectiles/magic.dmi'
+	icon_state = "summon_dark"
+	steps_allowed = 6
 	hit_target_turf = TRUE
-
 	lifetime = SECONDS_TO_DECISECONDS(2)
 
+/obj/projectile/magic/blackflame
+	name = "blackflame"
+	icon_state = "blackflame"
 
-/obj/projectile/bullet/holy_summon/post_on_hit(var/atom/hit_atom)
-	var/mob/living/simple/npc/summon/holy_warrior/H = new(previous_loc,null,owner,SECONDS_TO_DECISECONDS(60))
-	H.say("I RISE TO SERVER MY MASTER.")
-
-/obj/projectile/bullet/mass_heal
-	name = "mass heal"
-	icon = 'icons/obj/projectiles/holy.dmi'
-	icon_state = "heal"
-
-	lifetime = SECONDS_TO_DECISECONDS(1)
-
-
-/obj/projectile/bullet/mass_heal/post_on_hit(var/atom/hit_atom)
-	for(var/mob/living/L in range(3,hit_atom))
-		L.to_chat(span("notice","You are hit with a soothing energy..."))
-		if(is_advanced(L))
-			var/mob/living/advanced/A = L
-			var/adjusted_total = 0
-			for(var/obj/item/organ/O in A.organs)
-				var/adjusted_organ = O.adjust_brute_loss(-10)
-				O.health.update_health(adjusted_organ,owner)
-				adjusted_total += adjusted_organ
-			L.update_health(adjusted_total,owner)
-*/
+	collision_bullet_flags = FLAG_COLLISION_BULLET_SOLID

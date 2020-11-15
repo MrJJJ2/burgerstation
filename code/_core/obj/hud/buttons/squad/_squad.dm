@@ -2,7 +2,7 @@
 	name = "squad button"
 	desc = "We ARMA now."
 	desc_extended = "Press this button to open the squad menu."
-	icon = 'icons/hud/new.dmi'
+	icon = 'icons/hud/hud.dmi'
 	icon_state = "squad"
 	screen_loc = "LEFT,TOP-2"
 
@@ -25,12 +25,11 @@
 
 /obj/hud/button/squad/main/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(!is_player(caller))
-		return ..()
+	. = ..()
 
-	var/mob/living/advanced/player/P = caller
+	if(. && is_player(caller))
+		var/mob/living/advanced/player/P = caller
 
-	spawn()
 		if(length(all_squads))
 
 			var/list/squad_table = list()
@@ -40,13 +39,14 @@
 			if(P.current_squad)
 				squad_table["Leave Existing Squad"] = "Leave Existing Squad"
 
-			for(var/squad/S in all_squads)
+			for(var/k in all_squads)
+				var/squad/S = k
 				var/name_format = "[S.name] ([length(S.members)]/[SQUAD_MEMBERS_MAX])"
 				squad_table[name_format] = S
 
 			var/answer = input("Which squad would you like to join?","Squad Selection",null) as null|anything in squad_table
 
-			if(!P)
+			if(!P || !answer)
 				return FALSE
 
 			if(P.current_squad && answer == "Leave Existing Squad")
@@ -70,7 +70,7 @@
 			if(answer == "Yes")
 				new_squad(P)
 
-	return ..()
+	return .
 
 /obj/hud/button/squad/main/proc/new_squad(var/mob/living/advanced/player/P)
 	while(P.client)
@@ -90,7 +90,8 @@
 			return FALSE
 
 		var/found_name = FALSE
-		for(var/squad/S in all_squads)
+		for(var/k in all_squads)
+			var/squad/S = k
 			if(S.name == squad_name)
 				found_name = TRUE
 
@@ -118,9 +119,6 @@
 
 	screen_loc = "CENTER,CENTER"
 
-	var/health_current = 100
-	var/health_max = 100
-
 	var/mob/living/advanced/player/tracked_mob
 
 /obj/hud/button/squad/member/Destroy()
@@ -131,21 +129,30 @@
 	tracked_mob = desired_tracked_mob
 	return ..()
 
+/obj/hud/button/squad/member/update_owner(var/desired_owner)
+
+	. = ..()
+
+	if(.)
+		update_sprite()
+
+	return .
+
 /obj/hud/button/squad/member/update_underlays()
 	. = ..()
-	var/icon/I = new(icon,icon_state)
+	var/icon/I = new(initial(icon),initial(icon_state))
 	swap_colors(I)
 	underlays += I
 	return .
 
 /obj/hud/button/squad/member/update_icon()
-
 	. = ..()
-
-	maptext = tracked_mob.name
-
 	if(tracked_mob && tracked_mob.health)
 		var/desired_num = FLOOR((tracked_mob.health.health_current/tracked_mob.health.health_max) * 26, 1)
 		icon_state = "bar_[desired_num]"
 
 	return .
+
+/obj/hud/button/squad/member/update_sprite()
+	maptext = tracked_mob.name
+	return ..()

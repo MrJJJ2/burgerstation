@@ -1,6 +1,8 @@
 /obj/item/magazine/smg_40
 	name = "\improper .40 smg magazine"
-	icon = 'icons/obj/items/magazine/40smg.dmi'
+	desc = "IT'S NOT A CLIP. IT'S A MAGAZINE."
+	desc_extended = "Contains ammunition for a ranged weapon. Make sure you're trying to use the right caliber."
+	icon = 'icons/obj/item/magazine/40smg.dmi'
 	icon_state = "40"
 	bullet_count_max = 36
 
@@ -13,14 +15,13 @@
 	bullet_diameter_max = 11.2
 
 	weapon_whitelist = list(
-		/obj/item/weapon/ranged/bullet/magazine/smg/nanotech = TRUE
+		/obj/item/weapon/ranged/bullet/magazine/smg/p69 = TRUE,
 	)
 
 	ammo = /obj/item/bullet_cartridge/pistol_40
 
 	size = SIZE_2
-	weight = WEIGHT_2
 
-/obj/item/magazine/smg_40/update_icon()
-	icon_state = "[initial(icon_state)]_[FLOOR((length(stored_bullets)/bullet_count_max)*12,1)]"
-	return ..()
+	icon_states = 12
+
+	value = 10

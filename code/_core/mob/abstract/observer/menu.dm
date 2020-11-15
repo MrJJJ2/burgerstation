@@ -1,8 +1,10 @@
 /mob/abstract/observer/menu
+
 	spawning_buttons = list(
 		/obj/hud/button/menu/title,
 		/obj/hud/button/menu/selection/character_new,
 		/obj/hud/button/menu/selection/character_load,
+		/obj/hud/button/menu/selection/join_antagonist,
 		/obj/hud/button/menu/selection/observe,
 		/obj/hud/button/menu/selection/macros
 	)
@@ -14,7 +16,9 @@
 	var/current_lobby_position = 1
 	var/next_lobby_cycle = SECONDS_TO_DECISECONDS(10)
 
-/mob/abstract/observer/menu/do_say(var/text_to_say, var/should_sanitize = TRUE, var/talk_type_to_use = TEXT_TALK)
+	invisibility = INVISIBILITY_ALWAYS
+
+/mob/abstract/observer/menu/do_say(var/text_to_say, var/should_sanitize = TRUE, var/talk_type_to_use = TEXT_TALK,var/talk_range=TALK_RANGE)
 	return FALSE
 
 /mob/abstract/observer/menu/think()
@@ -31,7 +35,7 @@
 
 	return .
 
-/mob/abstract/observer/menu/Initialize()
+/mob/abstract/observer/menu/PostInitialize()
 	. = ..()
 	start_thinking(src)
 	return .

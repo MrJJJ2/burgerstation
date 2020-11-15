@@ -1,6 +1,5 @@
 /obj/projectile/bullet/laser/
 	name = "laser"
-	id = "laser"
 	icon = 'icons/obj/projectiles/laser.dmi'
 	icon_state = "normal"
 
@@ -9,6 +8,8 @@
 	muzzleflash_effect = /obj/effect/temp/muzzleflash/laser
 
 	collision_bullet_flags = FLAG_COLLISION_BULLET_LIGHT
+
+	plane = PLANE_EFFECT_LIGHTING
 
 /obj/projectile/bullet/laser/update_underlays()
 	. = ..()
@@ -21,3 +22,11 @@
 
 /obj/projectile/bullet/laser/weak
 	icon_state = "weak"
+
+/obj/projectile/bullet/laser/ion
+	icon_state = "ion"
+
+
+/obj/projectile/bullet/spit
+	icon = 'icons/obj/projectiles/spit.dmi'
+	icon_state = "spit"

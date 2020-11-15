@@ -2,18 +2,22 @@
 
 	. = ..()
 
+	var/savedata/client/mob/mobdata = MOBDATA(ckey_last)
 	if(mobdata)
-		mobdata.save_current_character(FALSE)
+		mobdata.save_character(src,save_inventory = FALSE,died = TRUE)
 
 	return .
 
 /mob/living/advanced/player/post_death()
 
+	play(pick('sound/ambient/death_1.ogg','sound/ambient/death_2.ogg','sound/ambient/death_3.ogg'),src)
+
 	var/list/people_who_contributed = list()
 	var/list/people_who_killed = list()
 	var/list/people_who_killed_names = list()
 
-	for(var/list/attack_log in attack_logs)
+	for(var/k in attack_logs)
+		var/list/attack_log = k
 		if(attack_log["lethal"])
 			var/mob/living/advanced/player/P = attack_log["attacker"]
 			if(!(P in people_who_killed))
@@ -38,7 +42,8 @@
 
 	/*
 	if(ENABLE_KARMA)
-		for(var/mob/living/advanced/player/P in people_who_killed)
+		for(var/k in people_who_killed)
+			var/mob/living/advanced/player/P = k
 
 			if(!P.client || !P.mobdata) //Something something exploitable something something
 				continue
@@ -82,6 +87,7 @@
 		var/mob/living/advanced/npc/beefman/B = new(src.loc)
 		INITIALIZE(B)
 		GENERATE(B)
+		FINALIZE(B)
 		step_rand(B)
 
 	return TRUE

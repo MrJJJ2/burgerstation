@@ -7,7 +7,9 @@
 
 	bullet_block_chance = 50
 
-/obj/structure/interactive/restocker/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+	density = TRUE
+
+/obj/structure/interactive/restocker/Crossed(atom/movable/O)
 	store(O)
 	return ..()
 
@@ -30,7 +32,9 @@
 	anchored = FALSE
 	collision_flags = FLAG_COLLISION_WALL
 
-/obj/structure/interactive/restocker/ammo/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/structure/interactive/restocker/ammo/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	INTERACT_CHECK
 
 	if(istype(object,/obj/item/magazine/))
 		var/obj/item/magazine/M = object
@@ -44,6 +48,7 @@
 			return TRUE
 		var/obj/item/bullet_cartridge/B = new M.ammo(src.loc)
 		INITIALIZE(B)
+		FINALIZE(B)
 		B.add_item_count(bullets_to_add - B.item_count_current,TRUE)
 		B.transfer_src_to_magazine(caller,M,location,control,params)
 		caller.to_chat(span("notice","\The [M.name] has been restocked with [bullets_to_add] bullets."))

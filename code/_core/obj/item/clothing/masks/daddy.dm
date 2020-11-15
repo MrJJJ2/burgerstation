@@ -1,11 +1,10 @@
 /obj/item/clothing/mask/daddy
 	name = "true mask"
-	icon = 'obj/items/clothing/masks/daddy.dmi'
+	icon = 'obj/item/clothing/masks/daddy.dmi'
 	rarity = RARITY_MYTHICAL
 	flags_clothing = FLAG_CLOTHING_NOBEAST_HEAD
 	desc = "Well, what is it?"
-	desc_extended = "A giant mask depicting some sort of father figure. Has a negative weight value, and decreases equip load when worn."
-	rarity = RARITY_UNCOMMON
+	desc_extended = "A giant mask depicting some sort of father figure. Speeds you up when worn."
 
 	defense_rating = list(
 		BLADE = 25,
@@ -14,8 +13,19 @@
 	)
 
 	size = SIZE_3
-	weight = -15
+	weight = -10
 
-	worn_layer = LAYER_MOB_CLOTHING_NECK_OVER
+	worn_layer = LAYER_MOB_CLOTHING_ALL
 
-	value = 200
+	value = 500
+
+	hidden_organs = list(
+		BODY_HEAD = TRUE,
+		BODY_HAIR_HEAD = TRUE,
+		BODY_HAIR_FACE = TRUE,
+		BODY_EYES = TRUE
+	)
+
+	item_slot = SLOT_HEAD | SLOT_FACE
+
+	blocks_clothing = SLOT_HEAD | SLOT_FACE

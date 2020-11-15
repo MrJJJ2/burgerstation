@@ -1,10 +1,12 @@
 /mob/living/simple/npc/ash_drake
 	name = "ash drake"
-	id = "ash_drake"
+	boss_icon_state = "ash_drake"
 	icon = 'icons/mob/living/simple/lavaland/ashdrake.dmi'
 	icon_state = "living"
 	damage_type = /damagetype/unarmed/claw/
-	class = "ash_drake"
+	class = /class/ash_drake
+
+	value = 6000
 
 	pixel_w = -16
 
@@ -12,7 +14,7 @@
 
 	stun_angle = 0
 
-	health_base = 2000
+	health_base = 3000
 
 	var/boss_state = 0
 	//0 = walking
@@ -25,44 +27,43 @@
 	boss = TRUE
 
 	armor_base = list(
-		BLADE = 50,
+		BLADE = 25,
 		BLUNT = 25,
-		PIERCE = 25,
+		PIERCE = 50,
 		LASER = 100,
-		MAGIC = 0,
-		HEAT = INFINITY,
-		COLD = 0,
-		BOMB = 50,
-		BIO = 75,
-		RAD = 75,
-		HOLY = 0,
-		DARK = INFINITY,
-		FATIGUE = INFINITY
+		ARCANE = 25,
+		HEAT = 100,
+		COLD = -25,
+		BOMB = 25,
+		BIO = 25,
+		RAD = 100,
+		HOLY = -25,
+		DARK = 100,
+		FATIGUE = 25,
+		ION = INFINITY
 	)
 
-	damage_received_multiplier = 0.5
-
-	butcher_contents = list(
-		/obj/item/clothing/overwear/armor/drake_armor,
-		/obj/item/soapstone/red
-	)
+	fatigue_from_block_mul = 0
 
 	status_immune = list(
 		STUN = TRUE,
-		SLEEP = STAGGER,
-		PARALYZE = STAGGER,
-		FATIGUE = STAGGER,
-		STAGGER = FALSE,
-		CONFUSED = FALSE,
-		CRIT = FALSE,
-		REST = FALSE,
-		ADRENALINE = FALSE,
-		DISARM = FALSE,
-		DRUGGY = FALSE
+		SLEEP = TRUE,
+		PARALYZE = TRUE,
+		FATIGUE = TRUE,
+		STAGGER = TRUE,
+		CONFUSED = TRUE,
+		CRIT = TRUE,
+		REST = TRUE,
+		ADRENALINE = TRUE,
+		DISARM = TRUE,
+		DRUGGY = TRUE,
+		FIRE = TRUE
 	)
 
 	mob_size = MOB_SIZE_BOSS
 
+	enable_medical_hud = FALSE
+	enable_security_hud = FALSE
 
 
 /*
@@ -86,6 +87,7 @@
 
 	boss_state = 1
 	update_collisions(FLAG_COLLISION_NONE,FLAG_COLLISION_BULLET_NONE)
+	interaction_flags = 0x0
 	icon_state = "shadow"
 	update_sprite()
 
@@ -94,13 +96,14 @@
 	if(boss_state != 1)
 		return
 
-	spawn()
-		new/obj/effect/temp/ash_drake/swoop_down(src.loc)
-		boss_state = 2
-		sleep(SECONDS_TO_DECISECONDS(1))
+	new/obj/effect/temp/ash_drake/swoop_down(src.loc)
+	boss_state = 2
+
+	spawn(SECONDS_TO_DECISECONDS(1))
 		boss_state = 0
 		icon_state = "living"
 		update_collisions(initial(collision_flags),initial(collision_bullet_flags))
+		interaction_flags = initial(interaction_flags)
 		update_sprite()
 
 		for(var/turf/T in range(2,src))
@@ -153,25 +156,26 @@
 	for(var/i=1,i<=amount_multiplier,i++)
 		var/turf/T = pick(valid_floors)
 		new/obj/effect/temp/ash_drake/target/(T)
-		new/obj/effect/temp/hazard/falling_fireball(T,desired_owner = src)
+		new/obj/effect/falling_meteor/falling_fireball(T)
 
 	return TRUE
 
 /mob/living/simple/npc/ash_drake/get_movement_delay()
-	if(boss_state)
-		return DECISECONDS_TO_TICKS(2)
 
-	return ..()
+	. = ..()
+
+	if(boss_state)
+		. *= 0.5
+
+	return .
 
 /mob/living/simple/npc/ash_drake/proc/shoot_fireball(var/atom/desired_target)
-	shoot_projectile(src,desired_target,null,null,/obj/projectile/magic/fireball/,/damagetype/ranged/magic/fireball/ash_drake,16,16,0,20,1,"#FFFFFF",0,0)
-
-
-
+	shoot_projectile(src,desired_target,null,null,/obj/projectile/magic/fireball/lava,/damagetype/ranged/magic/fireball,16,16,0,TILE_SIZE*0.75,1,"#FFFFFF",0,0,1,iff_tag,loyalty_tag)
 
 /mob/living/simple/npc/ash_drake/post_death()
 	..()
 	icon_state = "dead"
+	CREATE(/obj/structure/interactive/crate/necro/ash_drake,get_turf(src))
 	update_sprite()
 
 

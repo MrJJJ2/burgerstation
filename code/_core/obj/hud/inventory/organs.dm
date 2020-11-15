@@ -4,12 +4,11 @@
 	held_slots = 0
 	worn_slots = 0
 
-	max_weight = -1
 	max_size = -1
 
 	drag_to_take = TRUE
 
-	icon = 'icons/hud/new.dmi'
+	icon = 'icons/hud/hud.dmi'
 	icon_state = "square"
 
 	screen_loc = "CENTER,CENTER"

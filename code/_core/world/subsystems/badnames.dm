@@ -7,7 +7,7 @@ SUBSYSTEM_DEF(badnames)
 
 /subsystem/badnames/Initialize()
 
-	var/badnames = file2text(BADNAMES)
+	var/badnames = rustg_file_read(BADNAMES)
 	if(!badnames)
 		return
 
@@ -15,4 +15,4 @@ SUBSYSTEM_DEF(badnames)
 
 	log_subsystem(name,"Found [length(all_badnames)] bad names.")
 
-	return TRUE
+	return ..()

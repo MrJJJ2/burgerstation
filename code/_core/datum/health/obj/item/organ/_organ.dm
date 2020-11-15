@@ -1,3 +1,6 @@
+/health/obj/item/organ/
+	organic = TRUE
+
 /health/obj/item/organ/update_health_stats()
 
 	if(!is_organ(owner))
@@ -17,7 +20,7 @@
 
 	return .
 
-/health/obj/item/organ/update_health(var/damage_dealt,var/atom/attacker,var/update_hud=TRUE)
+/health/obj/item/organ/update_health(var/atom/attacker,var/damage_dealt=0,var/update_hud=TRUE,var/check_death=TRUE)
 
 	. = ..()
 
@@ -43,11 +46,10 @@
 					O.visual_wounds[damage_type] = current_amount
 					should_update = TRUE
 					if(damage_type == BRUTE && current_amount == 0)
-						O.bleeding = FALSE
-
+						O.bleeding = 0
 
 			if(should_update)
-				A.update_overlay(O)
+				A.update_overlay_tracked("\ref[O]")
 
 	return .
 
@@ -67,7 +69,7 @@
 
 	if(. && update && is_advanced(owner.loc))
 		var/mob/living/advanced/A = owner.loc
-		A.health.update_health()
+		A.queue_health_update = TRUE
 
 	return .
 
@@ -103,3 +105,7 @@
 		return FALSE
 
 	return A.health.adjust_fatigue_loss(value)
+
+
+/health/obj/item/organ/synthetic
+	organic = FALSE

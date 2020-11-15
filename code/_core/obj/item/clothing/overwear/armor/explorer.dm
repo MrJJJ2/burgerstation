@@ -1,6 +1,8 @@
 /obj/item/clothing/overwear/armor/explorer_suit
 	name = "explorer's suit"
-	icon = 'icons/obj/items/clothing/suit/explorer_suit.dmi'
+	desc = "CARGO WE NEED DIAMONDS"
+	desc_extended = "A protective suit of armor worn by miners to protect from the megafauna. Also comes with a hood and gas mask that can be brought up by shift-clicking the suit."
+	icon = 'icons/obj/item/clothing/suit/explorer_suit.dmi'
 	item_slot = SLOT_TORSO_A | SLOT_TORSO_O
 	worn_layer = LAYER_MOB_CLOTHING_HARDSUIT
 	rarity = RARITY_UNCOMMON
@@ -12,19 +14,20 @@
 		BLUNT = 25,
 		PIERCE = 25,
 		LASER = 25,
-		MAGIC = 25,
+		ARCANE = 25,
 		HEAT = 50,
-		COLD = -25,
+		COLD = 25,
 		BIO = 25,
 		HOLY = 25,
 		DARK = 25,
 	)
 	additional_clothing = list(
-		/obj/item/clothing/head/helmet/attached/explorer_suit,
-		/obj/item/clothing/mask/gas/mining
+		/obj/item/clothing/head/helmet/full/explorer
 	)
 
 	size = SIZE_6
-	weight = WEIGHT_4
+
+
+	blocks_clothing = SLOT_TORSO_U
 
 	value = 100

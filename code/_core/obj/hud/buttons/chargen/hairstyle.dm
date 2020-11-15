@@ -84,15 +84,17 @@ mob/living/advanced/proc/handle_hairstyle_chargen(var/hair_num=-1,var/desired_co
 
 	return .
 
-/obj/hud/button/chargen/change_hairstyle/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/chargen/change_hairstyle/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(is_advanced(caller))
+	. = ..()
+
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		var/species/S = all_species[A.species]
 		hair_num = clamp(hair_num + (dir == EAST ? 1 : -1),1,length(S.all_hair_head))
 		A.handle_hairstyle_chargen(hair_num)
 
-	return TRUE
+	return .
 
 /obj/hud/button/chargen/change_hairstyle/left
 	name = "cycle hairstyle left"
@@ -135,24 +137,31 @@ mob/living/advanced/proc/handle_hairstyle_chargen(var/hair_num=-1,var/desired_co
 
 	..()
 
-/obj/hud/button/chargen/hairstyle/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	if(is_advanced(caller))
+/obj/hud/button/chargen/hairstyle/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	. = ..()
+
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		A.handle_hairstyle_chargen(hair_num)
+
 	return TRUE
 
 /obj/hud/button/chargen/hairstyle/main
 	icon_state = "square_round"
 	screen_loc = "CENTER,CENTER+4"
 
-/obj/hud/button/chargen/hairstyle/main/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	if(is_advanced(caller))
+/obj/hud/button/chargen/hairstyle/main/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	. = ..()
+
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		var/desired_color = input("Hair Color","Hair Color",hair_color) as color|null
 		if(desired_color)
 			A.handle_hairstyle_chargen(hair_num,desired_color)
 
-	return TRUE
+	return .
 
 /obj/hud/button/chargen/hairstyle/slot01
 	icon_state = "square_trim"

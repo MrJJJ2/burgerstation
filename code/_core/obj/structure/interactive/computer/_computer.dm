@@ -1,8 +1,10 @@
 obj/structure/interactive/computer
 	name = "computer"
 	desc = "Beep boop."
+	desc_extended = "Operates things, depending on what the console is."
 	icon = 'icons/obj/structure/computer.dmi'
 	var/on = TRUE
+	plane = PLANE_OBJ
 
 obj/structure/interactive/computer/console
 	name = "computer console"
@@ -21,7 +23,9 @@ obj/structure/interactive/computer/console
 
 	bullet_block_chance = 75
 
-obj/structure/interactive/computer/console/Initialize()
+	density = TRUE
+
+obj/structure/interactive/computer/console/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .
@@ -52,14 +56,17 @@ obj/structure/interactive/computer/console/laptop
 
 obj/structure/interactive/computer/console/old
 	name = "old computer"
-	icon_state = "oldcomp"
+	desc = "An old, non-functional computer."
+	desc_extended = "It doesn't even work. What gives?!"
 	pixel_y = 10
+
+	icon_state = "oldcomp"
+	computer_type = "library"
+	keyboard_type = "no_keyboard"
 
 
 obj/structure/interactive/computer/console/old/chargen
 	name = "\improper IMB piece of shit"
-	computer_type = "library"
-	keyboard_type = ""
 
 obj/structure/interactive/computer/console/old/chargen/clicked_on_by_object(caller,object,location,control,params)
 
@@ -69,7 +76,6 @@ obj/structure/interactive/computer/console/old/chargen/clicked_on_by_object(call
 	INTERACT_CHECK
 
 	var/mob/living/advanced/player/P = caller
-
 	P.dialogue_target_id = "chargen_computer"
 	open_menu(P,"dialogue")
 
@@ -83,35 +89,40 @@ obj/structure/interactive/computer/console/medical
 
 obj/structure/interactive/computer/console/flight
 	name = "flight control console"
+	desc = "Beep boop."
+	desc_extended = "Operates things, depending on what the console is. This one controls a shuttle."
 	computer_type = "syndishuttle"
 	keyboard_type = "syndie_key"
 
-obj/structure/interactive/computer/console/flight/clicked_on_by_object(var/mob/caller,object,location,control,params)
+obj/structure/interactive/computer/console/flight/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	INTERACT_CHECK
 
 	if(!is_advanced(caller))
 		return ..()
 
-	INTERACT_CHECK
+	var/obj/shuttle_controller/SC = locate() in get_area(src)
 
-	if(!SShorde.allow_shuttle_launch)
+	if(!SC)
+		caller.to_chat("No shuttle controller found!")
+		return FALSE
+
+	if(SC.time_restricted && !SSgamemode.active_gamemode.allow_launch)
 		caller.to_chat(span("warning","The shuttle isn't ready to launch yet!"))
 		return FALSE
 
 	var/selection = input("Are you sure you wish to launch this shuttle?","Shuttle Control","Cancel") in list("Yes","No","Cancel")
 
 	if(selection == "Yes")
-		var/obj/shuttle_controller/SC = locate() in get_area(src)
-		if(SC)
-			if(SC.state == SHUTTLE_STATE_LANDED)
-				SC.state = SHUTTLE_STATE_WAITING
-				SC.time = 0
-				caller.to_chat("You prepare the shuttle for launch.")
-			else
-				caller.to_chat("ERROR: Shuttle already in transit.")
+		if(SC.state == SHUTTLE_STATE_LANDED)
+			SC.state = SHUTTLE_STATE_WAITING
+			SC.time = 0
+			caller.to_chat("You prepare the shuttle for launch.")
 		else
-			caller.to_chat("ERROR: No shuttle controller found!")
-
+			caller.to_chat("ERROR: Shuttle already in transit.")
 	return TRUE
+
+var/global/list/obj/structure/interactive/computer/console/remote_flight/all_remote_flight_consoles = list()
 
 /obj/structure/interactive/computer/console/remote_flight
 	name = "remote flight control console"
@@ -120,37 +131,33 @@ obj/structure/interactive/computer/console/flight/clicked_on_by_object(var/mob/c
 
 	var/obj/shuttle_controller/desired_shuttle_controller
 
-/obj/structure/interactive/computer/console/remote_flight/Initialize()
-
-	if(src.z == 3)
-		SShorde.possible_horde_targets += src
-
+/obj/structure/interactive/computer/console/remote_flight/Finalize()
+	desired_shuttle_controller = locate(desired_shuttle_controller) in world
+	all_remote_flight_consoles += src
 	return ..()
 
-/obj/structure/interactive/computer/console/remote_flight/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/structure/interactive/computer/console/remote_flight/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(!is_advanced(caller))
 		return ..()
 
 	INTERACT_CHECK
 
-	if(!SShorde.allow_shuttle_launch)
-		caller.to_chat(span("warning","The shuttle isn't ready to launch yet!"))
+	if(!SSgamemode.active_gamemode.allow_launch)
+		caller.to_chat(span("warning","\The [desired_shuttle_controller.name] isn't ready to launch yet!"))
 		return FALSE
 
-	var/selection = input("Are you sure you wish to launch this shuttle?","Shuttle Control","Cancel") in list("Yes","No","Cancel")
+	var/selection = input("Are you sure you wish to launch \the [desired_shuttle_controller.name]?","Shuttle Control","Cancel") as null|anything in list("Yes","No","Cancel")
 
 	if(selection == "Yes")
-		var/obj/shuttle_controller/SC = locate(desired_shuttle_controller) in world
-		if(SC)
-			if(SC.state == SHUTTLE_STATE_LANDED)
-				SC.state = SHUTTLE_STATE_WAITING
-				SC.time = 0
-				caller.to_chat("You prepare the shuttle for launch.")
-			else
-				caller.to_chat("ERROR: Shuttle already in transit.")
+		if(desired_shuttle_controller.state == SHUTTLE_STATE_LANDED)
+			desired_shuttle_controller.state = SHUTTLE_STATE_WAITING
+			desired_shuttle_controller.time = 0
+			caller.to_chat("You prepare \the [desired_shuttle_controller.name] for launch.")
 		else
-			caller.to_chat("ERROR: No shuttle controller found!")
+			caller.to_chat("ERROR: \The [desired_shuttle_controller.name] is already in transit.")
+	else
+		caller.to_chat(span("notice","You decide not to launch \the [desired_shuttle_controller.name]."))
 
 obj/structure/interactive/computer/console/remote_flight/cargo
 	name = "remote cargo shuttle console"
@@ -165,10 +172,10 @@ obj/structure/interactive/computer/console/old/station_job
 
 obj/structure/interactive/computer/console/old/station_job/clicked_on_by_object(caller,object,location,control,params)
 
+	INTERACT_CHECK
+
 	if(!is_player(caller))
 		return TRUE
-
-	INTERACT_CHECK
 
 	var/mob/living/advanced/player/P = caller
 
@@ -177,7 +184,6 @@ obj/structure/interactive/computer/console/old/station_job/clicked_on_by_object(
 	open_menu(P,"dialogue")
 
 	return TRUE
-
 
 obj/structure/interactive/computer/console/remote_flight/alpha
 	name = "remote alpha shuttle console"

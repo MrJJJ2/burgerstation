@@ -2,7 +2,7 @@
 	name = "bluespace gem"
 	desc = "Holds the souls of lesser beings. Not to be confused with bluespace crystals."
 	desc_extended = "Used in enchanting items or refilling the magic of staves."
-	icon = 'icons/obj/items/soulgem.dmi'
+	icon = 'icons/obj/item/soulgem.dmi'
 	icon_state = "common"
 
 	var/total_charge = 0
@@ -10,7 +10,24 @@
 
 	value = 60
 
-/obj/item/soulgem/calculate_value()
+	weight = 1
+
+/obj/item/soulgem/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("total_charge")
+	return .
+
+/obj/item/soulgem/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("total_charge")
+	return .
+
+/obj/item/soulgem/Finalize()
+	. = ..()
+	update_sprite()
+	return .
+
+/obj/item/soulgem/get_value()
 
 	. = ..()
 
@@ -26,7 +43,7 @@
 		icon_state = "[initial(icon_state)]_1"
 	else
 		icon_state = initial(icon_state)
-	..()
+	return ..()
 
 /obj/item/soulgem/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 

@@ -1,6 +1,6 @@
 /obj/item/clothing/overwear/coat/blazer_blue
 	name = "blue blazer"
-	icon = 'icons/obj/items/clothing/suit/blazer_blue.dmi'
+	icon = 'icons/obj/item/clothing/suit/blazer_blue.dmi'
 
 	rarity = RARITY_UNCOMMON
 
@@ -12,14 +12,14 @@
 	container_max_size = SIZE_2
 
 	size = SIZE_3
-	weight = WEIGHT_3
+
 
 	defense_rating = list(
 		BLADE = 10,
 		PIERCE = 10,
-		MAGIC = 25,
+		ARCANE = 25,
 		HEAT = -25,
 		COLD = 25
 	)
 
-	value = 10
+	value = 30

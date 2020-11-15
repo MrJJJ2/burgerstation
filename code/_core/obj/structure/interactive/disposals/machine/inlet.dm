@@ -1,5 +1,7 @@
 /obj/structure/interactive/disposals/machine/inlet
 	name = "disposals inlet"
+	desc = "Express delivery!"
+	desc_extended = "Throw various things in here, including yourself."
 	icon_state = "intake"
 
 	collision_flags = FLAG_COLLISION_WALKING
@@ -10,6 +12,8 @@
 	plane = PLANE_OBJ
 
 	bullet_block_chance = 50
+
+	density = TRUE
 
 /obj/structure/interactive/disposals/machine/inlet/set_dir(var/desired_dir,var/force = FALSE)
 
@@ -23,7 +27,7 @@
 
 	return .
 
-/obj/structure/interactive/disposals/machine/inlet/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+/obj/structure/interactive/disposals/machine/inlet/Crossed(atom/movable/O)
 	if(O.collision_flags & FLAG_COLLISION_ETHEREAL)
 		return ..()
 	enter_pipe(O)

@@ -27,7 +27,7 @@
 
 	health_base = 100
 
-	health_coefficient = 1
+	damage_coefficient = 1
 
 /obj/item/organ/torso/unattach_from_parent(var/turf/T)
 	. = ..()
@@ -54,6 +54,8 @@
 	icon = 'icons/mob/living/advanced/species/reptile.dmi'
 	desc = "An organ."
 
+	defense_rating = REPTILE_ARMOR
+
 /obj/item/organ/torso/reptile/female
 	icon_state = BODY_TORSO_FEMALE
 
@@ -63,6 +65,8 @@
 	name = "advanced reptile torso"
 	icon = 'icons/mob/living/advanced/species/reptile_advanced.dmi'
 	desc = "An organ."
+
+	defense_rating = REPTILE_ARMOR
 
 /obj/item/organ/torso/reptile_advanced/female
 	icon_state = BODY_TORSO_FEMALE
@@ -76,6 +80,8 @@
 	enable_glow = TRUE
 	enable_detail = TRUE
 
+	defense_rating = DIONA_ARMOR
+
 
 //Cyborg
 /obj/item/organ/torso/cyborg
@@ -83,7 +89,30 @@
 	icon = 'icons/mob/living/advanced/species/cyborg.dmi'
 	desc = "An organ."
 
+	defense_rating = CYBORG_ARMOR
+	health = /health/obj/item/organ/synthetic
+
 /obj/item/organ/torso/beefman
 	name = "beefman torso"
 	icon = 'icons/mob/living/advanced/species/beefman.dmi'
 	desc = "An organ."
+
+	defense_rating = MEATMEN_ARMOR
+
+
+/obj/item/organ/torso/skeleton
+	name = "skeleton torso"
+	icon = 'icons/mob/living/advanced/species/skeleton.dmi'
+	desc = "An organ."
+
+	defense_rating = SKELETON_ARMOR
+
+
+
+/obj/item/organ/torso/monkey
+	name = "monkey torso"
+	icon = 'icons/mob/living/advanced/species/monkey.dmi'
+	desc = "An organ."
+
+/obj/item/organ/torso/monkey/female
+	icon_state = BODY_TORSO_FEMALE

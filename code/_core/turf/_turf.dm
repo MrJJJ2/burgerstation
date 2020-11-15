@@ -20,14 +20,26 @@
 	var/density_down  = FALSE
 	var/allow_bullet_pass = FALSE
 
+	var/footstep/footstep //The footstep sounds that play.
+
 	var/list/mob/living/old_living //List of mobs that used to be on this turf.
 
 	var/material_id
 
 	var/delay_modifier = 1 //Increase to make it harder to move on this turf. Decrease to make it easier.
 
+	var/world_spawn = FALSE
+
+	var/darkness = 0 //Calculated tile darkness.
+
+	var/list/stored_shuttle_items
+
+/turf/proc/on_step()
+	return TRUE
+
 /turf/proc/is_space()
-	return FALSE
+	var/area/A = loc
+	return istype(A) && A.is_space()
 
 /turf/proc/update_edges()
 
@@ -39,7 +51,7 @@
 	return TRUE
 
 /turf/proc/is_safe_teleport()
-	return FALSE
+	return !is_space()
 
 /turf/New(loc)
 
@@ -57,29 +69,55 @@
 
 	return ..()
 
+/turf/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+	caller.face_atom(src)
+	return ..()
+
 /turf/change_victim(var/atom/attacker)
-	for(var/v in contents)
+
+	for(var/atom/movable/v in contents)
 		if(ismob(v) && attacker != v)
+			var/mob/M = v
+			if(M.mouse_opacity == 0)
+				continue
+			return v
+		if(v.health && v.can_be_attacked(attacker))
 			return v
 
 	if(old_living)
-		for(var/mob/living/L in old_living)
-			if(L.move_delay > 0 && attacker != L)
+		for(var/k in old_living)
+			var/mob/living/L = k
+			if(L.mouse_opacity > 0 && !L.dead && L.move_delay > 0 && attacker != L)
 				return L
 
 	return src
 
-/turf/Entered(var/atom/enterer,var/atom/old_loc)
+/turf/proc/do_footstep(var/atom/movable/source,var/enter=FALSE)
+
+	if(!source.has_footsteps)
+		return FALSE
+
+	var/list/returning_footsteps = source.get_footsteps(footstep ? list(footstep) : list(),enter)
+	if(length(returning_footsteps))
+		return source.handle_footsteps(src,returning_footsteps,enter)
+
+	return FALSE
+
+/turf/Entered(var/atom/movable/enterer,var/atom/old_loc)
 
 	if(src.loc && (!old_loc || src.loc != old_loc.loc))
 		src.loc.Entered(enterer)
 
+	do_footstep(enterer,TRUE)
+
 	..()
 
-/turf/Exited(var/atom/exiter,var/atom/new_loc)
+/turf/Exited(var/atom/movable/exiter,var/atom/new_loc)
 
 	if(src.loc && (!new_loc || src.loc != new_loc.loc))
 		src.loc.Exited(exiter)
+
+	do_footstep(exiter,FALSE)
 
 	..()
 
@@ -104,34 +142,29 @@
 
 /turf/Enter(var/atom/movable/enterer,var/atom/oldloc)
 
-	if(enterer.collision_flags & src.collision_flags)
+	if(density && (enterer.collision_flags && src.collision_flags) && (enterer.collision_flags & src.collision_flags))
 		var/enter_direction = get_dir(oldloc,src)
-
 		if((enter_direction & NORTH) && density_north)
 			return FALSE
-
 		if((enter_direction & EAST) && density_east)
 			return FALSE
-
 		if((enter_direction & SOUTH) && density_south)
 			return FALSE
-
 		if((enter_direction & WEST) && density_west)
 			return FALSE
 
 	return ..()
 
 
-/turf/act_explode(var/atom/owner,var/atom/source,var/atom/epicenter,var/magnitude)
+/turf/act_explode(var/atom/owner,var/atom/source,var/atom/epicenter,var/magnitude,var/desired_loyalty)
 
-	for(var/atom/A in contents)
-		CHECK_TICK
-		A.act_explode(owner,source,epicenter,magnitude)
+	for(var/atom/A in src.contents)
+		A.act_explode(owner,source,epicenter,magnitude,desired_loyalty)
 
 	return ..()
 
-
-/turf/dropped_on_by_object(var/atom/caller,var/atom/object)
+/*
+/turf/dropped_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(is_structure(object) && get_dist(src,object) <= 1 && get_dist(caller,object) <= 1)
 		var/obj/structure/S = object
@@ -140,3 +173,10 @@
 			return TRUE
 
 	return ..()
+*/
+
+/turf/proc/setup_turf_light(var/sunlight_freq=VIEW_RANGE*0.5)
+	return FALSE
+
+/turf/should_smooth_with(var/turf/T)
+	return (T.corner_category == corner_category) && (T.plane == plane)

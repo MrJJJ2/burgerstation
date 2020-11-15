@@ -1,6 +1,8 @@
 /obj/item/weapon/ranged/energy/hybrid/carbine
 	name = "hybrid laser carbine"
-	icon = 'icons/obj/items/weapons/ranged/laser/carbine.dmi'
+	desc = "Freeze, Criminal Scum!"
+	desc_extended = "A hybrid laser carbine with two firemodes, low intensity (stun) and high intensity (kill). Commonly used by shitsecurity."
+	icon = 'icons/obj/item/weapons/ranged/laser/carbine.dmi'
 
 	projectile_kill = /obj/projectile/bullet/laser/weak
 	projectile_stun = /obj/projectile/bullet/laser/weak
@@ -8,13 +10,13 @@
 	damage_type_kill = /damagetype/ranged/laser/carbine
 	damage_type_stun = /damagetype/ranged/laser/carbine/stun
 
-	shoot_sounds_kill = list('sounds/weapons/laser_carbine/kill.ogg')
-	shoot_sounds_stun = list('sounds/weapons/laser_carbine/stun.ogg')
+	shoot_sounds_kill = list('sound/weapons/laser_carbine/kill.ogg')
+	shoot_sounds_stun = list('sound/weapons/laser_carbine/stun.ogg')
 
 	bullet_color = "#FF0000"
 
-	projectile_speed = 31
-	shoot_delay = 1
+	projectile_speed = TILE_SIZE - 1
+	shoot_delay = 1.25
 
 	automatic = TRUE
 	max_bursts = 3
@@ -22,9 +24,7 @@
 	override_icon_state = TRUE
 	override_icon_state_held = TRUE
 
-	charge_max = CELL_SIZE_ADVANCED
-	charge_current = CELL_SIZE_ADVANCED
-	charge_cost = CELL_SIZE_ADVANCED / 60
+	charge_cost = CELL_SIZE_BASIC / 120
 
 	view_punch = 6
 
@@ -32,7 +32,10 @@
 	heat_max = 0.2
 
 	size = SIZE_3
-	weight = WEIGHT_4
+	weight = 14
+
+	value = 600
+
 
 /obj/item/weapon/ranged/energy/hybrid/carbine/update_icon()
 
@@ -48,17 +51,20 @@
 		icon_state_held = "[icon_state_held]_stun"
 		bullet_color = "#00FFFF"
 
-	var/charge_mod = charge_current >= charge_cost ? CEILING((charge_current/charge_max)*4,1) : 0
+	var/obj/item/powercell/PC = get_battery()
+
+	var/charge_mod = (istype(PC) && PC.charge_current >= charge_cost) ? CEILING((PC.charge_current/PC.charge_max)*4,1) : 0
 
 	icon_state = "[icon_state]_[charge_mod]"
 	icon_state_held = "[icon_state_held]_[charge_mod]"
+
 	icon_state_held_right = "[icon_state_held]_right"
 	icon_state_held_left = "[icon_state_held]_left"
 
 	return ..()
 
-/obj/item/weapon/ranged/energy/hybrid/carbine/get_static_spread() //Base spread
-	return 0.03
+/obj/item/weapon/ranged/energy/hybrid/carbine/get_static_spread()
+	return 0.01
 
-/obj/item/weapon/ranged/energy/hybrid/carbine/get_skill_spread(var/mob/living/L) //Base spread
-	return max(0,0.02 - (0.4 * L.get_skill_power(SKILL_RANGED)))
+/obj/item/weapon/ranged/energy/hybrid/carbine/get_skill_spread(var/mob/living/L)
+	return max(0,0.02 - (0.08 * L.get_skill_power(SKILL_RANGED)))

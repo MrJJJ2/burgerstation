@@ -1,59 +1,100 @@
-var/global/list/all_events = list()
-var/global/list/all_events_prob = list()
-var/global/list/all_events_active = list()
-
 SUBSYSTEM_DEF(events)
 	name = "Event Subsystem"
 	desc = "Stores all the known dialogue in a list."
 	priority = SS_ORDER_NORMAL
 	tick_rate = SECONDS_TO_TICKS(1)
 
-	var/ticks_unit_trigger = 300
+	var/list/all_events = list()
+	var/list/all_events_prob = list()
+	var/list/all_events_active = list()
+
+	var/next_event_time = 0
+
+/subsystem/events/unclog(var/mob/caller)
+
+	for(var/k in all_events_active)
+		var/datum/D = k
+		all_events_active -= k
+		qdel(D)
+
+	broadcast_to_clients(span("danger","Force ended all active events and shutdown the event subsystem."))
+
+	return ..()
 
 /subsystem/events/Initialize()
 
 	for(var/k in subtypesof(/event/))
-		var/event/E = k
-		var/E_id = initial(E.id)
-		if(!E_id)
-			continue
-		E = new k
-		all_events[E.id] = E
-		all_events_prob[E.id] = E.probability
+		var/event/E = new k
+		all_events[E.type] = E
+		all_events_prob[E.type] = E.probability
+
+	next_event_time = world.time + SECONDS_TO_DECISECONDS(600)
+
+	return ..()
+
+/subsystem/events/proc/process_event(var/event/E)
+	if(E.end_time != -1 && E.end_time <= world.time)
+		E.on_end()
+		E.active = FALSE
+		all_events_active -= E
+	else
+		E.on_life()
+	return TRUE
 
 /subsystem/events/on_life()
 
-	for(var/event/E in all_events_active)
-		if(E.end_time <= world.time)
-			E.on_end()
+	for(var/k in all_events_active)
+		var/event/E = k
+		if(process_event(E) == null)
 			all_events_active -= E
-		else
-			E.on_life()
+			qdel(E)
+			log_error("Warning! Event of type [E.type] did not process correctly, thus it was deleted.")
 
-	if(ticks_unit_trigger <= 0)
+	if(world.time >= next_event_time)
 		trigger_random_event()
-		ticks_unit_trigger = initial(ticks_unit_trigger)
-
-	ticks_unit_trigger -= 1
 
 	return TRUE
 
-/proc/trigger_random_event()
-	var/event_id = pickweight(all_events_prob)
+/subsystem/events/proc/trigger_random_event()
 
-	if(!event_id)
-		LOG_DEBUG("There are [length(all_events_prob)] events!")
+	if(!length(all_events_prob))
 		return FALSE
 
+	var/event_id = pickweight(all_events_prob)
+
 	var/event/E = all_events[event_id]
-	E.on_start()
+	return trigger_event(E)
+
+/subsystem/events/proc/trigger_event(var/event/E)
+
+	if(E.active)
+		return FALSE
+
+	if(!E.on_start())
+		E.on_fail()
+		next_event_time = world.time + 20
+		return FALSE
+
 	if(E.duration)
 		all_events_active += E
+		E.active = TRUE
 		E.start_time = world.time
-		E.end_time = world.time + E.duration
+		if(E.duration == -1)
+			E.end_time = -1
+		else
+			E.end_time = world.time + E.duration
+	else
+		E.on_end()
+
+	next_event_time = world.time + SECONDS_TO_DECISECONDS(rand(600,900))
+
+	E.occurances_current++
+
+	if(E.occurances_current >= E.occurances_max)
+		all_events -= E
+		all_events_prob -= E
 
 	return E
-
 
 
 

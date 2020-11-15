@@ -1,14 +1,12 @@
 /obj/item/material/sheet
 	name = "sheet"
 	desc = "I am error."
-	icon = 'icons/obj/items/material.dmi'
+	icon = 'icons/obj/item/material.dmi'
 	icon_state = "sheet"
 
 	item_count_current = 1
 	item_count_max = 50
 	item_count_max_icon = 3
-
-	weight = 1
 
 	crafting_id = "sheet"
 
@@ -24,6 +22,7 @@
 			R.item_count_current = 4
 			INITIALIZE(R)
 			GENERATE(R)
+			FINALIZE(R)
 			caller.to_chat("You cut \the [src.name] into 4 [R.name].")
 			add_item_count(-1)
 			R.Move(get_turf(I))
@@ -31,7 +30,7 @@
 	return ..()
 
 /obj/item/material/sheet/steel
-	material_id = "steel"
+	material_id = /material/steel
 
 /obj/item/material/sheet/steel/spawn_50/Generate()
 	item_count_current = 50
@@ -49,7 +48,9 @@
 	return ..()
 
 /obj/item/material/sheet/glass
-	material_id = "glass"
+	material_id = /material/glass
+
+	drop_sound = 'sound/items/drop/glass.ogg'
 
 /obj/item/material/sheet/glass/spawn_50/Generate()
 	item_count_current = 50

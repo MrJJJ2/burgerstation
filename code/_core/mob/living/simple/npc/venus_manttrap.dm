@@ -3,32 +3,37 @@
 	icon = 'icons/mob/living/simple/jungle/venus_human_trap.dmi'
 	icon_state = "venus_human_trap"
 	damage_type = /damagetype/unarmed/claw/
-	class = "venus_human_trap"
+	class = /class/venus_human_trap
+
+	health_base = 75
 
 	ai = /ai/
 
 	stun_angle = 0
 
+	value = 50
+
 	armor_base = list(
-		BLADE = 10,
-		BLUNT = 25,
-		PIERCE = 10,
+		BLADE = 0,
+		BLUNT = 50,
+		PIERCE = 75,
 		LASER = 0,
-		MAGIC = 0,
+		ARCANE = 100,
 		HEAT = 0,
-		COLD = 25,
+		COLD = -25,
 		BOMB = 0,
-		BIO = 0,
-		RAD = 0,
-		HOLY = 100,
-		DARK = 100,
-		FATIGUE = 0
+		BIO = -50,
+		RAD = 75,
+		HOLY = 75,
+		DARK = 0,
+		FATIGUE = 50,
+		ION = INFINITY
 	)
 
 	iff_tag = "jungle"
 	loyalty_tag = "jungle"
 
-	movement_delay = DECISECONDS_TO_TICKS(1)
+	movement_delay = DECISECONDS_TO_TICKS(2)
 
 	mob_size = MOB_SIZE_LARGE
 

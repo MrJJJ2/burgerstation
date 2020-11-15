@@ -4,8 +4,9 @@
 	desc_extended = "Those who perish in this world turn into these beings to then later be resurrected to die again and again."
 	icon = 'icons/mob/abstract/ghosts.dmi'
 	icon_state = "basic"
-	invisibility = INVISIBLITY_GHOST
-	see_invisible = INVISIBLITY_GHOST
+
+	invisibility = INVISIBILITY_DEFAULT
+	see_invisible = INVISIBILITY_DEFAULT
 
 	layer = LAYER_GHOST
 
@@ -15,8 +16,6 @@
 
 	collision_flags = FLAG_COLLISION_ETHEREAL
 	collision_bullet_flags = FLAG_COLLISION_BULLET_NONE
-
-	var/savedata/client/mob/mobdata
 
 	damage_type = null //Just in case.
 
@@ -49,9 +48,6 @@
 		qdel(src)
 		CRASH_SAFE("Tired to initialize an observer without a client!")
 		return FALSE
-
-	if(!mobdata)
-		mobdata = new(client)
 
 	name = "ghost of [ckey]"
 

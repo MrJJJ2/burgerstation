@@ -1,6 +1,7 @@
 /obj/item/magazine/clip/
 	name = "weapon clip"
-	desc = "IT'S NOT A MAGAZINE. IT'S A CLIP."
+	desc = "Leaving theese around the field won't get you in trouble with the Sergeant Major."
+	desc_extended = "Contains ammunition for a ranged weapon. Make sure you're trying to use the right caliber."
 
 /obj/item/magazine/clip/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
@@ -9,7 +10,9 @@
 	if(is_bullet_gun(object))
 		var/obj/item/weapon/ranged/bullet/G = object
 		var/insert_count = 0
-		for(var/obj/item/bullet_cartridge/B in stored_bullets)
+		for(var/k in stored_bullets)
+			if(!k) continue
+			var/obj/item/bullet_cartridge/B = k
 			var/target_point = get_first_missing_value(G.stored_bullets)
 			if(target_point == 0)
 				break

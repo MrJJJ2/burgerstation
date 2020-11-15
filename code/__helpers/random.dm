@@ -18,10 +18,17 @@
 
 /proc/luck(var/input,var/base_value=50,var/positive=TRUE)
 
+	if(base_value >= 100)
+		return TRUE
+
+	if(base_value <= 0)
+		return FALSE
+
 	. = 1
 
 	if(islist(input))
-		for(var/atom/A in input)
+		for(var/k in input)
+			var/atom/A = k
 			var/luck_to_use = A ? A.luck : 50
 			var/mod = positive ? 0.5 + (luck_to_use/50)*0.5 : 1.5 - (luck_to_use/50)*0.5
 			. *= mod

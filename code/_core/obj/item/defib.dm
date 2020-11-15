@@ -1,6 +1,6 @@
 /obj/item/defib
 	name = "defibrillator"
-	icon = 'icons/obj/items/defib.dmi'
+	icon = 'icons/obj/item/defib.dmi'
 	desc = "Contains a lot of atoms!"
 	desc_extended = "Put it on your back to be able to take out the paddles, and then apply them to a recently dead person."
 
@@ -11,7 +11,12 @@
 	item_slot = SLOT_TORSO_B
 	slot_icons = TRUE
 
+
+	size = SIZE_3
+
 	value = 110
+
+	weight = 8
 
 /obj/item/defib/can_be_worn(var/mob/living/advanced/owner,var/obj/hud/inventory/I)
 	return TRUE
@@ -32,9 +37,12 @@
 	if(!target)
 		return FALSE
 
+	var/turf/T = get_turf(target)
+
 	caller.visible_message("\The [caller.name] charges up \the [src.name]...","You charge up \the [src.name]...")
 
-	play('sounds/items/defib/defib_charge.ogg',src, alert = ALERT_LEVEL_NOISE, alert_source = caller)
+	play('sound/items/defib/defib_charge.ogg',T)
+	create_alert(VIEW_RANGE,T,caller,ALERT_LEVEL_NOISE)
 
 	PROGRESS_BAR(caller,src,30,.proc/defib_target,caller,target)
 	PROGRESS_BAR_CONDITIONS(caller,src,.proc/can_defib_target,caller,target)
@@ -43,29 +51,33 @@
 
 /obj/item/defib/proc/can_defib_target(var/mob/caller,var/mob/living/target)
 
-	if(get_dist(caller,target) > 1)
-		caller.to_chat("You're too far away!")
-		return FALSE
+	INTERACT_CHECK
+	INTERACT_CHECK_OTHER(target)
 
 	return TRUE
 
 /obj/item/defib/proc/defib_target(var/mob/caller,var/mob/living/target)
 
+	var/turf/T = get_turf(target)
+
 	target.add_status_effect(ADRENALINE,30,30)
 
-	caller.visible_message("\The [caller.name] shocks \the [target.name] with \the [src.name]!","You shock \the [target.name] with \the [src.name]!")
+	caller.visible_message(span("notice","\The [caller.name] shocks \the [target.name] with \the [src.name]!"),span("notice","You shock \the [target.name] with \the [src.name]!"))
 
-	play('sounds/items/defib/defib_zap.ogg',src, alert = ALERT_LEVEL_NOISE, alert_source = caller)
+	play('sound/items/defib/defib_zap.ogg',T)
+	create_alert(VIEW_RANGE,T,caller,ALERT_LEVEL_NOISE)
 
-	if(target.check_death() || !target.client)
-		target.visible_message("Nothing happens!")
-		play('sounds/items/defib/defib_failed.ogg',src, alert = ALERT_LEVEL_NOISE, alert_source = caller)
+	if(target.check_death() || !target.is_player_controlled() || target.suicide)
+		target.visible_message(span("warning","Nothing happens..."))
+		play('sound/items/defib/defib_failed.ogg',T)
+		create_alert(VIEW_RANGE,T,caller,ALERT_LEVEL_NOISE)
 		return FALSE
 
-	play('sounds/items/defib/defib_ready.ogg',src, alert = ALERT_LEVEL_NOISE, alert_source = caller)
+	play('sound/items/defib/defib_ready.ogg',T)
+	create_alert(VIEW_RANGE,T,caller,ALERT_LEVEL_NOISE)
 
 	target.revive()
-	caller.visible_message("\The [target.name] jolts to life!")
+	caller.visible_message(span("danger","\The [target.name] jolts to life!"))
 
 	target.add_status_effect(ADRENALINE,100,100)
 
@@ -88,13 +100,17 @@
 
 /obj/item/defib_paddle
 	name = "defibrillator paddle"
-	icon = 'icons/obj/items/defib_paddle.dmi'
+	icon = 'icons/obj/item/defib_paddle.dmi'
 	var/obj/item/defib/linked_defib
 	var/placed_target_ref //While refs can be replaced by other objects, placing the last paddle with check if it's a valid ref.
 
 	throwable = FALSE
 
-	value = 10
+	size = 99
+
+	size = SIZE_6
+
+	weight = 2
 
 /obj/item/defib_paddle/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
@@ -110,12 +126,12 @@
 
 	return ..()
 
-/obj/item/defib_paddle/drop_item(var/turf/new_location,var/pixel_x_offset = 0,var/pixel_y_offset = 0)
+/obj/item/defib_paddle/post_move()
 
 	. = ..()
 
-	if(. && linked_defib)
+	if(. && linked_defib && isturf(loc))
 		placed_target_ref = null
-		src.force_move(linked_defib)
+		src.drop_item(linked_defib)
 
 	return .

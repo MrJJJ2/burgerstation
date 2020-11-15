@@ -57,3 +57,10 @@
 
 #define GRAB "grab"
 //This actually does nothing but visual effects, and is used to check if objects can actually be grabbed.
+
+#define FIRE "fire"
+//Sets you on fire!
+
+
+#define SLIP "slip"
+//Honk

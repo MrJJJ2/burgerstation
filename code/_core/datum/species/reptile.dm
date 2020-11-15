@@ -6,11 +6,14 @@
 
 	flags_chargen = CHARGEN_SKIN | CHARGEN_EYE | CHARGEN_HAIR | CHARGEN_BEARD | CHARGEN_SEX
 
-	default_icon_hair = 'icons/mob/living/advanced/hair/reptile_hair_head.dmi'
-	default_icon_state_hair = "bald"
+	flags_flavor_love = FLAG_FLAVOR_GROSS | FLAG_FLAVOR_RAW | FLAG_FLAVOR_MEAT | FLAG_FLAVOR_FISH | FLAG_FLAVOR_CHICKEN | FLAG_FLAVOR_FAT
+	flags_flavor_hate = FLAG_FLAVOR_COOKED | FLAG_FLAVOR_GRAIN | FLAG_FLAVOR_JUNK | FLAG_FLAVOR_DAIRY
 
-	default_icon_face = 'icons/mob/living/advanced/hair/reptile_hair_face.dmi'
-	default_icon_state_face = "none"
+	default_icon_hair = 'icons/mob/living/advanced/hair/reptile_hair_head.dmi'
+	default_icon_state_hair = "none"
+
+	default_icon_hair_face = 'icons/mob/living/advanced/hair/reptile_hair_face.dmi'
+	default_icon_state_hair_face = "none"
 
 	default_color_eye = "#AAAA00"
 	default_color_skin = "#8CA73E"
@@ -80,3 +83,6 @@
 		BODY_INTESTINTES = /obj/item/organ/internal/intestines,
 		BODY_KIDNEYS = /obj/item/organ/internal/kidneys
 	)
+
+/species/reptile/generate_blood_type()
+	return /reagent/blood/reptile

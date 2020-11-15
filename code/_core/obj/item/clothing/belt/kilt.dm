@@ -2,7 +2,7 @@
 	name = "kilt belt"
 	desc = "THERE CAN ONLY BE ONE."
 	desc_extended = "For holding up kilts."
-	icon = 'icons/obj/items/clothing/belts/kilt.dmi'
+	icon = 'icons/obj/item/clothing/belts/kilt.dmi'
 
 	is_container = TRUE
 
@@ -12,14 +12,12 @@
 
 	container_max_size = 2
 
-	weight = WEIGHT_2
-
 	defense_rating = list(
-		BLADE = 15,
-		BLUNT = 5,
+		BLADE = 10,
+		BLUNT = 10,
 		PIERCE = 10,
-		MAGIC = 10
+		ARCANE = 10
 	)
 
 	rarity = RARITY_UNCOMMON
-	value = 20
+	value = 30

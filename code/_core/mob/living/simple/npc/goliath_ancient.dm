@@ -3,35 +3,31 @@
 	icon = 'icons/mob/living/simple/lavaland/goliath_ancient.dmi'
 	icon_state = "agoliath"
 	damage_type = /damagetype/unarmed/claw/
-	class = "ancient_goliath"
+	class = /class/goliath/ancient/
 
 	ai = /ai/goliath/ancient
 
 	stun_angle = 0
 
-	health_base = 500
-
-	var/boss_state = 0
-	//0 = walking
-	//1 = flying
-	//2 = landing
+	health_base = 400
 
 	attack_range = 1
 
 	armor_base = list(
 		BLADE = 75,
-		BLUNT = 75,
-		PIERCE = 75,
-		LASER = -25,
-		MAGIC = -25,
-		HEAT = INFINITY,
-		COLD = -25,
-		BOMB = 75,
-		BIO = 75,
-		RAD = 75,
-		HOLY = -25,
-		DARK = INFINITY,
-		FATIGUE = INFINITY
+		BLUNT = 90,
+		PIERCE = 90,
+		LASER = 90,
+		ARCANE = 50,
+		HEAT = 100,
+		COLD = 100,
+		BOMB = 25,
+		BIO = INFINITY,
+		RAD = INFINITY,
+		HOLY = 0,
+		DARK = 0,
+		FATIGUE = INFINITY,
+		ION = INFINITY
 	)
 
 	mob_size = MOB_SIZE_GIANT

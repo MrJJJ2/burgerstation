@@ -4,7 +4,7 @@
 	icon_state_worn = "worn_right"
 	worn_layer = LAYER_MOB_CLOTHING_BELT
 
-	icon = 'icons/obj/items/clothing/shoes/winter.dmi'
+	icon = 'icons/obj/item/clothing/shoes/winter.dmi'
 
 	item_slot = SLOT_FOOT_RIGHT
 	protected_limbs = list(BODY_FOOT_RIGHT)
@@ -14,8 +14,8 @@
 		BLUNT = 15,
 		PIERCE = 10,
 		LASER = -25,
-		MAGIC = -25,
-		HEAT = -50,
+		ARCANE = -25,
+		HEAT = -25,
 		COLD = 75
 	)
 
@@ -25,11 +25,11 @@
 	)
 
 	size = SIZE_2
-	weight = WEIGHT_3
 
-	value = 30
 
-	slowdown_mul_worn = 1.05
+	value = 70
+
+
 
 /obj/item/clothing/feet/shoes/winter/left
 	name = "left winter boot"
@@ -38,7 +38,7 @@
 
 	item_slot = SLOT_FOOT_LEFT
 	protected_limbs = list(BODY_FOOT_LEFT)
-	blocks_clothing = SLOT_FOOT_LEFT_U
+	blocks_clothing = SLOT_FOOT_LEFT | SLOT_FOOT_LEFT_U
 
 	protection_cold = list(
 		BODY_FOOT_LEFT = 3,

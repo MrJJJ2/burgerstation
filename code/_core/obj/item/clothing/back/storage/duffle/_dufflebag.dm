@@ -1,6 +1,8 @@
 /obj/item/clothing/back/storage/dufflebag/
 	name = "dufflebag"
-	icon = 'icons/obj/items/clothing/back/dufflebag/white.dmi'
+	desc = "What are you, part pack mule?"
+	desc_extended = "A robust duffelbag for lugging around a lot of gear. Slows you down, however."
+	icon = 'icons/obj/item/clothing/back/dufflebag/white.dmi'
 	rarity = RARITY_COMMON
 
 	dynamic_inventory_count = MAX_INVENTORY_X*3
@@ -8,9 +10,13 @@
 	size = MAX_INVENTORY_X*3*SIZE_3
 	container_max_size = SIZE_4
 
-	weight = WEIGHT_4
 
-	value = 20
+	weight = 20
+
+	value = 100
+
+
+
 
 /obj/item/clothing/back/storage/dufflebag/loadout/pmc
 	color = COLOR_WHITE
@@ -24,4 +30,5 @@
 
 /obj/item/clothing/back/storage/dufflebag/engineering
 	name = "engineering dufflebag"
-	icon = 'icons/obj/items/clothing/back/dufflebag/engineering.dmi'
+	desc_extended = "A robust duffelbag for lugging around materials. Slows you down, however."
+	icon = 'icons/obj/item/clothing/back/dufflebag/engineering.dmi'

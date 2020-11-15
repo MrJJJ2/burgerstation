@@ -15,13 +15,18 @@
 #define PIERCE "pierce"
 
 #define LASER "laser"
-#define MAGIC "magic"
+#define ARCANE "magic"
+#define MAGIC "magic" //TODO: REPLACE
+
 #define HEAT "heat"
 #define COLD "cold"
 #define BOMB "bomb"
 #define BIO "bioweapon"
 #define RAD "radiation"
 
+#define ION "ion"
+
 #define HOLY "holy"
 #define DARK "dark"
 
+#define ALL_DAMAGE list(BLADE,BLUNT,PIERCE,LASER,ARCANE,HEAT,COLD,BOMB,BIO,RAD,ION)

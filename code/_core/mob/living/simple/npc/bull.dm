@@ -8,8 +8,18 @@
 
 	health_base = 100
 
+	value = 50
+
+	butcher_contents = list(
+		/obj/item/container/food/dynamic/meat/raw,
+		/obj/item/container/food/dynamic/meat/raw,
+		/obj/item/container/food/dynamic/meat/raw,
+		/obj/item/container/food/dynamic/meat/raw
+	)
+
+
 	ai = /ai/
-	class = "bull"
+	class = /class/bull
 	damage_type = /damagetype/npc/bull
 
 	armor_base = list(
@@ -17,15 +27,10 @@
 		BLUNT = 25,
 		PIERCE = 25,
 		LASER = -25,
-		MAGIC = -25,
-		HEAT = 0,
-		COLD = 0,
-		BOMB = 0,
-		BIO = 0,
-		RAD = 0,
+		ARCANE = 25,
 		HOLY = 50,
 		DARK = 100,
-		FATIGUE = 0
+		ION = INFINITY
 	)
 
 	mob_size = MOB_SIZE_LARGE

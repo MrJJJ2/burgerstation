@@ -1,6 +1,6 @@
 /obj/item/clothing/overwear/coat/vest/
-	name = "tactical vest"
-	icon = 'icons/obj/items/clothing/suit/black_vest.dmi'
+	name = "tactical storage vest"
+	icon = 'icons/obj/item/clothing/suit/black_vest.dmi'
 
 	rarity = RARITY_UNCOMMON
 
@@ -18,16 +18,14 @@
 		BLUNT = 10,
 		PIERCE = 10,
 		LASER = -25,
-		MAGIC = -25
+		ARCANE = -25
 	)
-
-	weight = WEIGHT_4
 
 	protected_limbs = list(BODY_TORSO)
 
-	value = 30
+	value = 90
 
-/obj/item/clothing/overwear/coat/vest/clicked_on_by_object(var/atom/caller,var/atom/object,location,control,params)
+/obj/item/clothing/overwear/coat/vest/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(is_inventory(object))
 		click_self(caller,location,control,params)
@@ -37,7 +35,7 @@
 
 /obj/item/clothing/overwear/coat/vest/colored
 	name = "colored vest"
-	icon = 'icons/obj/items/clothing/suit/white_vest.dmi'
+	icon = 'icons/obj/item/clothing/suit/white_vest.dmi'
 
 	dyeable = TRUE
 
@@ -49,9 +47,13 @@
 	name = "medical vest"
 	color = COLOR_WHITE
 
+/obj/item/clothing/overwear/coat/vest/colored/grey
+	name = "grey vest"
+	color = COLOR_GREY
+
 /obj/item/clothing/overwear/coat/vest/sleeveless_leather_jacket
 	name = "sleeveless leather jacket"
-	icon = 'icons/obj/items/clothing/suit/leather_jacket_sleeveless.dmi'
+	icon = 'icons/obj/item/clothing/suit/leather_jacket_sleeveless.dmi'
 	rarity = RARITY_COMMON
 	desc = "For when you need pockets but not many."
 
@@ -65,7 +67,7 @@
 		BLUNT = 10,
 		PIERCE = 10,
 		LASER = -10,
-		MAGIC = 10,
+		ARCANE = 10,
 		HEAT = 10,
 		COLD = 25
 	)

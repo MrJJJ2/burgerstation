@@ -7,11 +7,24 @@ var/global/list/obj/hud/button/keypad_buttons = list(
 
 /obj/item/device/keypad
 	name = "keypad"
-	desc = "An access keypad. Only works if you know the code."
+	desc = "One, One, One...uh....One!"
+	desc_extended = "An access keypad. Only works if you know the code."
 	icon_state = "keypad_red"
 	interactable = TRUE
 
 	var/code = 1337
+
+	value = 10
+
+/obj/item/device/keypad/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("code")
+	return .
+
+/obj/item/device/keypad/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("code")
+	return .
 
 /obj/item/device/keypad/trigger(var/mob/caller,var/atom/source,var/signal_freq,var/signal_code)
 
@@ -20,15 +33,13 @@ var/global/list/obj/hud/button/keypad_buttons = list(
 
 	return TRUE
 
-/obj/item/device/keypad/clicked_on_by_object(var/mob/caller,object,location,control,params)
-
-	INTERACT_CHECK
+/obj/item/device/keypad/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(!is_player(caller))
-		return TRUE
+		return ..()
 
+	INTERACT_CHECK
 	var/mob/living/advanced/player/P = caller
-
 	P.set_device_active(src)
 
 	return TRUE
@@ -45,6 +56,7 @@ var/global/list/obj/hud/button/keypad_buttons = list(
 	for(var/v in keypad_buttons)
 		var/obj/hud/button/keypad/K = new v
 		INITIALIZE(K)
+		FINALIZE(K)
 		K.update_owner(A)
 		K.update_sprite()
 

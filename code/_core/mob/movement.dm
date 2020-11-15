@@ -23,9 +23,7 @@
 
 	return ..()
 
-/mob/get_movement_delay()
-
-	. = ..()
+/mob/proc/get_stance_movement_mul()
 
 	move_mod = initial(move_mod)
 
@@ -40,27 +38,32 @@
 
 	switch(move_mod)
 		if(1)
-			. *= walk_delay_mul
+			.return walk_delay_mul
 		if(2)
-			. *= jog_delay_mul
+			return jog_delay_mul
 		if(3)
-			. *= sprint_delay_mul
+			return sprint_delay_mul
+
+	return 1
+
+/mob/get_movement_delay()
+
+	. = ..()
+
+	. *= get_stance_movement_mul()
 
 	if(health && health.health_max)
 		. *= 2 - (health.health_current/health.health_max)
 
 	return .
 
-/mob/Move(var/atom/NewLoc,Dir=0,desired_step_x=0,desired_step_y=0,var/silent=FALSE)
+/mob/Move(NewLoc,Dir=0,step_x=0,step_y=0)
 
 	var/atom/old_loc = loc
 
 	. = ..()
 
 	if(.)
-
-		update_rs_chat()
-
 		switch(move_mod)
 			if(1)
 				on_walk()
@@ -69,30 +72,34 @@
 			if(3)
 				on_sprint()
 
-	if(loc != old_loc)
-		post_move(old_loc)
+		if(loc != old_loc)
+			post_move(old_loc)
 
 	return .
 
 
 /mob/proc/update_rs_chat()
-	for(var/obj/effect/chat_text/CT in stored_chat_text)
+	for(var/k in stored_chat_text)
+		var/obj/effect/chat_text/CT = k
 		CT.glide_size = src.glide_size
 		CT.force_move(src.loc)
 
 
 /mob/post_move(var/atom/old_loc)
 
+	var/turf/T = get_turf(src.loc)
+
 	for(var/k in parallax)
 		var/obj/parallax/P = parallax[k]
-		var/desired_x = FLOOR(-(x - (WORLD_SIZE*0.5)) * P.ratio,1)
-		var/desired_y = FLOOR(-(y - (WORLD_SIZE*0.5)) * P.ratio,1)
-
+		var/desired_x = FLOOR(-(T.x - (WORLD_SIZE*0.5)) * P.ratio,1)
+		var/desired_y = FLOOR(-(T.y - (WORLD_SIZE*0.5)) * P.ratio,1)
 		P.screen_loc = "CENTER-7:[desired_x],CENTER-7:[desired_y]"
 
 	. = ..()
 
 	if(client)
 		client.post_move(loc,old_loc)
+
+	update_rs_chat()
 
 	return .

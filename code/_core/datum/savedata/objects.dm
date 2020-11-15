@@ -1,4 +1,4 @@
-/savedata/proc/load_and_create_object(var/list/object_data,var/atom/loc)
+/proc/load_and_create_object(var/list/object_data,var/atom/loc)
 
 	if(!object_data)
 		log_error("Tried to create an object with a blank object_data list!")
@@ -10,6 +10,9 @@
 
 	var/o_type = object_data["type"]
 	var/obj/O
+
+	if(!o_type)
+		return FALSE
 
 	try
 		O = new o_type(loc)
@@ -32,11 +35,6 @@
 			I.item_count_current = object_data["item_count_current"]
 		if(object_data["delete_on_drop"])
 			I.delete_on_drop = TRUE
-		if(object_data["reagents"] && length(object_data["reagents"]))
-			for(var/r_id in object_data["reagents"])
-				var/volume = object_data["reagents"][r_id]
-				I.reagents.add_reagent(text2path(r_id),volume,TNULL,FALSE)
-			I.reagents.update_container()
 
 	if(istype(O,/obj/item/radio) && object_data["stored_radio"])
 		var/obj/item/radio/R = O
@@ -86,11 +84,6 @@
 		var/obj/item/soulgem/S = O
 		if(object_data["total_charge"])
 			S.total_charge = object_data["total_charge"]
-
-	if(is_currency(O))
-		var/obj/item/currency/C = O
-		if(object_data["value"])
-			C.value = object_data["value"]
 
 	if(is_powercell(O))
 		var/obj/item/powercell/P = O
@@ -156,13 +149,27 @@
 		if(object_data["iff_tag"])
 			FP.iff_tag = object_data["iff_tag"]
 
+	if(istype(O,/obj/item/supply_remote))
+		var/obj/item/supply_remote/D = O
+		D.stored_object_types = object_data["stored_object_types"]
+		D.charges = object_data["charges"]
+
 	INITIALIZE(O)
+
+	if(is_item(O) && object_data["reagents"] && length(object_data["reagents"]))
+		var/obj/item/I = O
+		for(var/r_id in object_data["reagents"])
+			var/volume = object_data["reagents"][r_id]
+			I.reagents.add_reagent(text2path(r_id),volume,TNULL,FALSE)
+		I.reagents.update_container()
+		I.update_sprite()
+
 	O.force_move(loc)
 	O.update_sprite()
 
 	return O
 
-/savedata/proc/get_inventory_data(var/obj/hud/inventory/I)
+/proc/get_inventory_data(var/obj/hud/inventory/I)
 	if(!I)
 		return list()
 
@@ -182,40 +189,7 @@
 
 	return returning_list
 
-
-/savedata/proc/apply_inventory_data(var/obj/item/O,var/list/inventory_data)
-
-	var/obj/hud/inventory/I
-
-	for(var/obj/hud/inventory/I2 in O.inventories)
-		if(I2.id == inventory_data["id"])
-			I = I2
-			break
-
-	if(I)
-		if(inventory_data["held"])
-			for(var/i=1,i<=length(inventory_data["held"]),i++)
-				try
-					var/obj/item/I2 = load_and_create_object(inventory_data["held"][i],get_turf(I))
-					if(I2)
-						I.add_held_object(I2,FALSE,TRUE)
-				catch(var/exception/e)
-					log_error("LOADING ERROR: [e] on [e.file]:[e.line]! Couldn't load [inventory_data["held"][i]]!")
-		if(inventory_data["worn"])
-			for(var/i=1,i<=length(inventory_data["worn"]),i++)
-				try
-					var/obj/item/I2 = load_and_create_object(inventory_data["worn"][i],get_turf(I))
-					if(I2)
-						I.add_worn_object(I2,FALSE,TRUE)
-				catch(var/exception/e)
-					log_error("LOADING ERROR: [e] on [e.file]:[e.line]! Couldn't load [inventory_data["worn"][i]]!")
-
-		return TRUE
-
-
-	return FALSE
-
-/savedata/proc/get_item_data(var/obj/I,var/save_inventory = TRUE)
+/proc/get_item_data(var/obj/I,var/save_inventory = TRUE)
 
 	try
 		if(!I || !I.should_save)
@@ -247,11 +221,13 @@
 			if(IT.reagents && IT.reagents.stored_reagents && length(IT.reagents.stored_reagents))
 				returning_list["reagents"] = list()
 				for(var/r_id in IT.reagents.stored_reagents)
-					returning_list["reagents"][r_id] = IT.reagents.stored_reagents[r_id]
+					var/volume = IT.reagents.stored_reagents[r_id]
+					returning_list["reagents"][r_id] = volume
 
 		if(istype(I,/obj/item/weapon/ranged/))
 			var/obj/item/weapon/ranged/R = I
-			returning_list["firing_pin"] = get_item_data(R.firing_pin)
+			if(R.firing_pin)
+				returning_list["firing_pin"] = get_item_data(R.firing_pin)
 
 		if(is_food(I))
 			var/obj/item/container/food/F = I
@@ -310,11 +286,6 @@
 			var/obj/item/clothing/ears/headset/R = I
 			returning_list["stored_radio"] = get_item_data(R.stored_radio)
 
-		if(is_currency(I))
-			var/obj/item/currency/C = I
-			if(C.value > 1)
-				returning_list["value"] = C.value
-
 		if(is_bullet_gun(I))
 			var/obj/item/weapon/ranged/bullet/BG = I
 
@@ -352,45 +323,14 @@
 			var/obj/item/firing_pin/FP = I
 			returning_list["iff_tag"] = FP.iff_tag
 
+		if(istype(I,/obj/item/supply_remote))
+			var/obj/item/supply_remote/D = I
+			returning_list["stored_object_types"] = D.stored_object_types
+			returning_list["charges"] = D.charges
+
 		return returning_list
 
 	catch(var/exception/e)
 		log_error("ERROR: Could not save [I.get_debug_name()]! [e.name] in [e.file]:[e.line].\n[e.desc]")
 
 	return null
-
-
-/savedata/proc/generate_blend_data(var/obj/O)
-
-	var/list/returning_list = list()
-	for(var/id in O.additional_blends)
-
-		var/icon_blend/IB = O.additional_blends[id]
-
-		if(IB.should_save)
-			returning_list[id] = list()
-		else
-			continue
-
-		if(IB.id)
-			returning_list[id]["id"] = IB.id
-
-		if(IB.icon)
-			returning_list[id]["icon"] = IB.icon
-
-		if(IB.icon_state)
-			returning_list[id]["icon_state"] = IB.icon_state
-
-		if(IB.color)
-			returning_list[id]["color"] = IB.color
-
-		if(IB.blend)
-			returning_list[id]["blend"] = IB.blend
-
-		if(IB.special_type)
-			returning_list[id]["special_type"] = IB.special_type
-
-		if(IB.layer)
-			returning_list[id]["layer"] = IB.layer
-
-	return returning_list

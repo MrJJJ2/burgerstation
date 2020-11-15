@@ -4,7 +4,7 @@
 		return
 
 	if(findtext(href,"<script",1,0))
-		LOG_ADMIN("Attempted use of scripts within a topic call, by [src]/[usr].")
+		log_admin("Attempted use of scripts within a topic call, by [src]/[usr].")
 		return
 
 	/*
@@ -24,7 +24,35 @@
 	*/
 
 	if(length(href_list))
-		if(href_list["change_key"])
+		if(href_list["examine"])
+			var/datum/D = locate(href_list["examine"])
+			if(D && !is_atom(D) || (D in view(mob,VIEW_RANGE)))
+				examine(D)
+		if(href_list["spectate"])
+			if(is_observer(mob))
+				var/mob/abstract/observer/O = mob
+				var/turf/T = locate(text2num(href_list["x"]),text2num(href_list["y"]),text2num(href_list["z"]))
+				if(T)
+					O.force_move(T)
+					to_chat(span("notice","Jumping to new location..."))
+				else
+					to_chat(span("warning","Could not find that location!"))
+			else
+				to_chat(span("warning","You can't do this!"))
+		if(href_list["vote"])
+			var/vote/vote_datum = locate(href_list["vote"]) in SSvote.active_votes
+			if(!vote_datum)
+				to_chat("Could not locate a valid poll!")
+			else
+				if(href_list["vote_option"])
+					var/option = text2num(href_list["vote_option"])
+					vote_datum.set_vote(src.ckey,option)
+					//src << browse(null,"window=Voting")
+					to_chat(span("notice","Your vote has been recorded."))
+					vote_datum.show(src)
+				else
+					vote_datum.show(src)
+		else if(href_list["change_key"])
 			//Changing Macros
 			var/key = href_list["change_key"]
 			if(key == "quit")
@@ -43,7 +71,7 @@
 			else if(key == "QWERTY")
 				var/confirm = input("Are you sure you want to reset your macros to QWERTY?","QWERTY Macros","No") in list("Yes","No","Cancel")
 				if(confirm == "Yes")
-					macros.macros = QWERT_MACROS
+					macros.macros = QWERTY_MACROS
 					to_chat(span("notice","Successfully reset macros."))
 			else if(key == "AZERTY")
 				var/confirm = input("Are you sure you want to change your macros to AZERTY?","AZERTY Macros","No") in list("Yes","No","Cancel")
@@ -68,57 +96,16 @@
 			if(key != "quit")
 				edit_macros()
 
+		if(permissions & FLAG_PERMISSION_ADMIN)
+			if(href_list["var_edit_ref"])
+				var/datum/actual_reference = locate(href_list["var_edit_ref"])
+				if(actual_reference)
+					var_edit(actual_reference)
 
-
-
-
-
-
-
-
-
-
-
-
-		/*
-		if(href_list["chat_examine"])
-			var/datum/actual_reference = locate(href_list["chat_examine"])
-
-			if(is_client(actual_reference))
-
-
-			else if(is_atom(actual_reference))
-
-		*/
-
-		/*
-		if(href_list["var_edit_ref"])
-			var/datum/actual_reference = locate(href_list["var_edit_ref"])
-			if(actual_reference)
-				var_edit(actual_reference)
-
-		if(href_list["var_edit_other"] && href_list["var_edit_other_ref"])
-			var/datum/actual_reference = locate(href_list["var_edit_other_ref"])
-			var/actual_key = href_list["var_edit_other"]
-
-			if(actual_reference && actual_key && actual_reference.vars[actual_key])
-
-				var/current_value = actual_reference.vars[actual_key]
-
-				if(current_value)
-
-					spawn()
-						var/new_value = null
-
-						if(isnum(current_value))
-							new_value = input("Desired Number") as num|null
-
-						else if(istext(current_value))
-							new_value = input("Desired Number") as text|null
-
-						if(new_value)
-							change_variable(actual_reference,actual_key,new_value)
-			*/
+			else if(href_list["var_edit_other"] && href_list["var_edit_other_ref"])
+				var/datum/actual_reference = locate(href_list["var_edit_other_ref"])
+				var/actual_key = href_list["var_edit_other"]
+				change_variable(actual_reference,actual_key,null)
 
 		if(href_list["done_loading"])
 			send_load(src.mob,href_list["done_loading"])

@@ -6,10 +6,12 @@
 
 	var/obj/item/organ/internal/stored_implant
 
-	icon = 'icons/obj/items/implanter.dmi'
+	icon = 'icons/obj/item/implanter.dmi'
 	icon_state = "implanter"
 
 	value = 50
+
+	weight = 3
 
 
 /obj/item/implanter/update_icon()
@@ -61,6 +63,12 @@
 
 /obj/item/implanter/IFF
 		stored_implant = /obj/item/organ/internal/implant/hand/left/iff/nanotrasen
+		removes_existing = FALSE
 
 /obj/item/implanter/od_purge
 		stored_implant = /obj/item/organ/internal/implant/torso/od_purge
+		removes_existing = TRUE
+
+/obj/item/implanter/death_alarm
+		stored_implant = /obj/item/organ/internal/implant/torso/death_alarm
+		removes_existing = TRUE

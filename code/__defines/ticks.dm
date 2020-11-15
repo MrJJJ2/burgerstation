@@ -1,4 +1,8 @@
-#define TICK_USAGE world.tick_usage
-#define TICK_LIMIT 90
-
-#define CHECK_TICK ( (TICK_USAGE > TICK_LIMIT) ? stoplag() : FALSE )
+#define CHECK_TICK(limit,max_delays) \
+	if(ENABLE_STOPLAG && world.tick_usage > limit) { \
+		var/safety_count=0; \
+		while(world.tick_usage > limit && (max_delays <= safety_count || !max_delays)) {\
+			safety_count++; \
+			sleep(TICK_LAG); \
+		}\
+	}

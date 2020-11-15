@@ -4,14 +4,19 @@
 	icon = 'icons/turf/floor/tile.dmi'
 	icon_state = "white_multi"
 
-	footstep_id = "default"
+	footstep = /footstep/tile
 
-	layer = LAYER_FLOOR
-	plane = PLANE_TILE
+	layer = LAYER_FLOOR_TILE
 
 	exposed = FALSE
 
 	destruction_turf = /turf/simulated/floor/plating
+
+
+/turf/simulated/floor/tile/chapel/
+	name = "chapel floor"
+	icon = 'icons/turf/floor/chapel.dmi'
+	icon_state = "floor"
 
 /turf/simulated/floor/tile/grey
 	color = COLOR_GREY
@@ -30,6 +35,9 @@
 
 /turf/simulated/floor/tile/dark
 	color = COLOR_STEEL
+
+/turf/simulated/floor/tile/dark/er
+	color = "#242424"
 
 /turf/simulated/floor/tile/dark/single
 	icon_state = "white_single"
@@ -60,6 +68,10 @@
 
 /turf/simulated/floor/tile/brown
 	color = "#995121"
+
+/turf/simulated/floor/tile/tan
+	color = "#D3CBA5"
+
 
 /turf/simulated/floor/tile/yellow
 	color = "#FFFF44"

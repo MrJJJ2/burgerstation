@@ -1,6 +1,6 @@
 /obj/item/clothing/overwear/coat/brown
-	name = "coat"
-	icon = 'icons/obj/items/clothing/suit/detective_coat.dmi'
+	name = "brown coat"
+	icon = 'icons/obj/item/clothing/suit/detective_coat.dmi'
 
 	desc = "The detective's favorite."
 	desc_extended = "A dark brown leather coat. It is quite heavy, but contains many pockets."
@@ -10,13 +10,13 @@
 	container_max_size = SIZE_2
 
 	defense_rating = list(
-		BLADE = 10,
+		BLADE = 25,
 		PIERCE = 25,
 		HEAT = -25,
-		COLD = 50
+		COLD = 25
 	)
 
 	size = SIZE_3
-	weight = WEIGHT_4
 
-	value = 10
+
+	value = 60

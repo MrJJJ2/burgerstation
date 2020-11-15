@@ -1,10 +1,10 @@
 /obj/item/material/
 	name = "glitch"
 	desc = "I am error."
-	icon = 'icons/obj/items/material.dmi'
+	icon = 'icons/obj/item/material.dmi'
 	icon_state = "shard_1"
 
-	var/material_id = "glitch"
+	var/material_id = /material/steel
 
 	item_count_current = 1
 	item_count_max = 50
@@ -14,7 +14,32 @@
 
 	value = 1
 
-/obj/item/material/Generate()
+	drop_sound = 'sound/items/drop/gascan.ogg'
+
+	weight = 0.1
+
+/obj/item/material/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEPATH("material_id")
+	return .
+
+/obj/item/material/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADPATH("material_id")
+	return .
+
+/obj/item/material/Initialize()
+	if(!SSmaterials.all_materials[material_id])
+		log_error("Warning: [src.get_debug_name()] had invalid material id \"[material_id]\".")
+		qdel(src)
+		return TRUE
+
+	var/material/M = SSmaterials.all_materials[material_id]
+	crafting_id = "[crafting_id]_[M.name]"
+
+	return ..()
+
+/obj/item/material/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .
@@ -23,8 +48,8 @@
 	var/material/M = SSmaterials.all_materials[material_id]
 	return ..() * M.value_per_unit
 
-
-/obj/item/material/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+/*
+/obj/item/material/Crossed(atom/movable/O)
 
 	if(!istype(O,/obj/item/material))
 		return ..()
@@ -38,3 +63,4 @@
 
 	src.transfer_item_count_to(M)
 	return TRUE
+*/

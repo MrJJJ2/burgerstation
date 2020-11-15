@@ -1,14 +1,15 @@
 /obj/item/clothing/feet/shoes/colored
 	name = "right shoe"
 	desc = "Good for running!"
-	desc_extended = "A basic running shoe. Doesn't protect much, but it makes you go faster."
+	desc_extended = "A basic running shoe. Doesn't protect much, but it makes you go faster. Can also be colored with dye."
 	icon_state = "inventory_right"
 	icon_state_worn = "worn_right"
 
-	icon = 'icons/obj/items/clothing/shoes/colored.dmi'
+	icon = 'icons/obj/item/clothing/shoes/colored.dmi'
 
 	item_slot = SLOT_FOOT_RIGHT
 	protected_limbs = list(BODY_FOOT_RIGHT)
+	blocks_clothing = SLOT_FOOT_RIGHT_U | SLOT_FOOT_RIGHT
 
 	no_initial_blend = TRUE
 
@@ -16,16 +17,14 @@
 		BLADE = 5,
 		BLUNT = 5,
 		PIERCE = 5,
-		MAGIC = 25,
-		HEAT = 5,
-		COLD = 5,
-		FATIGUE = 10
+		ARCANE = 25,
+		COLD = 10,
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_1
 
 
+	dyeable = TRUE
 
 	polymorphs = list(
 		"base" = COLOR_WHITE,
@@ -33,9 +32,11 @@
 		"sole" = COLOR_GREY_LIGHT
 	)
 
-	value = 10
+	value = 30
 
-	slowdown_mul_worn = 0.95
+
+
+	drop_sound = 'sound/items/drop/shoes.ogg'
 
 /obj/item/clothing/feet/shoes/colored/left
 	name = "left shoe"
@@ -44,7 +45,7 @@
 
 	item_slot = SLOT_FOOT_LEFT
 	protected_limbs = list(BODY_FOOT_LEFT)
-	blocks_clothing = SLOT_FOOT_LEFT_U
+	blocks_clothing = SLOT_FOOT_LEFT | SLOT_FOOT_LEFT_U
 
 
 /obj/item/clothing/feet/shoes/colored/black
@@ -62,7 +63,7 @@
 
 	item_slot = SLOT_FOOT_LEFT
 	protected_limbs = list(BODY_FOOT_LEFT)
-	blocks_clothing = SLOT_FOOT_LEFT_U
+	blocks_clothing = SLOT_FOOT_LEFT | SLOT_FOOT_LEFT_U
 
 /obj/item/clothing/feet/shoes/colored/blacker
 	polymorphs = list(
@@ -78,7 +79,7 @@
 
 	item_slot = SLOT_FOOT_LEFT
 	protected_limbs = list(BODY_FOOT_LEFT)
-	blocks_clothing = SLOT_FOOT_LEFT_U
+	blocks_clothing = SLOT_FOOT_LEFT | SLOT_FOOT_LEFT_U
 
 
 /obj/item/clothing/feet/shoes/colored/brown
@@ -95,4 +96,4 @@
 
 	item_slot = SLOT_FOOT_LEFT
 	protected_limbs = list(BODY_FOOT_LEFT)
-	blocks_clothing = SLOT_FOOT_LEFT_U
+	blocks_clothing = SLOT_FOOT_LEFT | SLOT_FOOT_LEFT_U

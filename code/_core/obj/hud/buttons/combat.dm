@@ -7,14 +7,15 @@
 
 	flags = FLAGS_HUD_MOB
 
-/obj/hud/button/resist/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/resist/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(is_living(owner))
+	. = ..()
+
+	if(. && is_living(owner))
 		var/mob/living/L = owner
-		if(L.can_resist())
-			L.resist()
+		L.resist()
 
-	return ..()
+	return .
 
 /obj/hud/button/resist_auto
 	name = "toggle auto resist"
@@ -34,10 +35,15 @@
 
 	..()
 
-/obj/hud/button/resist_auto/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	owner.auto_resist = !owner.auto_resist
-	update_sprite()
-	return ..()
+/obj/hud/button/resist_auto/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	. = ..()
+
+	if(.)
+		owner.auto_resist = !owner.auto_resist
+		update_sprite()
+
+	return .
 
 /*
 /obj/hud/button/targeting
@@ -91,7 +97,7 @@
 
 	..()
 
-/obj/hud/button/targeting/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/targeting/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(!is_player(caller))
 		return
@@ -170,7 +176,7 @@
 
 	..()
 
-/obj/hud/button/defense/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/defense/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(!params[PARAM_ICON_Y])
 		return

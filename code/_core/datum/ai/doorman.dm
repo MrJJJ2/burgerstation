@@ -8,14 +8,26 @@
 
 	var/obj/marker/beepsky/beepsky_marker
 
-	enabled = TRUE
+	aggression = 0
+	retaliate = TRUE
+
+/ai/doorman/Destroy()
+	beepsky_marker = null
+	return ..()
+
+/ai/doorman/should_attack_mob(var/mob/living/L,var/do_aggression_check = TRUE)
+
+	if(L == owner)
+		return FALSE
+
+	return TRUE
 
 /ai/doorman/handle_movement()
 
 	if(!beepsky_marker)
 		beepsky_marker = locate() in owner.loc.loc.contents
 
-	if(frustration_move > frustration_threshold)
+	if(frustration_move > frustration_move_threshold)
 		owner.force_move(beepsky_marker.loc)
 		frustration_move = 0
 
@@ -24,7 +36,7 @@
 			owner.move_dir = get_dir(owner,objective_attack)
 		else
 			owner.move_dir = 0x0
-	else
+	else if(beepsky_marker)
 		if(owner.loc != beepsky_marker.loc)
 			owner.move_dir = get_dir(owner,beepsky_marker)
 		else

@@ -8,11 +8,16 @@
 	if(I.id == BODY_HAND_RIGHT)
 		right_hand = I
 
+	if(I.id == BODY_TORSO_OB)
+		holster = I
+
 	inventory += I
 
 	if(client)
 		client.screen += I
 		client.known_inventory += I
+
+	return TRUE
 
 /mob/living/advanced/proc/remove_inventory(var/obj/hud/inventory/I)
 
@@ -22,6 +27,9 @@
 	if(I.id == BODY_HAND_RIGHT)
 		right_hand = null
 
+	if(I.id == BODY_TORSO_OB)
+		holster = null
+
 	inventory -= I
 
 	if(client)
@@ -30,20 +38,28 @@
 
 /mob/living/advanced/proc/remove_all_inventory()
 
-	for(var/obj/hud/inventory/I in inventory)
+	for(var/k in inventory)
+		var/obj/hud/inventory/I = k
 		remove_inventory(I)
+
+	return TRUE
 
 
 /mob/living/advanced/proc/restore_inventory()
-	if(!client)
-		return
 
-	for(var/obj/hud/inventory/I in inventory)
+	if(!client)
+		return FALSE
+
+	for(var/k in inventory)
+		var/obj/hud/inventory/I = k
 		client.screen += I
+
+	return TRUE
 
 
 /mob/living/advanced/proc/open_inventory(var/obj/hud/inventory/I)
 	active_inventory = I
+	return TRUE
 
 
 /mob/living/advanced/proc/drop_held_objects(var/turf/T)

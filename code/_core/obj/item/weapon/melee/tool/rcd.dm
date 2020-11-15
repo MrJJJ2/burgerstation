@@ -1,8 +1,8 @@
-/obj/item/weapon/melee/tool/rcd
+/obj/item/rcd
 	name = "rapid construction device"
 	desc = "Rapidly construct items."
 	desc_extended = "Useful for making complex structures fast. Requires a blueprint disk to be loaded."
-	icon = 'icons/obj/items/weapons/melee/tools/rcd.dmi'
+	icon = 'icons/obj/item/weapons/melee/tools/rcd.dmi'
 
 	var/obj/item/disk/rcd_disk
 
@@ -13,23 +13,35 @@
 
 	value = 50
 
-/obj/item/weapon/melee/tool/rcd/Generate()
+	weight = 5
+
+/obj/item/rcd/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEATOM("rcd_disk")
+	return .
+
+/obj/item/rcd/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADATOM("rcd_disk")
+	return .
+
+/obj/item/rcd/Generate()
 	matter_current = matter_max
 	return ..()
 
-/obj/item/weapon/melee/tool/rcd/proc/add_matter(var/matter_amount)
+/obj/item/rcd/proc/add_matter(var/matter_amount)
 	matter_current = min(matter_current + matter_amount,matter_max)
 	update_sprite()
 	return matter_current
 
-/obj/item/weapon/melee/tool/rcd/proc/spend_matter(var/matter_to_spend)
+/obj/item/rcd/proc/spend_matter(var/matter_to_spend)
 	if(matter_to_spend > matter_current)
 		return FALSE
 	matter_current -= matter_to_spend
 	update_sprite()
 	return TRUE
 
-/obj/item/weapon/melee/tool/rcd/update_overlays()
+/obj/item/rcd/update_overlays()
 
 	. = ..()
 
@@ -40,7 +52,10 @@
 
 	return .
 
-/obj/item/weapon/melee/tool/rcd/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
+/obj/item/rcd/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
+
+	if(is_inventory(object))
+		return ..()
 
 	if(!isturf(object))
 		object = get_turf(object)
@@ -81,37 +96,33 @@
 				var/atom/A = data["object"]
 				A = new A(T)
 				INITIALIZE(A)
+				FINALIZE(A)
 				caller.to_chat("You construct \a [A.name] with \the [src.name].")
 
 		return TRUE
 
 	return ..()
 
-/obj/item/weapon/melee/tool/rcd/proc/insert_disk(var/mob/caller,var/obj/item/disk/desired_disk,var/silent=FALSE)
-
-	var/obj/item/disk/old_disk
+/obj/item/rcd/proc/insert_disk(var/mob/caller,var/obj/item/disk/desired_disk,var/silent=FALSE)
 	if(rcd_disk)
-		old_disk = eject_disk(caller,TRUE)
-		if(caller && !silent)
-			caller.to_chat("You swap \the [old_disk.name] for \the [desired_disk.name].")
-
-	desired_disk.force_move(src)
+		if(caller && !silent) caller.to_chat("There is already a [rcd_disk.name] installed in \the [src.name]!")
+		return null
+	desired_disk.drop_item(src)
 	rcd_disk = desired_disk
-	if(caller && !silent)
-		caller.to_chat("You insert \the [rcd_disk.name] into \the [src.name] and download the data onto the RCD.")
+	if(caller && !silent) caller.to_chat("You insert \the [rcd_disk.name] into \the [src.name] and download the data onto the RCD.")
+	return rcd_disk
 
-	return old_disk
-
-/obj/item/weapon/melee/tool/rcd/proc/eject_disk(var/mob/caller,var/silent=FALSE)
-	var/obj/item/disk/old_disk
-	old_disk = rcd_disk
-	rcd_disk.force_move(get_turf(src))
+/obj/item/rcd/proc/eject_disk(var/mob/caller,var/silent=FALSE)
+	if(!rcd_disk)
+		caller.to_chat("There is no disk to eject from \the [src.name]!")
+		return null
+	if(caller && !silent) caller.to_chat("You remove \the [rcd_disk.name] from \the [src.name].")
+	rcd_disk.drop_item(get_turf(src))
+	. = rcd_disk
 	rcd_disk = null
-	if(caller && !silent)
-		caller.to_chat("You remove \the [old_disk.name] from \the [src.name].")
-	return old_disk
+	return .
 
-/obj/item/weapon/melee/tool/rcd/clicked_on_by_object(var/mob/caller as mob,var/atom/object,location,control,params) //The src was clicked on by the object
+/obj/item/rcd/clicked_on_by_object(var/mob/caller as mob,var/atom/object,location,control,params) //The src was clicked on by the object
 
 	if(is_inventory(object) && rcd_disk)
 		var/obj/hud/inventory/I = object
@@ -122,10 +133,11 @@
 	if(istype(object,/obj/item/disk/) && is_inventory(object.loc))
 		var/obj/hud/inventory/I = object.loc
 		var/obj/item/disk/D = object
-		D.drop_item(src.loc)
-		var/obj/item/disk/existing_disk = insert_disk(caller,D)
-		if(existing_disk)
-			I.add_object(existing_disk)
+		var/obj/item/disk/old_disk
+		if(rcd_disk) old_disk = eject_disk(caller)
+		if(!rcd_disk)
+			insert_disk(caller,D)
+			if(old_disk) I.add_object(old_disk)
 		return TRUE
 
 	return ..()

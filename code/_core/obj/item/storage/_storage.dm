@@ -2,9 +2,6 @@
 	name = "storage"
 	desc = "What could it contain?"
 
-	icon_state = "box"
-	icon = 'icons/obj/items/storage/boxes.dmi'
-
 	size = 3
 
 	is_container = TRUE
@@ -12,4 +9,6 @@
 
 	dynamic_inventory_count = 4
 
-	value = 10
+	drop_sound = 'sound/items/drop/box.ogg'
+
+	weight = 2

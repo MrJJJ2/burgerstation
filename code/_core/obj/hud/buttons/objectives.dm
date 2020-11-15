@@ -28,9 +28,8 @@ var/global/list/obj/hud/button/objectives/all_objective_buttons = list()
 
 	. = ..()
 
-	if(. && SShorde && SShorde.last_update)
-		set_stored_text(SShorde.last_update)
-		//maptext = stored_text
+	if(. && SSgamemode && SSgamemode.active_gamemode && SSgamemode.active_gamemode.objective_text)
+		set_stored_text(SSgamemode.active_gamemode.objective_text)
 
 	return .
 
@@ -38,15 +37,18 @@ var/global/list/obj/hud/button/objectives/all_objective_buttons = list()
 	all_objective_buttons -= src
 	return ..()
 
-/obj/hud/button/objectives/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/objectives/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(!maptext)
-		alpha = 100
-		maptext = stored_text
-		animate(src,alpha = 255,time = 1)
-	else
-		alpha = 255
-		maptext = null
-		animate(src,alpha = 100,time = 1)
+	. = ..()
 
-	return ..()
+	if(.)
+		if(!maptext)
+			alpha = 100
+			maptext = stored_text
+			animate(src,alpha = 255,time = 1)
+		else
+			alpha = 255
+			maptext = null
+			animate(src,alpha = 100,time = 1)
+
+	return .

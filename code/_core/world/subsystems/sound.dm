@@ -1,4 +1,4 @@
-var/global/list/active_sounds = list()
+#define ROUND_END_DIRECTORY "sound/round_end/"
 
 SUBSYSTEM_DEF(sound)
 	name = "Sound Subsystem"
@@ -6,31 +6,62 @@ SUBSYSTEM_DEF(sound)
 	priority = SS_ORDER_PRELOAD
 	var/channel_hack = 0
 
+	cpu_usage_max = 75
+	tick_usage_max = 75
+
+	var/list/round_end_sounds = list()
+
+	var/list/active_sounds = list()
+
+/subsystem/sound/unclog(var/mob/caller)
+	for(var/k in src.active_sounds)
+		var/sound/S = k
+		qdel(S)
+		active_sounds -= k
+	broadcast_to_clients(span("danger","Removed all active sounds."))
+	return ..()
+
+/subsystem/sound/Initialize()
+	var/found_files = flist(ROUND_END_DIRECTORY)
+	for(var/k in found_files)
+		round_end_sounds += "[ROUND_END_DIRECTORY][k]"
+	log_subsystem(name,"Found [length(round_end_sounds)] round end sounds.")
+	return TRUE
+
+/subsystem/sound/proc/process_sound(var/sound/S)
+	if(active_sounds[S] == -1)
+		return FALSE
+	active_sounds[S] -= 1
+	if(active_sounds[S] > 0)
+		return FALSE
+	S.status = SOUND_MUTE | SOUND_UPDATE
+	for(var/k in all_clients)
+		var/client/C = k
+		C.receive_sound(S)
+	active_sounds -= S
+	qdel(S)
+	return TRUE
+
 /subsystem/sound/on_life()
 	for(var/F in active_sounds)
+		CHECK_TICK(tick_usage_max,FPS_SERVER)
 		var/sound/S = F
-		if(active_sounds[S] == -1)
-			continue
-		active_sounds[S] -= 1
-		if(active_sounds[S] > 0)
-			continue
-		S.status = SOUND_MUTE | SOUND_UPDATE
-		for(var/mob/M in all_mobs_with_clients)
-			if(!M.client)
-				continue
-			M.client.receive_sound(S)
-		active_sounds -= S
-		qdel(S)
+		if(!process_sound(S))
+			log_error("Warning! Could not properly process an active sound!")
+			qdel(S)
+			active_sounds -= F
 
 	return TRUE
 
 /proc/stop_sound(var/sound_path,var/list/mob/hearers)
-	for(var/F in active_sounds)
+	for(var/F in SSsound.active_sounds)
+		CHECK_TICK(SSsound.tick_usage_max,FPS_SERVER)
 		var/sound/S = F
 		if(S.file != sound_path)
 			continue
 		S.status = SOUND_MUTE
-		for(var/mob/M in hearers)
+		for(var/k in hearers)
+			var/mob/M = k
 			if(!M.client)
 				continue
 			M.client.receive_sound(S)
@@ -71,7 +102,8 @@ proc/play_ambient_sound(var/sound_path,var/list/atom/hearers,var/volume=50,var/p
 	created_sound.environment = environment
 	created_sound.status = SOUND_STREAM
 
-	for(var/mob/M in hearers)
+	for(var/k in hearers)
+		var/mob/M = k
 		if(M.client)
 			if(M.client.current_ambient_sound == sound_path)
 				continue
@@ -95,7 +127,8 @@ proc/play_random_ambient_sound(var/sound_path,var/list/atom/hearers,var/volume=5
 	created_sound.environment = environment
 	created_sound.status = SOUND_STREAM
 
-	for(var/mob/M in hearers)
+	for(var/k in hearers)
+		var/mob/M = k
 		if(!M.client)
 			continue
 		created_sound.volume = M.client.settings.loaded_data["volume_ambient"]
@@ -138,6 +171,22 @@ proc/play_music_track(var/music_track_id,var/client/hearer,var/volume=25)
 	var/area/A = get_area(src)
 	return A.sound_environment
 
+/proc/get_mobs_in_range(var/range,var/atom/epicenter=usr)
+	. = list()
+	for(var/mob/M in range(range,epicenter))
+		. += M
+	return .
+
+/proc/get_clients_in_range(var/range,var/atom/epicenter=usr)
+
+	. = list()
+	for(var/k in all_mobs_with_clients)
+		var/mob/M = k
+		if(get_dist(epicenter,M) > range)
+			continue
+		. += M
+	return .
+
 //Example Formats
 /*
 play('sound',mob) to play to that mob only
@@ -145,33 +194,44 @@ play('sound, atom) to play to all turfs in range of that atom(add args range_min
 play('sound',list_of_hearers, turf or vector) to play to that list of hearers at that location
 */
 
-/proc/play(var/sound_path = null, var/location_or_list = null, var/sound_source = null, var/range_min=1, var/range_max = SOUND_RANGE, var/volume=50, var/sound_setting = SOUND_SETTING_FX, var/pitch=1, var/loop=0, var/duration=0, var/pan=0, var/channel=SOUND_CHANNEL_FX, var/priority=0, var/echo = 0, var/invisibility_check = 0, var/alert=0, var/atom/alert_source = null)
+/proc/play(var/sound_path = null, var/location_or_list = null, var/sound_source = null, var/range_min=1, var/range_max = SOUND_RANGE, var/volume=50, var/sound_setting = SOUND_SETTING_FX, var/pitch=1, var/loop=0, var/duration=0, var/pan=0, var/channel=SOUND_CHANNEL_FX, var/priority=0, var/echo = 0, var/invisibility_check = 0)
 
-	if(!sound_path || !location_or_list)
+	if(!SSsound)
+		log_error("Tried playing a sound without the sound subsystem active!")
+		return FALSE
+
+	if(!sound_path)
+		CRASH_SAFE("Tried playing a sound without a sound path!")
+		return FALSE
+
+	if(!location_or_list)
+		CRASH_SAFE("Tried playing a sound \"[sound_path]\" without a target!")
 		return FALSE
 
 	var/list/hearers = list()
 	var/list/pos = list()
 
 	if(islist(location_or_list))
-		hearers = location_or_list
+		var/list/NL = location_or_list
+		hearers = NL.Copy()
 	else if(ismob(location_or_list))
 		hearers += location_or_list
 	else if(is_atom(location_or_list))
 		var/atom/A = location_or_list
 		var/turf/AT = get_turf(A)
-		for(var/mob/M in mobs_in_range(range_max,AT))
-			hearers += M
+		hearers += get_clients_in_range(range_max,AT)
 		if(!sound_source)
 			sound_source = AT
 	else
-		hearers = all_mobs_with_clients
+		CRASH_SAFE("Tried playing a sound without a valid ([location_or_list]) target!")
+		return FALSE
 
 	if(islist(sound_source))
 		pos = sound_source
 	else if(ismob(sound_source))
 		var/mob/M = sound_source
 		if(!M.client)
+			log_error("Tried playing a sound to a mob ([M.get_debug_name()], but it had no client!")
 			return FALSE
 	else if(sound_source)
 		if(isturf(sound_source))
@@ -205,31 +265,35 @@ play('sound',list_of_hearers, turf or vector) to play to that list of hearers at
 		SSsound.channel_hack = 100
 
 	if(duration > 0)
-		active_sounds[created_sound] = duration
+		SSsound.active_sounds[created_sound] = duration
 	else if(loop)
-		active_sounds[created_sound] = -1
+		SSsound.active_sounds[created_sound] = -1
 
-	for(var/mob/M in hearers)
+	for(var/k in hearers)
+		var/mob/M = k
 
-		CHECK_TICK
+		CHECK_TICK(SSsound.tick_usage_max,FPS_SERVER*2)
 
-		var/client/C = M.client
-
-		if(C && ismob(C.eye))
-			M = C.eye
-
-		if(length(pos) && pos[3] != 0 && pos[3] != M.z) //0 just means that it should play locally
+		if(!M.client)
 			continue
 
 		if(!created_sound)
 			log_error("WARNING: For some reason, [M] cannot hear the sound ([sound_path]) as it is deleted!")
 			return FALSE
 
-		if(invisibility_check && M.see_invisible < invisibility_check)
-			continue
-
 		var/turf/T = get_turf(M)
 		if(!T)
+			continue
+
+		var/client/C = M.client
+
+		if(C && ismob(C.eye))
+			M = C.eye
+
+		if(length(pos) && pos[3] != T.z)
+			continue
+
+		if(invisibility_check && M.see_invisible < invisibility_check)
 			continue
 
 		created_sound.environment = M.get_sound_environment()
@@ -267,11 +331,6 @@ play('sound',list_of_hearers, turf or vector) to play to that list of hearers at
 			continue
 
 		created_sound.volume = local_volume
-
-		if(alert && is_living(M) && luck(alert_source,created_sound.volume*3,FALSE))
-			var/mob/living/L = M
-			if(L.ai && L.ai.alert_level != ALERT_LEVEL_COMBAT)
-				CALLBACK("alert_level_change_\ref[src]",CEILING(L.ai.reaction_time*0.1,1),L.ai,/ai/proc/set_alert_level,alert,FALSE,alert_source)
 
 		if(C) C.receive_sound(created_sound)
 

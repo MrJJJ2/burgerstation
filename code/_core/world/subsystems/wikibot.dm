@@ -1,3 +1,5 @@
+#define WIKIBOT "text/wikibot.txt"
+
 var/global/list/wikibot_list = list()
 
 SUBSYSTEM_DEF(wikibot)
@@ -5,9 +7,12 @@ SUBSYSTEM_DEF(wikibot)
 	desc = "A 'bot' that answers questions."
 	priority = SS_ORDER_PRELOAD
 
+	cpu_usage_max = 50
+	tick_usage_max = 50
+
 /subsystem/wikibot/Initialize()
 
-	var/wikibot_file = file2text(WIKIBOT)
+	var/wikibot_file = rustg_file_read(WIKIBOT)
 
 	if(wikibot_file)
 		wikibot_list = json_decode(wikibot_file)
@@ -16,28 +21,26 @@ SUBSYSTEM_DEF(wikibot)
 		log_subsystem(name,"Found no wikibot question/answer keys. Creating new one...")
 		add_new_wikibot_key(list("what","is","wikibot"),"Wikibot is a bot-controlled OOC helper that helps answer commonly asked questions.")
 
-	return TRUE
+	return ..()
 
 /subsystem/wikibot/proc/add_new_wikibot_key(var/list/keywords,var/answer)
 	wikibot_list += list(list("keywords" = keywords, "answer" = answer))
-	fdel(WIKIBOT)
-	text2file(json_encode(wikibot_list),WIKIBOT)
+	rustg_file_write(json_encode(wikibot_list),WIKIBOT)
 	return TRUE
-
-
 
 /subsystem/wikibot/proc/process_string(var/asker,var/string_to_process)
 
 	var/best_score = 0
 	var/best_answer = null
 
-	for(var/list/wikibot_key in wikibot_list)
+	for(var/k in wikibot_list)
+		var/list/wikibot_key = k
 		var/question_keys = wikibot_key["keywords"]
 		var/answer_key = wikibot_key["answer"]
 		var/current_score = 0
 
 		for(var/key in question_keys)
-			CHECK_TICK
+			CHECK_TICK(75,FPS_SERVER*3)
 			if(!findtextEx(lowertext(string_to_process),key))
 				continue
 			current_score += 1

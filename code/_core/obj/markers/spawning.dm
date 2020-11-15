@@ -2,6 +2,7 @@
 	name = "spawning marker"
 	icon = 'icons/obj/markers/spawning.dmi'
 	initialize_type = INITIALIZE_EARLY
+	plane = PLANE_OBJ
 
 /obj/marker/spawning/Initialize()
 	do_spawn(src.loc)
@@ -51,6 +52,8 @@
 	INITIALIZE(W)
 	GENERATE(G)
 	GENERATE(W)
+	FINALIZE(G)
+	FINALIZE(W)
 	queue_update_smooth_edges(W)
 
 /obj/marker/spawning/window/reinforced/
@@ -72,3 +75,20 @@
 	LATE_INIT(G)
 	LATE_INIT(W)
 	setup_airlock()
+
+
+/obj/marker/spawning/random
+	var/list/possible_objects = list()
+
+
+/obj/marker/spawning/random/do_spawn(var/turf/T)
+	var/atom/movable/M = pickweight(possible_objects)
+	M = new M(T)
+	LATE_INIT(M)
+
+/obj/marker/spawning/random/object_of_interest
+	possible_objects = list(
+		/obj/structure/interactive/vending/random = 1,
+		/obj/structure/interactive/vending/old_ammo = 1,
+		/obj/item/storage/heavy/trash_pile = 1
+	)

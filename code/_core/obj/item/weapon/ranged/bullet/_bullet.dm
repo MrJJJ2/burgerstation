@@ -1,7 +1,7 @@
 /obj/item/weapon/ranged/bullet
 
 	var/obj/item/bullet_cartridge/chambered_bullet //One in the chamber
-	var/list/obj/item/bullet_cartridge/stored_bullets //This is a fixed list, so be careful.
+	var/list/obj/item/bullet_cartridge/stored_bullets //This is a fixed list, so be careful. Used for shotguns and stuff.
 
 	var/bullet_count_max = 0 //How many bullets can this store on top of the chambered bullet?
 
@@ -12,10 +12,10 @@
 	requires_bullets = TRUE
 
 	empty_sounds = list(
-		'sounds/weapons/empty1.ogg',
-		'sounds/weapons/empty2.ogg',
-		'sounds/weapons/empty3.ogg',
-		'sounds/weapons/empty4.ogg'
+		'sound/weapons/empty1.ogg',
+		'sound/weapons/empty2.ogg',
+		'sound/weapons/empty3.ogg',
+		'sound/weapons/empty4.ogg'
 	)
 
 	var/jammed = FALSE
@@ -27,6 +27,44 @@
 	var/bullet_diameter_min = -1
 	var/bullet_diameter_best = -1
 	var/bullet_diameter_max = -1
+
+	var/standard_bullet_type //The standard bullet type this weapon normally uses.
+
+
+/obj/item/weapon/ranged/bullet/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+
+	if(src.chambered_bullet) .["chambered_bullet"] = src.chambered_bullet.type
+
+	if(length(src.stored_bullets))
+		.["stored_bullets"] = new/list(length(src.stored_bullets))
+		for(var/i=1,i<=length(src.stored_bullets),i++)
+			var/obj/item/bullet_cartridge/B = src.stored_bullets[i]
+			if(B) .["stored_bullets"][i] = B.type
+
+	return .
+
+/obj/item/weapon/ranged/bullet/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+
+	if(object_data["chambered_bullet"])
+		var/b_type = object_data["chambered_bullet"]
+		var/obj/item/bullet_cartridge/B = new b_type(src)
+		INITIALIZE(B)
+		FINALIZE(B)
+		src.chambered_bullet = B
+
+	if(object_data["stored_bullets"] && length(object_data["stored_bullets"]))
+		for(var/i=1, i <= length(object_data["stored_bullets"]), i++)
+			var/b_type = object_data["stored_bullets"][i]
+			if(b_type)
+				var/obj/item/bullet_cartridge/B = new b_type(src)
+				INITIALIZE(B)
+				FINALIZE(B)
+				src.stored_bullets[i] = B
+
+	return .
+
 
 /obj/item/weapon/ranged/bullet/get_examine_list(var/mob/examiner)
 
@@ -52,21 +90,30 @@
 		return FALSE
 
 	var/obj/item/bullet_cartridge/B = chambered_bullet
+	var/jam_chance = B.jam_chance
+	if(B.bullet_length != bullet_length_best)
+		jam_chance += 25
+	if(B.bullet_diameter != bullet_diameter_best)
+		jam_chance += 50
 
 	if(jammed)
-		caller.to_chat(span("notice","You unjam \the [src.name]!"))
+		if(jam_chance < 100) caller.to_chat(span("notice","You unjam \the [src.name]!"))
 		jammed = FALSE
-	else if(B.jam_chance && luck(list(B,src,caller),B.jam_chance,FALSE))
-		caller.to_chat(span("danger","\The [src.name] jams!"))
+	else if(jam_chance && luck(list(B,src,caller),jam_chance,FALSE))
+		if(jam_chance < 100) caller.to_chat(span("danger","\The [src.name] jams!"))
 		jammed = TRUE
 		return FALSE
 
-	B.force_move(new_loc)
-	B.update_sprite()
-	if(play_sound)
-		play(chambered_bullet.get_bullet_eject_sound(),src)
-	if(B.is_spent)
+	if(B.is_spent && B.caseless)
 		qdel(B)
+	else
+		if(play_sound)
+			play(chambered_bullet.get_bullet_eject_sound(),src)
+		if(B.is_spent && !ENABLE_BULLET_CASINGS)
+			qdel(B)
+		else
+			B.drop_item(new_loc)
+			B.update_sprite()
 
 	chambered_bullet = null
 
@@ -78,12 +125,12 @@
 		return FALSE
 
 	stored_bullets -= bullet_to_remove
-	bullet_to_remove.force_move(new_loc)
+	bullet_to_remove.drop_item(new_loc)
 	bullet_to_remove.update_sprite()
 	stored_bullets += null
 	if(play_sound)
 		play(bullet_to_remove.get_bullet_eject_sound(),src)
-	if(bullet_to_remove.is_spent)
+	if(bullet_to_remove.is_spent && !ENABLE_BULLET_CASINGS)
 		qdel(bullet_to_remove)
 
 	return bullet_to_remove
@@ -91,14 +138,18 @@
 
 /obj/item/weapon/ranged/bullet/proc/eject_stored_bullets(var/mob/caller,var/new_loc,var/play_sound=FALSE)
 
-	for(var/obj/item/bullet_cartridge/B in stored_bullets)
+	for(var/k in stored_bullets)
+		if(!k) continue
+		var/obj/item/bullet_cartridge/B = k
 		eject_stored_bullet(caller,B,new_loc,play_sound)
 
 	return TRUE
 
 /obj/item/weapon/ranged/bullet/proc/eject_stored_bullets_spent(var/mob/caller,var/new_loc,var/play_sound=FALSE)
 
-	for(var/obj/item/bullet_cartridge/B in stored_bullets)
+	for(var/k in stored_bullets)
+		if(!k) continue
+		var/obj/item/bullet_cartridge/B = k
 		if(!B.is_spent)
 			continue
 		eject_stored_bullet(caller,B,new_loc,play_sound)
@@ -110,16 +161,32 @@
 	if(!chambered_bullet || chambered_bullet.is_spent)
 		return FALSE
 
-	return chambered_bullet.spend_bullet(caller)
+	var/misfire_chance = 0
+	if(chambered_bullet.bullet_length != bullet_length_best)
+		misfire_chance += 25
+	if(chambered_bullet.bullet_diameter != bullet_diameter_best)
+		misfire_chance += 50
+
+	. = chambered_bullet.spend_bullet(caller,misfire_chance)
+
+	if(chambered_bullet.qdeleting)
+		chambered_bullet = null
+
+	return .
 
 /obj/item/weapon/ranged/bullet/proc/spend_stored_bullet(var/mob/caller,var/bullet_position = 1)
 
 	if(length(stored_bullets) && stored_bullets[bullet_position]) //Spend a bullet
 		var/obj/item/bullet_cartridge/B = stored_bullets[bullet_position]
-		return B.spend_bullet(caller)
+		var/misfire_chance = 0
+		if(B.bullet_length != bullet_length_best)
+			misfire_chance += 25
+		if(B.bullet_diameter != bullet_diameter_best)
+			misfire_chance += 50
+		return B.spend_bullet(caller,misfire_chance)
 
 
-	return FALSE
+	return null
 
 /obj/item/weapon/ranged/bullet/handle_ammo(var/mob/caller)
 	return spend_chambered_bullet(caller)

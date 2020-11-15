@@ -2,7 +2,7 @@
 
 	if(!force && length(status_immune) && status_immune[status_type])
 		if(isnum(status_immune[status_type]))
-			if(!stealthy) new/obj/effect/temp/damage_number(src.loc,duration,"IMMUNE!")
+			if(ENABLE_DAMAGE_NUMBERS && !stealthy) new/obj/effect/temp/damage_number(src.loc,duration,"IMMUNE!")
 			return FALSE
 		else
 			status_type = status_immune[status_type]
@@ -76,24 +76,21 @@
 			remove_status_effect(status)
 			continue
 		if(status_effects[status]["duration"] < -1)
-			status_effects[status]["duration"]++
+			status_effects[status]["duration"] = min(-1,status_effects[status]["duration"] + LIFE_TICK)
 			continue
-		status_effects[status]["duration"]--
+		status_effects[status]["duration"] = max(0,status_effects[status]["duration"] - LIFE_TICK)
 
 	return TRUE
 
-
-/mob/living/proc/has_status_effect(var/status_type,var/and=FALSE) //Accepts lists! Defaults to OR. Set to true if you want AND.
-
-	if(islist(status_type))
-		for(var/v in status_type)
-			if(has_status_effect(v))
-				return TRUE
-			else if(and)
-				return FALSE
-	else if(src.status_effects[status_type])
+/mob/living/proc/has_status_effect(var/status_type) //Accepts lists! Defaults to OR. Set to true if you want AND.
+	if(src.status_effects[status_type])
 		return TRUE
+	return FALSE
 
+/mob/living/proc/has_status_effects(...)
+	for(var/status_type in args)
+		if(src.status_effects[status_type])
+			return TRUE
 	return FALSE
 
 /mob/living/proc/get_status_effect_duration(var/status_type)

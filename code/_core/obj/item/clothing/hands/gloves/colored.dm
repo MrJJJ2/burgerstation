@@ -4,24 +4,23 @@
 	icon_state_worn = "worn_right"
 	desc = "Slap people with these."
 	desc_extended = "A generic glove. Hope that you have a matching pair."
-	icon = 'icons/obj/items/clothing/gloves/regular.dmi'
+	icon = 'icons/obj/item/clothing/gloves/regular.dmi'
 	color = "#FFFFFF"
 
 	item_slot = SLOT_HAND_RIGHT
 	protected_limbs = list(BODY_HAND_RIGHT)
 
 	defense_rating = list(
-		BLADE = 10,
-		BLUNT = 10,
-		PIERCE = 10,
-		MAGIC = 25,
-		HEAT = 25,
+		BLADE = 5,
+		BLUNT = 5,
+		PIERCE = 5,
+		ARCANE = 25,
 		COLD = 25,
 		BIO = 10
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_0
+
 
 	value = 20
 
@@ -29,14 +28,19 @@
 
 /obj/item/clothing/hands/gloves/colored/left
 	name = "left glove"
+	desc = "Slap people with these."
+	desc_extended = "A generic glove. Hope that you have a matching pair."
 	icon_state = "inventory_left"
 	icon_state_worn = "worn_left"
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 /obj/item/clothing/hands/gloves/colored/combat
 	name = "right combat glove"
+	desc = "Shoot guns with theese."
+	desc_extended = "A combat glove. Sadly cannot be used for catching bullets to fuel your russian bias."
 	color = "#404040"
 	rarity = RARITY_UNCOMMON
 
@@ -45,7 +49,7 @@
 		BLUNT = 10,
 		PIERCE = 25,
 		LASER = -10,
-		MAGIC = -25,
+		ARCANE = -25,
 		HEAT = 25,
 		COLD = 25,
 		BOMB = 10,
@@ -57,16 +61,19 @@
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_2
+
 
 /obj/item/clothing/hands/gloves/colored/combat/left
 	name = "left combat glove"
+	desc = "Shoot guns with theese."
+	desc_extended = "A combat glove. Sadly cannot be used for catching bullets to fuel your russian bias."
 	color = "#404040"
 	icon_state = "inventory_left"
 	icon_state_worn = "worn_left"
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 	protection_cold = list(
 		BODY_HAND_LEFT = 1
@@ -74,7 +81,9 @@
 
 
 /obj/item/clothing/hands/gloves/colored/insulated
-	name = "right insulted glove"
+	name = "right insulated glove"
+	desc = "Hack airlocks with these."
+	desc_extended = "Someday, someone declared that the insulated gloves looked like shit. They turned into insulted gloves, but they got over it now. Also has infinite fatigue resist, hell if i know why."
 	color = "#FFFF00"
 	rarity = RARITY_RARE
 
@@ -82,9 +91,9 @@
 		BLADE = 5,
 		BLUNT = 5,
 		PIERCE = 5,
-		MAGIC = 50,
-		HEAT = 50,
-		COLD = -25,
+		ARCANE = 50,
+		HEAT = 25,
+		COLD = 25,
 		BIO = 10,
 		FATIGUE = INFINITY
 	)
@@ -94,12 +103,14 @@
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_1
 
-	value = 60
+
+	value = 150
 
 /obj/item/clothing/hands/gloves/colored/insulated/left
-	name = "left insulted glove"
+	name = "left insulated glove"
+	desc = "Hack airlocks with theese."
+	desc_extended = "Someday, someone declared that the insulated gloves looked like shit. They turned into insulted gloves, but they got over it now. Also has infinite fatigue resist, hell if i know why."
 	color = "#FFFF00"
 
 	icon_state = "inventory_left"
@@ -107,16 +118,17 @@
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 	protection_cold = list(
 		BODY_HAND_RIGHT = 2
 	)
 
-	value = 40
-
 /obj/item/clothing/hands/gloves/colored/padded
-	name = "padded glove"
-	icon = 'icons/obj/items/clothing/gloves/padded.dmi'
+	name = "right padded tactical glove"
+	desc = "Be tactical with theese."
+	desc_extended = "A padded glove. Equipped with a fancier icon for extra tactical-ness."
+	icon = 'icons/obj/item/clothing/gloves/padded.dmi'
 	rarity = RARITY_UNCOMMON
 
 	defense_rating = list(
@@ -124,7 +136,7 @@
 		BLUNT = 25,
 		PIERCE = 25,
 		LASER = -25,
-		MAGIC = -50,
+		ARCANE = -50,
 		HEAT = 50,
 		COLD = 50,
 		BIO = 10
@@ -135,15 +147,20 @@
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_1
+
+	value = 120
+
 
 /obj/item/clothing/hands/gloves/colored/padded/left
-	name = "left padded glove"
+	name = "left padded tactical glove"
+	desc = "Be tactical with theese."
+	desc_extended = "A padded glove. Equipped with a fancier texture for extra tactical-ness."
 	icon_state = "inventory_left"
 	icon_state_worn = "worn_left"
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 	protection_cold = list(
 		BODY_HAND_LEFT = 3
@@ -159,6 +176,7 @@
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 	protection_cold = list(
 		BODY_HAND_LEFT = 3
@@ -176,6 +194,7 @@
 
 	item_slot = SLOT_HAND_LEFT
 	protected_limbs = list(BODY_HAND_LEFT)
+	blocks_clothing = SLOT_HAND_LEFT
 
 	protection_cold = list(
 		BODY_HAND_LEFT = 3

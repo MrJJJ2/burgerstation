@@ -14,6 +14,8 @@
 
 	genderless = TRUE
 
+	flags_species_traits = TRAIT_NO_PAIN
+
 	spawning_organs_male = list(
 		BODY_TORSO = /obj/item/organ/torso/cyborg,
 		BODY_HEAD = /obj/item/organ/head/cyborg,
@@ -34,3 +36,6 @@
 		BODY_INTESTINTES = /obj/item/organ/internal/intestines,
 		BODY_KIDNEYS = /obj/item/organ/internal/kidneys
 	)
+
+/species/reptile/generate_blood_type()
+	return /reagent/blood/robot

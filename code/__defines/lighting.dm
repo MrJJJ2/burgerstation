@@ -1,4 +1,4 @@
-#define LIGHTING_INTERVAL       1     // Frequency, in 1/10ths of a second, of the lighting process.
+#define LIGHTING_INTERVAL       4     // Frequency, in 1/10ths of a second, of the lighting process.
 
 #define LIGHTING_HEIGHT         1 // height off the ground of light sources on the pseudo-z-axis, you should probably leave this alone
 #define LIGHTING_Z_FACTOR       10 // Z diff is multiplied by this and LIGHTING_HEIGHT to get the final height of a light source. Affects how much darker A Z light gets with each level transitioned.
@@ -10,7 +10,7 @@
 #define LIGHTING_DARKNESS_ICON_STATE "black"	// icon_state used for lighting overlays with no luminosity.
 #define LIGHTING_TRANSPARENT_ICON_STATE "blank"
 
-#define LIGHTING_SOFT_THRESHOLD 0 // If the max of the lighting lumcounts of each spectrum drops below this, disable luminosity on the lighting overlays.
+#define LIGHTING_SOFT_THRESHOLD 0.01 // If the max of the lighting lumcounts of each spectrum drops below this, disable luminosity on the lighting overlays.
 #define LIGHTING_BLOCKED_FACTOR 0.5	// How much the range of a directional light will be reduced while facing a wall.
 
 // If defined, instant updates will be used whenever server load permits. Otherwise queued updates are always used.
@@ -29,7 +29,7 @@
 		1, 1, 1, 0, \
 		1, 1, 1, 0, \
 		1, 1, 1, 0, \
-		0, 0, 0, 0.95  \
+		0, 0, 0, 0.98  \
 	)               \
 
 // Helpers so we can (more easily) control the colour matrices.
@@ -95,3 +95,4 @@
 #define LIGHT_SEMI 180
 #define LIGHT_WIDE 90
 #define LIGHT_NARROW 45
+#define LIGHT_TUBE null

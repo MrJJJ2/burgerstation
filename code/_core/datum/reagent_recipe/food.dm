@@ -1,7 +1,9 @@
-/reagent_recipe/dough/
+/reagent_recipe/food/
+	category = "Food"
+
+/reagent_recipe/food/dough/
 
 	name = "wheat grain dough"
-	id = "dough_wheat_grain"
 
 	required_reagents = list(
 		/reagent/nutrition/wheat_grain = 3,
@@ -14,10 +16,9 @@
 
 	result = /obj/item/container/food/dynamic/bread
 
-/reagent_recipe/dough/flour
+/reagent_recipe/food/dough/flour
 
 	name = "whole wheat flour dough"
-	id = "dough_flour"
 
 	required_reagents = list(
 		/reagent/nutrition/wheat_grain/flour = 3,
@@ -30,10 +31,9 @@
 
 	result = /obj/item/container/food/dynamic/bread
 
-/reagent_recipe/dough/flour/processed
+/reagent_recipe/food/dough/flour/processed
 
 	name = "white flour dough"
-	id = "dough_flour_white"
 
 	required_reagents = list(
 		/reagent/nutrition/wheat_grain/flour/processed = 3,
@@ -47,10 +47,9 @@
 	result = /obj/item/container/food/dynamic/bread
 
 
-/reagent_recipe/bread/
+/reagent_recipe/food/bread/
 
 	name = "wheat grain bread"
-	id = "bread_wheat_grain"
 
 	required_reagents = list(
 		/reagent/nutrition/dough = 1
@@ -64,10 +63,9 @@
 		/reagent/nutrition/bread = 1
 	)
 
-/reagent_recipe/bread/flour
+/reagent_recipe/food/bread/flour
 
 	name = "whole wheat flour bread"
-	id = "bread_flour"
 
 	required_reagents = list(
 		/reagent/nutrition/dough/flour = 1
@@ -81,10 +79,9 @@
 		/reagent/nutrition/bread/flour = 1
 	)
 
-/reagent_recipe/bread/flour/processed
+/reagent_recipe/food/bread/flour/processed
 
 	name = "white flour bread"
-	id = "bread_flour_white"
 
 	required_reagents = list(
 		/reagent/nutrition/dough/flour/processed = 1,
@@ -98,37 +95,43 @@
 		/reagent/nutrition/bread/flour/processed = 1
 	)
 
-//Meat
-/reagent_recipe/meat/cow
+/reagent_recipe/food/cake_batter/
 
-	name = "cooked cow's meat"
-	id = "cooked_meat_cow"
+	name = "cake batter"
 
 	required_reagents = list(
-		/reagent/nutrition/meat/cow = 1
-	)
-
-	required_temperature_min = list(
-		/reagent/nutrition/meat/cow = 400
+		/reagent/nutrition/wheat_grain/flour/processed = 15,
+		/reagent/nutrition/sugar = 5,
+		/reagent/nutrition/egg_white = 5,
+		/reagent/nutrition/egg_yellow = 5,
 	)
 
 	results = list(
-		/reagent/nutrition/meat/cow/cooked = 1
+		/reagent/nutrition/cake_batter = 30
 	)
 
-/reagent_recipe/meat/chicken
+	result = /obj/item/container/food/dynamic/cake
 
-	name = "cooked chicken's meat"
-	id = "cooked_chicken"
+/reagent_recipe/food/icing_sugar
+	name = "icing sugar"
 
 	required_reagents = list(
-		/reagent/nutrition/meat/chicken = 1
-	)
-
-	required_temperature_min = list(
-		/reagent/nutrition/meat/chicken = 400
+		/reagent/nutrition/corn_flour = 1,
+		/reagent/nutrition/sugar = 1
 	)
 
 	results = list(
-		/reagent/nutrition/meat/chicken/cooked = 1
+		/reagent/nutrition/sugar/icing = 1
+	)
+
+/reagent_recipe/food/icing
+	name = "icing"
+
+	required_reagents = list(
+		/reagent/nutrition/sugar/icing = 1,
+		/reagent/nutrition/water = 1
+	)
+
+	results = list(
+		/reagent/nutrition/icing = 1
 	)

@@ -55,9 +55,9 @@ mob/living/advanced/proc/handle_beardstyle_chargen(var/hair_num=-1,var/desired_c
 
 	var/hair_icon = S.all_hair_face[clamp(choice_main,1,length(S.all_hair_face))]
 	if(desired_color)
-		change_organ_visual("hair_face", desired_icon = S.default_icon_face, desired_icon_state = hair_icon, desired_color = desired_color)
+		change_organ_visual("hair_face", desired_icon = S.default_icon_hair_face, desired_icon_state = hair_icon, desired_color = desired_color)
 	else
-		change_organ_visual("hair_face", desired_icon = S.default_icon_face, desired_icon_state = hair_icon)
+		change_organ_visual("hair_face", desired_icon = S.default_icon_hair_face, desired_icon_state = hair_icon)
 
 	if(update_blends) update_all_blends()
 
@@ -76,15 +76,17 @@ mob/living/advanced/proc/handle_beardstyle_chargen(var/hair_num=-1,var/desired_c
 
 	chargen_flags = CHARGEN_BEARD
 
-/obj/hud/button/chargen/change_beardstyle/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/chargen/change_beardstyle/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(is_advanced(caller))
+	. = ..()
+
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		var/species/S = all_species[A.species]
 		hair_num = clamp(hair_num + (dir == EAST ? 1 : -1),1,length(S.all_hair_face))
 		A.handle_beardstyle_chargen(hair_num)
 
-	return TRUE
+	return .
 
 
 /obj/hud/button/chargen/change_beardstyle/main/update_owner(var/mob/desired_owner)
@@ -127,7 +129,7 @@ mob/living/advanced/proc/handle_beardstyle_chargen(var/hair_num=-1,var/desired_c
 		var/hair_icon = S.all_hair_face[hair_num]
 		if(hair_icon)
 			var/icon/I2 = new/icon('icons/mob/living/advanced/species/human.dmi',"head_m")
-			var/icon/I3 = new/icon(S.default_icon_face,hair_icon)
+			var/icon/I3 = new/icon(S.default_icon_hair_face,hair_icon)
 			I3.Blend(hair_color,ICON_MULTIPLY)
 			I2.Blend(I3,ICON_OVERLAY)
 			I2.Shift(SOUTH,9)
@@ -137,25 +139,28 @@ mob/living/advanced/proc/handle_beardstyle_chargen(var/hair_num=-1,var/desired_c
 
 	..()
 
-/obj/hud/button/chargen/beardstyle/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	if(is_advanced(caller))
+/obj/hud/button/chargen/beardstyle/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+	. = ..()
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		A.handle_beardstyle_chargen(hair_num)
-	return TRUE
+	return .
 
 /obj/hud/button/chargen/beardstyle/main
 	icon_state = "square_round"
 	screen_loc = "CENTER,CENTER+3"
 
-/obj/hud/button/chargen/beardstyle/main/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/chargen/beardstyle/main/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(is_advanced(caller))
+	. = ..()
+
+	if(. && is_advanced(caller))
 		var/mob/living/advanced/A = caller
 		var/desired_color = input("Hair Color","Hair Color",hair_color) as color|null
 		if(desired_color)
 			A.handle_beardstyle_chargen(hair_num,desired_color)
 
-	return TRUE
+	return .
 
 /obj/hud/button/chargen/beardstyle/slot01
 	icon_state = "square_trim"

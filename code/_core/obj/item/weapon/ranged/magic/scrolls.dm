@@ -4,7 +4,7 @@
 	damage_type = null //TODO: Paper cut
 	ranged_damage_type = null
 
-	icon = 'icons/obj/items/weapons/ranged/magic/scroll.dmi'
+	icon = 'icons/obj/item/weapons/ranged/magic/scroll.dmi'
 	icon_state = "scroll"
 
 	override_icon_state = TRUE
@@ -14,6 +14,24 @@
 	automatic = FALSE
 
 	var/scroll_count = 1
+
+	weight = 0.1
+
+
+/obj/item/weapon/ranged/magic/scroll/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("scroll_count")
+	return .
+
+/obj/item/weapon/ranged/magic/scroll/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("scroll_count")
+	return .
+
+/obj/item/weapon/ranged/magic/scroll/get_value()
+	. = ..()
+	. *= (1 + scroll_count)
+	return .
 
 /obj/item/weapon/ranged/magic/scroll/quick(var/mob/caller as mob,var/atom/object,location,params)
 	shoot(caller,object,location,params)
@@ -28,6 +46,11 @@
 /obj/item/weapon/ranged/magic/scroll/can_gun_shoot(var/mob/caller)
 
 	if(!open)
+		caller.to_chat(span("notice","You need to unravel the scroll before firing it!"))
+		return FALSE
+
+	if(get_ammo_count() <= 0)
+		caller.to_chat(span("notice","The scroll is blank!"))
 		return FALSE
 
 	return ..()
@@ -56,6 +79,8 @@
 
 /obj/item/weapon/ranged/magic/scroll/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
+	object = object.defer_click_on_object()
+
 	if(is_scroll(object))
 
 		if(scroll_count <= 0)
@@ -68,7 +93,7 @@
 			caller.to_chat(span("notice","The scroll is blank and void of magic!"))
 			return TRUE
 
-		if(S.id != id) //Need to be the exact same id.
+		if(S.type != type) //Need to be the exact same id.
 			caller.to_chat(span("notice","It wouldn't be a very good idea to mix scrolls together without a tome."))
 			return TRUE
 
@@ -86,13 +111,13 @@
 	return ..()
 
 /obj/item/weapon/ranged/magic/scroll/handle_ammo(var/mob/caller,var/bullet_position=1)
-	scroll_count -= 1
+	scroll_count--
 	update_sprite()
+	return ..()
 
 /obj/item/weapon/ranged/magic/scroll/fireball
 	name = "scroll of fireball"
 	desc = "Shoots a fireball."
-	id = "fireball"
 
 	projectile = /obj/projectile/magic/fireball
 
@@ -101,8 +126,10 @@
 	shoot_delay = 10
 	projectile_speed = 16
 
-	shoot_sounds = list('sounds/weapons/magic/fireball.ogg')
+	shoot_sounds = list('sound/weapons/magic/fireball.ogg')
 
-/obj/item/weapon/ranged/magic/scroll/fireball/amount_3/Generate()
+	value = 20
+
+/obj/item/weapon/ranged/magic/scroll/fireball/Generate()
 	scroll_count = 5
 	return ..()

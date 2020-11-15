@@ -1,6 +1,6 @@
 /obj/item/crafting/pill_press
 	name = "portable pill press table"
-	icon = 'icons/obj/items/ore.dmi'
+	icon = 'icons/obj/item/ore.dmi'
 	icon_state = "pill_press"
 
 	inventories = list(
@@ -12,6 +12,8 @@
 	)
 
 	crafting_id = "pill_press"
+
+	crafting_type = null //This actually doesn't make anything.
 
 	value = 40
 
@@ -34,11 +36,11 @@
 	var/list/item_table = generate_crafting_table(caller,src)
 
 	if(!item_table["b1"] || !is_beaker(item_table["b1"]))
-		caller.to_chat(span("notice","There must be a beaker in the left slot in order to make a pill!"))
+		caller.to_chat(span("notice","There must be a beaker in the left-most slot in order to make a pill!"))
 		return FALSE
 
-	if(item_table["b2"] && !is_beaker(item_table["b2"]))
-		caller.to_chat(span("notice","There must be a beaker in the right slot in order to make a double pill!"))
+	if(item_table["b3"] && !is_beaker(item_table["b3"]))
+		caller.to_chat(span("notice","There must be a beaker in the right-most slot in order to make a double pill!"))
 		return FALSE
 
 	var/obj/item/container/beaker/I1 = item_table["b1"]
@@ -57,12 +59,10 @@
 	P = new P(get_turf(src))
 	INITIALIZE(P)
 	GENERATE(P)
+	FINALIZE(P)
 
 	I1.reagents.transfer_reagents_to(P.reagents,I1.transfer_amount)
-	if(I2)
-		I2.reagents.transfer_reagents_to(P.reagents_2,I2.transfer_amount)
-
-
+	if(I2) I2.reagents.transfer_reagents_to(P.reagents_2,I2.transfer_amount)
 
 	if(product_container)
 		product_container.add_to_inventory(caller,P,TRUE)

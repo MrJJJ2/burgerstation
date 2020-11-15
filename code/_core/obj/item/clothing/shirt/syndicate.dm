@@ -1,6 +1,8 @@
 /obj/item/clothing/shirt/syndicate
-	name = "\improper syndicate shirt"
-	icon = 'icons/obj/items/clothing/shirts/syndicate.dmi'
+	name = "\improper syndicate turtleneck"
+	desc = "Suspicious-looking."
+	desc_extended = "Wearing this as a member of Nanotrasen might not be a good idea..."
+	icon = 'icons/obj/item/clothing/shirts/syndicate.dmi'
 
 	item_slot = SLOT_TORSO
 
@@ -8,8 +10,8 @@
 		BLADE = 15,
 		BLUNT = 15,
 		PIERCE = 15,
-		MAGIC = 10,
-		COLD = 25,
+		ARCANE = 10,
+		COLD = 50,
 	)
 
-	value = 20
+	value = 60

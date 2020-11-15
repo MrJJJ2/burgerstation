@@ -1,5 +1,7 @@
 /obj/structure/interactive/disposals/machine/chute
 	name = "disposals chute"
+	desc = "Express delivery!"
+	desc_extended = "Throw trash in here."
 	icon_state = "disposal"
 
 	collision_flags = FLAG_COLLISION_WALKING
@@ -11,6 +13,8 @@
 
 	bullet_block_chance = 50
 
+	density = TRUE
+
 /obj/structure/interactive/disposals/machine/chute/think()
 
 	if(disposals_countdown <= 0)
@@ -18,7 +22,8 @@
 		disposals_container.sorting_tag = "disposals"
 		INITIALIZE(disposals_container)
 		GENERATE(disposals_container)
-		for(var/atom/movable/M in contents)
+		FINALIZE(disposals_container)
+		for(var/atom/movable/M in src.contents)
 			M.force_move(disposals_container)
 		stop_thinking(src)
 		disposals_countdown = initial(disposals_countdown)
@@ -29,24 +34,28 @@
 
 	return TRUE
 
-/obj/structure/interactive/disposals/machine/chute/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+/obj/structure/interactive/disposals/machine/chute/Crossed(atom/movable/O)
 	O.force_move(src)
 	start_thinking(src)
 	return ..()
 
-/obj/structure/interactive/disposals/machine/chute/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	if(is_item(object))
-		var/obj/item/I = object
-		I.drop_item(get_turf(src))
-	return ..()
-
-/obj/structure/interactive/disposals/machine/chute/drop_on_object(var/atom/caller,var/atom/object,location,control,params)
+/obj/structure/interactive/disposals/machine/chute/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	INTERACT_CHECK
 
+	if(is_item(object))
+		var/obj/item/I = object
+		I.drop_item(src)
+
+	return ..()
+
+/obj/structure/interactive/disposals/machine/chute/drop_on_object(var/mob/caller,var/atom/object,location,control,params)
+	//Todo, interact delay.
 	if(ismob(object) && caller == object)
-		var/mob/M = object
-		M.force_move(src)
+		INTERACT_CHECK
+		INTERACT_CHECK_OTHER(object)
+		var/mob/living/L = object
+		L.force_move(src)
 		start_thinking(src)
 		return TRUE
 

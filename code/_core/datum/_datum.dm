@@ -4,20 +4,42 @@
 	var/qdeleting = FALSE
 	var/initialized = FALSE
 	var/generated = FALSE
+	var/finalized = FALSE
+	var/qdelete_immune = FALSE
 	var/list/hooks
 
+/datum/proc/get_examine_list(var/mob/examiner)
+	return list(div("examine_title","[src]"),div("examine_description","[src.type]"))
+
+/datum/proc/get_examine_details_list(var/mob/examiner)
+	return list()
+
 /datum/proc/Initialize()
-	initialized = TRUE
+	if(initialized)
+		CRASH_SAFE("WARNING: [src.get_debug_name()] was initialized twice!")
+		return TRUE
+	return TRUE
+
+/datum/proc/PostInitialize()
 	return TRUE
 
 /datum/proc/Generate() //Generate the atom, giving it stuff if needed.
-	generated = TRUE
 	return TRUE
 
-/datum/proc/is_safe_to_delete()
+/datum/proc/Finalize() //We're good to go.
 	return TRUE
+
+/datum/proc/is_safe_to_delete(var/check_loc = FALSE)
+	return TRUE
+
+/datum/proc/delete()
+	qdel(src)
+	return TRUE
+
 
 /datum/Destroy()
+
+	HOOK_CALL("Destroy")
 
 	if(hooks)
 		hooks.Cut()
@@ -29,10 +51,12 @@
 /datum/proc/get_debug_name()
 	return "[src.type]"
 
+/datum/proc/get_log_name()
+	return "[src.type]"
 
 /datum/atom/Destroy()
 
-	if(!initialized)
-		log_error("Warning: [get_debug_name()] is being destroyed before it is initialized!")
+	if(!finalized)
+		log_error("Warning: [get_debug_name()] is being destroyed before it is finalized!")
 
 	return ..()

@@ -37,7 +37,7 @@
 					return .
 				if(L.loyalty_tag == "Syndicate")
 					found_syndicate += L
-				else if(!is_player(L))
+				else if(!L.is_player_controlled())
 					mobs_to_delete += L
 
 			for(var/mob/living/L in mobs_to_delete)
@@ -53,7 +53,7 @@
 				return .
 
 			spawn for(var/i=1,i<=min(5-length(found_syndicate),SShorde.get_enemies_to_spawn()),i++)
-				CHECK_TICK
+				CHECK_TICK(75,0)
 				var/turf/T = pick(valid_spots)
 				valid_spots -= T
 				var/mob/living/advanced/npc/syndicate/S = new(T)

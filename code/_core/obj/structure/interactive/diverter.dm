@@ -14,14 +14,24 @@
 
 	var/list/atom/movable/tracked_movables = list()
 
-/obj/structure/interactive/diverter/Initialize()
+	density = TRUE
 
-	icon_state = "diverter_on"
+/obj/structure/interactive/diverter/Initialize()
 
 	if(.)
 		collision_dir = turn(dir,180)
 
 	return ..()
+
+/obj/structure/interactive/diverter/PostInitialize()
+	. = ..()
+	update_sprite()
+	return .
+
+/obj/structure/interactive/diverter/update_icon()
+	. = ..()
+	icon_state = "diverter_on"
+	return .
 
 /obj/structure/interactive/diverter/proc/should_push(var/atom/movable/M)
 	return TRUE
@@ -34,14 +44,14 @@
 			continue
 		var/atom/movable/M = k
 		if(!M.anchored && !M.grabbing_hand && should_push(M) && M.loc == src.loc)
-			M.Move(get_step(src,dir),silent = TRUE)
+			M.Move(get_step(src,dir))
 		tracked_movables -= k
 
 	think_timer--
 
 	return think_timer
 
-/obj/structure/interactive/diverter/Crossed(var/atom/movable/O,var/atom/new_loc,var/atom/old_loc)
+/obj/structure/interactive/diverter/Crossed(atom/movable/O)
 
 	tracked_movables[O] = world.time + 4
 
@@ -61,7 +71,7 @@
 /obj/structure/interactive/diverter/high_value/should_push(var/atom/movable/M)
 	if(is_item(M))
 		var/obj/item/I = M
-		return I.calculate_value() >= value_threshold
+		return I.get_value() >= value_threshold
 
 	return FALSE
 
@@ -83,13 +93,13 @@
 
 /obj/structure/interactive/diverter/living
 	name = "airjet diverter (living)"
-	desc_extended = "A special conveyor diverter that uses powerful jets of air to push objects off the conveyor belt based on the conditions. This one checks whether or not the object is a living person or a creature."
+	desc_extended = "A special conveyor diverter that uses powerful jets of air to push objects off the conveyor belt based on the conditions. This one checks whether or not the object is a living person or a creature, or is able to be revived."
 
 /obj/structure/interactive/diverter/living/should_push(var/atom/movable/M)
 
 	if(is_living(M))
 		var/mob/living/L = M
-		if(!L.dead)
+		if(!L.dead || L.ckey)
 			return TRUE
 
 	return FALSE

@@ -1,6 +1,8 @@
 /obj/item/container/beaker/bottle
 	name = "small bottle"
-	icon = 'icons/obj/items/container/cup/bottle.dmi'
+	desc = "Remember to read the label before drinking."
+	desc_extended = "A bottle used by chemists to contain medicines and other reagents."
+	icon = 'icons/obj/item/container/cup/bottle.dmi'
 	icon_state = "bottle"
 	icon_count = 7
 
@@ -38,21 +40,70 @@
 	reagents.add_reagent(/reagent/medicine/adrenaline/epinephrine,reagents.volume_max)
 	return ..()
 
+/obj/item/container/beaker/bottle/calomel
+	name = "bottle of calomel"
+
+/obj/item/container/beaker/bottle/calomel/Generate()
+	reagents.add_reagent(/reagent/medicine/purge,reagents.volume_max)
+	return ..()
+
+/obj/item/container/beaker/bottle/antihol
+	name = "bottle of antihol"
+
+/obj/item/container/beaker/bottle/antihol/Generate()
+	reagents.add_reagent(/reagent/medicine/antihol,reagents.volume_max)
+	return ..()
+
+/obj/item/container/beaker/bottle/charcoal
+	name = "bottle of charcoal"
+
+/obj/item/container/beaker/bottle/charcoal/Generate()
+	reagents.add_reagent(/reagent/medicine/charcoal,reagents.volume_max)
+	return ..()
+
 
 
 /obj/item/container/beaker/glass
 	name = "drinking glass"
-	icon = 'icons/obj/items/container/cup/glass.dmi'
-	icon_state = "cup"
-	icon_count = 15
+	desc = "Bottom's up!"
+	desc_extended = "You can put drinks in these."
+	icon = 'icons/obj/item/container/cup/glass.dmi'
+	icon_state = "glass"
+	icon_count = 12
 
-	reagents = /reagent_container/beaker/bottle/
+	reagents = /reagent_container/beaker/drink/
 
 	value = 10
 
+	pixel_y = 4
+
+	consume_size = BITE_SIZE*2
+
+/obj/item/container/beaker/shot
+	name = "shot glass"
+	desc = "Bottom's way up!"
+	desc_extended = "You can put drinks in these."
+	icon = 'icons/obj/item/container/cup/glass_shot.dmi'
+	icon_state = "glass"
+	icon_count = 9
+
+	reagents = /reagent_container/beaker/shot_glass/
+
+	value = 5
+
+	pixel_y = 4
+
+	consume_size = 100 //All of it.
+
+
+
+
+
 /obj/item/container/beaker/bowl
 	name = "glass mixing bowl"
-	icon = 'icons/obj/items/container/cup/bowl.dmi'
+	desc = "A bowl for all your baking needs."
+	desc_extended = "You can use this to prepare mixes for baking."
+	icon = 'icons/obj/item/container/cup/bowl.dmi'
 	icon_state = "bowl"
 	icon_count = 23
 

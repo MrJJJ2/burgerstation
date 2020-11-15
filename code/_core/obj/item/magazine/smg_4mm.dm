@@ -1,8 +1,10 @@
 /obj/item/magazine/smg_46
 	name = "\improper 4.6x30mm WT-550 magazine"
-	icon = 'icons/obj/items/magazine/4mm_smg.dmi'
+	desc = "IT'S NOT A CLIP. IT'S A MAGAZINE."
+	desc_extended = "Contains ammunition for a ranged weapon. Make sure you're trying to use the right caliber."
+	icon = 'icons/obj/item/magazine/4mm_smg.dmi'
 	icon_state = "mag"
-	bullet_count_max = 20
+	bullet_count_max = 25
 
 	bullet_length_min = 25
 	bullet_length_best = 30
@@ -19,15 +21,7 @@
 	ammo = /obj/item/bullet_cartridge/pistol_4mm/
 
 	size = SIZE_2
-	weight = WEIGHT_2
 
-/obj/item/magazine/smg_46/update_icon()
-	icon_state = "[initial(icon_state)]_[FLOOR((length(stored_bullets)/20)*5,1)]"
-	..()
+	icon_states = 5
 
-/*
-/obj/item/magazine/smg_22/surplus
-	name = "surplus .22 PDW magazine"
-	ammo = /obj/item/bullet_cartridge/revolver_22/surplus
-
-*/
+	value = 10

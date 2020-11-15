@@ -1,11 +1,3 @@
-#define SHUTTLE_STATUS_NONE "none"
-
-#define SHUTTLE_STATE_LAUNCHING "launching" //We're going to launch.
-#define SHUTTLE_STATE_TRANSIT "transit" //We're currently in transit.
-#define SHUTTLE_STATE_LANDING "landing" //We're currently landing.
-#define SHUTTLE_STATE_LANDED "landed" //We have landed.
-#define SHUTTLE_STATE_WAITING "waiting" //We have enough people to launch, now we wait just for more, just in case.
-
 var/global/list/all_shuttle_controlers = list()
 
 /obj/shuttle_controller
@@ -29,7 +21,6 @@ var/global/list/all_shuttle_controlers = list()
 	var/transit_end
 
 	var/default_transit_time = SHUTTLE_DEFAULT_TRANSIT_TIME
-	var/default_transit_time_no_living = SHUTTLE_DEFAULT_TRANSIT_TIME_NO_LIVING
 	var/default_waiting_time = SHUTTLE_DEFAULT_WAITING_TIME
 
 	anchored = TRUE
@@ -39,6 +30,14 @@ var/global/list/all_shuttle_controlers = list()
 	initialize_type = INITIALIZE_LATE
 
 	var/mob/last_caller = null //The last caller who interacted with this shuttle's launch, if any.
+
+	var/start_sound = 'sound/effects/shuttle/hyperspace_begin.ogg'
+	var/progress_sound = 'sound/effects/shuttle/hyperspace_progress.ogg'
+	var/end_sound = 'sound/effects/shuttle/hyperspace_end.ogg'
+
+	var/enable_shuttle_throwing = TRUE
+
+	var/time_restricted = TRUE
 
 /obj/shuttle_controller/Destroy()
 	all_shuttle_controlers -= src
@@ -69,7 +68,7 @@ var/global/list/all_shuttle_controlers = list()
 
 	. =..()
 
-	set_doors(TRUE,TRUE,TRUE) //Open all the doors!
+	set_doors(TRUE,TRUE,TRUE) //Open and bolt all the doors!
 
 	return .
 
@@ -82,20 +81,19 @@ var/global/list/all_shuttle_controlers = list()
 	if(!set_doors(FALSE,TRUE,TRUE)) //Something blocking?
 		return FALSE
 
-	play('sounds/effects/shuttle/hyperspace_begin.ogg',src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3,alert = caller ? ALERT_LEVEL_NOISE : ALERT_LEVEL_NONE, alert_source = caller)
 	last_caller = caller
 	state = SHUTTLE_STATE_LAUNCHING
 	time = 0
-	if(!desired_transit_time)
-		desired_transit_time = default_transit_time_no_living
-		for(var/mob/living/advanced/P in get_area(src))
-			if(P.dead)
-				continue
-			desired_transit_time = default_transit_time
-			break
-	transit_time = max(10,desired_transit_time)
+
+	if(start_sound)
+		play(start_sound,src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3)
+		if(last_caller)
+			create_alert(VIEW_RANGE*3,src.loc,last_caller,ALERT_LEVEL_CAUTION)
+
 	var/area/A = get_area(src)
-	if(A.id == transit_start)
+	if(!desired_transit_time) desired_transit_time = default_transit_time
+	transit_time = max(1,desired_transit_time)
+	if(A.type == transit_start)
 		transit_target = transit_end
 		transit_source = transit_start
 	else
@@ -105,39 +103,38 @@ var/global/list/all_shuttle_controlers = list()
 
 /obj/shuttle_controller/proc/set_doors(var/open = TRUE,var/lock = FALSE,var/force = FALSE)
 
-	. = TRUE
+	. = TRUE //TRUE if nothing went wrong. False if something went wrong.
 
 	var/area/A = get_area(src)
-	for(var/obj/structure/interactive/door/airlock/shuttle/S in A.contents)
-		var/doorstuck = FALSE
-		var/obj/structure/interactive/scanner/living/S1 = locate() in S.loc.contents
-		if(S1 && !S1.trigger(null,src,-1,-1))
-			. = FALSE
-			continue
 
-		var/exposed_to_space = FALSE
+	for(var/obj/structure/interactive/door/airlock/shuttle/S in A.contents)
+
+		var/obj/structure/interactive/scanner/living/S1 = locate() in S.loc.contents
+		if(S1 && !S1.trigger(null,src,-1,-1)) //Unsafe to close.
+			. = FALSE
+			break
+
+		var/exposed_to_space = S.get_best_touching_space(FALSE)
+
 		for(var/direction in DIRECTIONS_CARDINAL)
 			var/turf/T = get_step(S,direction)
-			if(istype(T.loc,/area/space/))
-				exposed_to_space = TRUE
+			var/obj/structure/interactive/scanner/living/S2 = locate() in T.contents
+			if(S2 && !S2.trigger(null,src,-1,-1))
+				. = FALSE //Unsafe to close.
+				break
 
-		if(!exposed_to_space)
-			for(var/direction in DIRECTIONS_CARDINAL)
-				var/turf/T = get_step(S,direction)
-				var/obj/structure/interactive/scanner/living/S2 = locate() in T.contents
-				if(S2 && !S2.trigger(null,src,-1,-1))
-					. = FALSE
-					doorstuck = TRUE
-					continue
-				var/obj/structure/interactive/door/airlock/AL = locate() in T.contents
-				if(AL && !istype(AL,/obj/structure/interactive/door/airlock/shuttle/))
-					if(open)
-						AL.open(null,lock,force)
-					else
-						AL.close(null,lock,force)
+			var/obj/structure/interactive/door/airlock/AL = locate() in T.contents
+			if(!AL || istype(AL,/obj/structure/interactive/door/airlock/shuttle/))
+				//No airlock? Whatever, keep going.
+				continue
 
-		if(!doorstuck)
-			if(!exposed_to_space && open)
+			if(open)
+				AL.open(null,lock,force)
+			else
+				AL.close(null,lock,force)
+
+		if(.)
+			if(open && !exposed_to_space)
 				S.open(null,lock,force)
 			else
 				S.close(null,lock,force)
@@ -157,8 +154,10 @@ var/global/list/all_shuttle_controlers = list()
 		if(time >= 6) //Needs to be hardcoded as this is based on sound.
 			if(!transit(transit_source,transit_bluespace))
 				return FALSE
-			play('sounds/effects/shuttle/hyperspace_progress.ogg',src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3,alert = last_caller ? ALERT_LEVEL_NOISE : ALERT_LEVEL_NONE, alert_source = last_caller)
-
+			if(progress_sound)
+				play(progress_sound,src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3)
+				if(last_caller)
+					create_alert(VIEW_RANGE*3,src.loc,last_caller,ALERT_LEVEL_CAUTION)
 			state = SHUTTLE_STATE_TRANSIT
 			time = 0
 
@@ -175,7 +174,10 @@ var/global/list/all_shuttle_controlers = list()
 			if(!transit(transit_bluespace,transit_target))
 				return FALSE
 			set_doors(TRUE,TRUE,TRUE) //Open all the doors!
-			play('sounds/effects/shuttle/hyperspace_end.ogg',src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3,alert = last_caller ? ALERT_LEVEL_NOISE : ALERT_LEVEL_NONE, alert_source = last_caller)
+			if(end_sound)
+				play(end_sound,src,range_min=VIEW_RANGE,range_max=VIEW_RANGE*3)
+				if(last_caller)
+					create_alert(VIEW_RANGE,src.loc,last_caller,ALERT_LEVEL_CAUTION)
 			state = SHUTTLE_STATE_LANDED
 			time = 0
 			transit_source = null
@@ -183,7 +185,7 @@ var/global/list/all_shuttle_controlers = list()
 
 	var/area/A = get_area(src)
 
-	for(var/obj/structure/interactive/status_display/SD in A.contents)
+	for(var/obj/structure/interactive/status_display/shuttle/SD in A.contents)
 		SD.set_text(display)
 
 	if(status_id)
@@ -196,6 +198,8 @@ var/global/list/all_shuttle_controlers = list()
 
 	var/area/transit/starting_transit = transit_areas[starting_transit_id]
 	var/area/transit/ending_transit = transit_areas[ending_transit_id]
+
+	//log_debug("SHUTTLE: [src.get_debug_name()] moving from [starting_transit.get_debug_name()] to [ending_transit.get_debug_name()].")
 
 	var/starting_cord_x = starting_transit.x
 	var/starting_cord_y = starting_transit.y
@@ -221,30 +225,56 @@ var/global/list/all_shuttle_controlers = list()
 
 	var/list/atom/movable/objects_to_throw = list()
 
+	//var/found_turfs = 0
 	for(var/turf/T in starting_transit)
-		CHECK_TICK
+		CHECK_TICK(75,FPS_SERVER)
 		if(T.plane != PLANE_SHUTTLE)
 			continue
 		var/offset_x = T.x - starting_cord_x
 		var/offset_y = T.y - starting_cord_y
 		var/turf/replacing_turf = locate(ending_cord_x + offset_x, ending_cord_y + offset_y, ending_cord_z)
+		if(!replacing_turf)
+			//log_error("Warning: Could not find a replacing turf for [src.get_debug_name()] at [ending_cord_x + offset_x],[ending_cord_y + offset_y],[ending_cord_z].")
+			continue
+
+		for(var/k in replacing_turf.contents)
+			var/atom/movable/M = k
+			M.on_crush()
+		if(!replacing_turf.stored_shuttle_items) replacing_turf.stored_shuttle_items = list()
+		var/list/stored_items = list()
+		for(var/obj/item/I in replacing_turf.contents) //Second pass. Get everything that might've been crushed.
+			stored_items += I
+			I.force_move(src)
 		replacing_turf.change_turf(T.type,TRUE,TRUE)
-		for(var/atom/movable/M in T.contents)
-			CHECK_TICK
-			if(!M.allow_shuttle_move)
+		replacing_turf.stored_shuttle_items = stored_items
+
+		for(var/k in T.contents)
+			var/atom/movable/M = k
+			CHECK_TICK(75,FPS_SERVER)
+			if(!M.allow_shuttle_move) //For things like light.
+				continue
+			if(M.loc != T)
 				continue
 			M.move_delay = SECONDS_TO_TICKS(3)
 			M.force_move(replacing_turf)
-			objects_to_throw += M
+			if(enable_shuttle_throwing)
+				objects_to_throw += M
+		for(var/k in T.stored_shuttle_items)
+			var/obj/item/I = k
+			I.drop_item(T)
+			T.stored_shuttle_items -= I
 		T.change_turf(starting_transit.transit_turf,TRUE,TRUE)
 
-	for(var/atom/movable/M in objects_to_throw)
-		if(M.anchored || M.collision_flags & FLAG_COLLISION_ETHEREAL)
-			continue
-		if(istype(M,/obj/structure/))
-			continue
-		if(is_living(M) && locate(/obj/structure/interactive/chair) in M.loc.contents)
-			continue
-		//M.throw_self(M,null,null,null,transit_throw_x*16,transit_throw_y*16)
+	if(enable_shuttle_throwing)
+		for(var/k in objects_to_throw)
+			var/atom/movable/M = k
+			CHECK_TICK(75,FPS_SERVER)
+			if(M.anchored || M.collision_flags & FLAG_COLLISION_ETHEREAL)
+				continue
+			if(istype(M,/obj/structure/))
+				continue
+			if(is_living(M) && locate(/obj/structure/interactive/chair) in M.loc.contents)
+				continue
+			M.throw_self(M,null,null,null,transit_throw_x*8,transit_throw_y*8)
 
 	return TRUE

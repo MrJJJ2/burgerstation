@@ -111,6 +111,15 @@
 /turf/simulated/floor/tile/morphing/cryo
 	color = COLOR_GREEN
 
+/turf/simulated/floor/tile/morphing/virology
+	color = COLOR_GREEN
+
+/turf/simulated/floor/tile/morphing/hydroponics
+	color = COLOR_GREEN
+
+/turf/simulated/floor/tile/morphing/mining
+	color = COLOR_SCIENCE
+
 /turf/simulated/floor/tile/morphing/medical
 	color = COLOR_MEDICAL
 
@@ -119,3 +128,45 @@
 
 /turf/simulated/floor/tile/morphing/engineering
 	color = COLOR_ENGINEERING
+
+/turf/simulated/floor/tile/morphing/security
+	color = COLOR_SECURITY
+
+/turf/simulated/floor/tile/morphing/janitor
+	color = COLOR_JANITOR
+
+/turf/simulated/floor/tile/morphing/chapel
+	color = COLOR_GREY_DARK
+
+/turf/simulated/floor/tile/morphing/library
+	color = COLOR_LIBRARY
+
+/turf/simulated/floor/tile/morphing/red
+	color = COLOR_RED
+
+/turf/simulated/floor/tile/morphing/red/dark
+	color = COLOR_RED_DARK
+
+/turf/simulated/floor/tile/morphing/blue
+	color = COLOR_BLUE
+
+/turf/simulated/floor/tile/morphing/grey
+	color = COLOR_GREY
+
+/turf/simulated/floor/tile/morphing/green
+	color = COLOR_GREEN
+
+/turf/simulated/floor/tile/morphing/yellow
+	color = COLOR_YELLOW
+
+/turf/simulated/floor/tile/morphing/yellow/pure
+	color = "#FFFF00"
+
+/turf/simulated/floor/tile/morphing/chemistry
+	color = COLOR_CHEMISTRY
+
+/turf/simulated/floor/tile/morphing/command
+	color = COLOR_COMMAND
+
+/turf/simulated/floor/tile/morphing/cargo
+	color = COLOR_CARGO

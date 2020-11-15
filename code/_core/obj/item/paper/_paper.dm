@@ -1,15 +1,22 @@
 /obj/item/paper/
 	name = "Paper"
 	desc = "Paper!"
+	desc_extended = "Historically used to write things on."
 
-	icon = 'icons/obj/items/paper.dmi'
+	icon = 'icons/obj/item/paper.dmi'
 	icon_state = "normal"
 
 	var/last_page = 1
 
 	var/list/data = list("There is nothing here.","Oh god oh fuck.")
 
-	value = 1
+	value = 10
+
+	drop_sound = 'sound/items/drop/paper.ogg'
+
+	var/editable = TRUE
+
+	weight = 0.01
 
 /obj/item/paper/click_self(var/mob/caller,location,control,params)
 
@@ -38,10 +45,4 @@
 			close_menu(P,"paper")
 			P.active_paper = null
 
-	return ..()
-
-
-/obj/item/paper/firearms/Generate()
-	name = "book: A Guide to Firearms"
-	data = all_paper_data["a guide to firearms"]
 	return ..()

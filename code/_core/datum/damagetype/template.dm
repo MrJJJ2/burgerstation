@@ -15,7 +15,8 @@
 		RAD = 0,
 		HOLY = 0,
 		DARK = 0,
-		FATIGUE = 0
+		FATIGUE = 0,
+		ION = 0
 	)
 
 	//How much armor to penetrate. It basically removes the percentage of the armor using these values.
@@ -32,14 +33,15 @@
 		RAD = 0,
 		HOLY = 0,
 		DARK = 0,
-		FATIGUE = 0
+		FATIGUE = 0,
+		ION = 0
 	)
 
 
 	attribute_stats = list(
-		ATTRIBUTE_STRENGTH = CLASS_F,
-		ATTRIBUTE_DEXTERITY = CLASS_F,
-		ATTRIBUTE_INTELLIGENCE = CLASS_F
+		ATTRIBUTE_STRENGTH = 100,
+		ATTRIBUTE_DEXTERITY = 100,
+		ATTRIBUTE_INTELLIGENCE = 100
 	)
 
 	attribute_damage = list(
@@ -49,19 +51,13 @@
 	)
 
 	skill_stats = list(
-		SKILL_UNARMED = CLASS_F,
-		SKILL_MELEE = CLASS_F,
-		SKILL_RANGED = CLASS_F
+		SKILL_UNARMED = 100,
+		SKILL_MELEE = 100,
+		SKILL_RANGED = 100
 	)
 
 	skill_damage = list(
 		SKILL_UNARMED = BLADE,
 		SKILL_MELEE = BLADE,
 		SKILL_RANGED = BLADE
-	)
-
-	skill_xp_per_damage = list(
-		SKILL_UNARMED = 0,
-		SKILL_MELEE = 0,
-		SKILL_RANGED = 0
 	)

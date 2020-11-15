@@ -6,7 +6,17 @@
 
 	ai = /ai/carp
 	damage_type = /damagetype/unarmed/bite/
-	class = "carp"
+	class = /class/carp/
+
+	health_base = 150
+
+	value = 100
+
+	butcher_contents = list(
+		/obj/item/container/food/dynamic/fish/carp/,
+		/obj/item/container/food/dynamic/fish/carp/,
+		/obj/item/container/food/dynamic/fish/carp/
+	)
 
 	collision_flags = FLAG_COLLISION_FLYING | FLAG_COLLISION_SWIMMING
 	collision_bullet_flags = FLAG_COLLISION_BULLET_INORGANIC
@@ -15,22 +25,29 @@
 	iff_tag = "carp"
 
 	armor_base = list(
-		BLADE = 25,
-		BLUNT = 0,
+		BLADE = 50,
+		BLUNT = 25,
 		PIERCE = 25,
-		LASER = -25,
-		MAGIC = -25,
-		HEAT = INFINITY,
-		COLD = INFINITY,
-		BOMB = 0,
-		BIO = INFINITY,
+		LASER = 0,
+		ARCANE = 75,
+		HEAT = 50,
+		COLD = 100,
+		BOMB = 25,
+		BIO = 75,
 		RAD = INFINITY,
-		HOLY = 100,
-		DARK = 100,
-		FATIGUE = 0
+		HOLY = 75,
+		DARK = 75,
+		FATIGUE = 25,
+		ION = INFINITY
 	)
 
 	mob_size = MOB_SIZE_LARGE
+
+	movement_delay = DECISECONDS_TO_TICKS(1.5)
+
+	has_footsteps = FALSE
+
+	stun_angle = 180
 
 /mob/living/simple/npc/spacecarp/post_death()
 	..()
@@ -39,6 +56,6 @@
 
 /mob/living/simple/npc/spacecarp/leader
 	name = "alpha space carp"
-	class = "carp"
+	class = /class/carp
 	level_multiplier = 1.25
 

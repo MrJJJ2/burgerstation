@@ -115,3 +115,11 @@
 #define is_pill(A) istype(A, /obj/item/container/pill)
 
 #define is_food(A) istype(A, /obj/item/container/food)
+
+#define is_hud(A) istype(A,/obj/hud/)
+
+#define is_modular_mech(A) istype(A,/mob/living/vehicle/mech/modular)
+
+#define is_mech_part(A) istype(A,/obj/item/mech_part)
+
+#define is_paper(A) istype(A,/obj/item/paper)

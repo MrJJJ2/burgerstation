@@ -1,27 +1,22 @@
 /obj/item/clothing/uniform/hop
 	name = "head of personel's uniform"
 	desc = "Nothing personel, kid."
-	icon = 'icons/obj/items/clothing/uniforms/hop.dmi'
+	desc_extended = "The uniform of choice for giving the clown all access and looking good while doing it."
+	icon = 'icons/obj/item/clothing/uniforms/hop.dmi'
+	rarity = RARITY_RARE
 
 	item_slot = SLOT_TORSO | SLOT_GROIN
 
 	flags_clothing = FLAG_CLOTHING_NOBEAST_FEET
 
 	defense_rating = list(
-		BLADE = 10,
-		BLUNT = 10,
-		PIERCE = 10,
+		BLADE = 15,
+		BLUNT = 15,
+		PIERCE = 15,
 		LASER = 5,
-		MAGIC = 20,
-		HEAT = 0,
+		ARCANE = 20,
 		COLD = 10,
-		BOMB = 0,
-		BIO = 0,
-		RAD = 0,
-		HOLY = 0,
-		DARK = 0,
-		FATIGUE = 0
 	)
 
-	value = 150
+	value = 300
 

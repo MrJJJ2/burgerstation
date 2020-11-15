@@ -1,9 +1,5 @@
-var/global/list/all_areas = list()
-
-
 /area/
 	name = "AREA ERROR"
-	id = null
 	icon = 'icons/area/area.dmi'
 	icon_state = ""
 	layer = LAYER_AREA
@@ -14,34 +10,28 @@ var/global/list/all_areas = list()
 
 	var/flags_area = FLAG_AREA_NONE
 
+	var/flags_comms = FLAG_COMM_NONE
+
 	var/sound_environment = ENVIRONMENT_GENERIC
+
+	var/area_identifier //The identifier of the area. Useful for simulating seperate levels on the same level, without pinpointer issues. Also used by telecomms.
+	var/trackable = FALSE //Trackable area by the game.
 
 	var/map_color_r = rgb(255,0,0,255)
 	var/map_color_g = rgb(0,255,0,255)
 	var/map_color_b = rgb(0,0,255,255)
 	var/map_color_a = rgb(0,0,0,255)
 
-	var/dynamic_lighting_overlay_color = FALSE
-	var/list/lighting_overlay_color_day = LIGHTING_BASE_MATRIX
-	var/list/lighting_overlay_color_night = LIGHTING_BASE_MATRIX
-
 	var/ambient_sound
 	var/list/random_sounds = list()
 	var/list/tracks = list()
 
-	var/level_multiplier = 1 //Adjust the level multiplier for mobs that spawn here using spawners.
-
-	var/area_light_power = 0
-
-	var/list/mob/living/advanced/player/players_inside
+	var/level_multiplier = 1 //Adjust the level multiplier for mobs that spawn here using spawners. This actually just multiplies their experience from the template.
 
 	var/hazard //The id of the hazard
 
 	var/sunlight_freq = 0
-
-	desired_light_range = 0
-	desired_light_power = 0
-	desired_light_color = 0
+	var/sunlight_color = "#FFFFFF"
 
 	//var/assoc_wishgranter //The wishgranter ID this is area is associated with, if any.
 
@@ -55,36 +45,28 @@ var/global/list/all_areas = list()
 
 	var/list/turf/sunlight_turfs = list()
 
-	var/is_space = FALSE
-
 	var/defend = FALSE //Set to true if you're supposed to defend this area.
 
 	var/safe_storage = FALSE
 
+	var/interior = FALSE
 
-/area/New()
-	. = ..()
+	var/average_x = 0
+	var/average_y = 0
 
-	if(hazard)
-		all_areas_with_hazards += src
+	var/allow_ghosts = TRUE //Set to false to prevent a ghost from teleporting to this location.
 
-	/*
-	if(dynamic_lighting_overlay_color)
-		all_areas_with_dynamic_lighting_overlay_color += src
-	*/
 
-	if(!all_areas[type])
-		all_areas[type] = src
-
-	return .
-
+/area/proc/is_space()
+	return FALSE
 
 /area/Destroy()
-	if(players_inside)
-		players_inside.Cut()
 
 	if(sunlight_turfs)
 		sunlight_turfs.Cut()
+
+	SSarea.all_areas -= src.type
+	SSarea.areas_by_identifier[area_identifier] -= src
 
 	return ..()
 
@@ -98,28 +80,42 @@ var/global/list/all_areas = list()
 
 /area/Initialize()
 
-	if(sunlight_freq > 0 && desired_light_range && desired_light_power && desired_light_color)
-
-		var/light_count = 0
-
-		for(var/turf/simulated/T in contents)
-			if(setup_sunlight(T))
-				light_count++
-
-		LOG_DEBUG("Initialized Area \"[name]\" with [light_count] sun lights.")
-
 	if(weather)
 		icon = 'icons/area/weather.dmi'
 		icon_state = weather
+
+	var/area_count = 0
+	average_x = 0
+	average_y = 0
+
+	for(var/turf/T in contents)
+		average_x += T.x
+		average_y += T.y
+		area_count += 1
+
+	average_x = CEILING(average_x/area_count,1)
+	average_y = CEILING(average_y/area_count,1)
 
 	return ..()
 
 /area/proc/setup_sunlight(var/turf/T)
 
+	if(sunlight_freq == 0)
+		return FALSE
+
+	if(T.desired_light_power && T.desired_light_range)
+		return FALSE //Already has a light.
+
+	if(T.setup_turf_light(sunlight_freq))
+		return TRUE
+
 	if((T.x % sunlight_freq) || (T.y % sunlight_freq))
 		return FALSE
 
-	T.set_light(sunlight_freq+1,desired_light_power,desired_light_color)
+	T.desired_light_power = 1
+	T.desired_light_range = sunlight_freq
+	T.desired_light_color = sunlight_color
+	T.update_atom_light()
 
 	return TRUE
 
@@ -128,31 +124,22 @@ var/global/list/all_areas = list()
 	if(is_player(enterer))
 
 		var/mob/living/advanced/player/P = enterer
-
-		/*
-		if(safe)
-			P.spawn_protection = SECONDS_TO_DECISECONDS(GENERATE_PROTECTION_TIME)
-		*/
-
-		if(!players_inside)
-			players_inside = list()
-
-		if(!(enterer in players_inside))
-			players_inside += enterer
-
 		if(flags_area & FLAGS_AREA_SINGLEPLAYER)
 			P.see_invisible = INVISIBILITY_NO_PLAYERS
 
-	if(ismob(enterer))
+	if(ENABLE_TRACKS && ismob(enterer) && !istype(enterer,/mob/abstract/observer/menu))
 		var/mob/M = enterer
 		if(M.client && length(tracks) && (!M.client.next_music_track || M.client.next_music_track <= world.time))
 			play_music_track(pick(tracks),M.client)
 
 	if(enterer.area != src)
-		if(ismob(enterer) && !is_observer(enterer))
+		if(ismob(enterer) && !istype(enterer,/mob/abstract/observer/menu))
 			var/mob/M = enterer
-			if(M.client && ambient_sound && (!enterer.area || enterer.area.ambient_sound != ambient_sound))
-				play_ambient_sound(ambient_sound,list(enterer),environment = sound_environment,loop = TRUE)
+			if(M.client)
+				if(!ambient_sound)
+					stop_ambient_sounds(M)
+				else if(!enterer.area || enterer.area.ambient_sound != ambient_sound)
+					play_ambient_sound(ambient_sound,list(M),environment = sound_environment,loop = TRUE)
 
 		enterer.area = src
 
@@ -164,9 +151,23 @@ var/global/list/all_areas = list()
 
 	if(is_player(exiter))
 		var/mob/living/advanced/player/P = exiter
-		if(players_inside)
-			players_inside -= exiter
 		if(flags_area & FLAGS_AREA_SINGLEPLAYER)
 			P.see_invisible = initial(P.see_invisible)
 
 	return TRUE
+
+
+/area/proc/smash_all_lights()
+	for(var/obj/structure/interactive/lighting/T in src.contents)
+		CHECK_TICK(75,FPS_SERVER)
+		if(!T.desired_light_color)
+			continue
+		T.on_destruction(null,TRUE)
+	return TRUE
+
+/area/proc/toggle_all_lights()
+	var/obj/structure/interactive/light_switch/LS = locate() in src.contents
+	if(LS && LS.on)
+		LS.toggle()
+		return TRUE
+	return FALSE

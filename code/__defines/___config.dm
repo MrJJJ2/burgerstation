@@ -1,7 +1,23 @@
+//Loads your character instantly at a marker point.
+#define ENABLE_INSTALOAD FALSE
+#define QUICK_VOTE FALSE
+#define SHOW_HOOKS FALSE
+#define ENABLE_TRACKS FALSE
+#define DEBUG_PATHS FALSE
+
+#define LOAD_GROUND_MAP TRUE
+#define ENABLE_STOPLAG TRUE
+#define ENABLE_DAMAGE_NUMBERS TRUE
+
+#define MOVEMENT_DELAY_MOD 1 //Lower values means faster.
+
 //Game Options
 #define FPS_CLIENT 60 //0 Means synced. Also this is default, players can change this for themselves.
-#define FPS_SERVER 55
-#define FPS_SERVER_MIN 30
+#define FPS_SERVER 20
+
+#define NEXT_MAP_FILE "data/server/next_map.txt"
+
+#define BITE_SIZE 5
 
 #define SHUTDOWN_SUBSYSTEM_ON_ERROR FALSE
 
@@ -13,15 +29,17 @@
 
 #define BADNAMES "text/badnames.txt"
 
-#define WIKIBOT "data/server/wikibot.txt"
-
 #define MAX_ZOOM 4 //This is for z-zoom.
 #define MIN_ZOOM 1
 
-#define ZOOM_RANGE 8
+#define ZOOM_RANGE 6
 #define VIEW_RANGE 11
+#define AI_DETECTION_RANGE VIEW_RANGE * 0.6
+#define AI_DETECTION_RANGE_NOISE VIEW_RANGE
+#define AI_DETECTION_RANGE_CAUTION VIEW_RANGE + ZOOM_RANGE*0.5
+#define AI_DETECTION_RANGE_COMBAT VIEW_RANGE + ZOOM_RANGE
 
-#define SOUND_RANGE 18
+#define SOUND_RANGE VIEW_RANGE + ZOOM_RANGE
 
 #define STUN_ANGLE -90
 
@@ -29,12 +47,11 @@
 #define TALK_RANGE VIEW_RANGE
 #define YELL_RANGE VIEW_RANGE*1.5
 
-#define RADIO_RANGE 3 //Can only receive radio messages in this distance
 #define RADIO_WHISPER_RANGE 1
 #define RADIO_TALK_RANGE 4
 #define RADIO_YELL_RANGE 8
 
-#define BOSS_RANGE VIEW_RANGE*2 //If you're out of this range, you're out of the boss fight.
+#define BOSS_RANGE VIEW_RANGE + ZOOM_RANGE*2 //If you're out of this range, you're out of the boss fight.
 
 #define MAX_MESSAGE_LEN 512
 #define MAX_CHARACTERS 10 //Maximum amount of saved characters a player can have at once.
@@ -51,19 +68,11 @@
 
 #define BYPASS_AREA_NO_DAMAGE TRUE
 
-//Basically debug mode
-#define ENABLE_INSTALOAD FALSE
-
-//Makes compiling faster. FALSE means disabled
-
 #define ENABLE_BULLET_CASINGS FALSE
 #define ENABLE_AI TRUE
 #define ENABLE_MAPLOAD TRUE
 #define ENABLE_LIGHTING TRUE
 #define ENABLE_TURFGEN TRUE
-#define ENABLE_STOPLAG TRUE
-
-#define ENABLE_HIJACK FALSE
 
 #define ENABLE_ATMOS FALSE
 
@@ -92,7 +101,7 @@
 #define ITEM_DELETION_TIME_DROPPED 3000 //5 minutes
 #define ITEM_DELETION_TIME_NEW 600 //60 seconds.
 
-#define WARN_ON_DUPLICATE_QDEL TRUE
+#define WARN_ON_DUPLICATE_QDEL FALSE
 #define CRASH_ON_DUPLICATE_QDEL FALSE
 
 #define CHAT_FONT_SIZE 0.25
@@ -122,7 +131,7 @@
 
 #define CONSUME_AMOUNT_MAX 30
 
-#define HEALTH_REGEN_BUFFER_MAX 10
+#define HEALTH_REGEN_BUFFER_MAX 3
 #define HEALTH_REGEN_BUFFER_MIN -10
 
 #define STAMINA_REGEN_BUFFER_MAX 10
@@ -134,19 +143,14 @@
 #define TARGETABLE_LIMBS list(BODY_HEAD, BODY_TORSO, BODY_GROIN, BODY_ARM_LEFT, BODY_ARM_RIGHT , BODY_HAND_LEFT, BODY_HAND_RIGHT, BODY_LEG_LEFT, BODY_LEG_RIGHT, BODY_FOOT_LEFT, BODY_FOOT_RIGHT	)
 #define TARGETABLE_LIMBS_KV list(BODY_HEAD = 0, BODY_TORSO = 0, BODY_GROIN = 0, BODY_ARM_LEFT = 0, BODY_ARM_RIGHT = 0, BODY_HAND_LEFT = 0, BODY_HAND_RIGHT = 0, BODY_LEG_LEFT = 0, BODY_LEG_RIGHT = 0, BODY_FOOT_LEFT = 0, BODY_FOOT_RIGHT = 0	)
 
-#define AIR_TEMPERATURE_MOD 0.5 //How much the air has an impact on reagent temperature.
+#define AIR_TEMPERATURE_MOD 3 //How much the air has an impact on reagent temperature.
 
-#define DEFAULT_COLORS list("#3D5E80","#48728B","#5D96A0","#FFFFFF","#335871","#FE0000")
+#define DEFAULT_COLORS list("#498eb1","#4f7081","#326068","#eaeaea","#333333","#fe0000")
 
 #define FRIENDLY_FIRE FALSE
 #define PLAYER_COLLISIONS FALSE
 
-#define SHUTTLE_DEFAULT_TRANSIT_TIME 60 //In seconds.
-#define SHUTTLE_DEFAULT_TRANSIT_TIME_NO_LIVING 15
-#define SHUTTLE_DEFAULT_WAITING_TIME 30
-#define SHUTTLE_DEFAULT_IDLE_TIME 10
-
-#define QWERT_MACROS list( \
+#define QWERTY_MACROS list( \
 	"W" = "move_up", \
 	"D" = "move_right", \
 	"S" = "move_down", \
@@ -155,16 +159,17 @@
 	"2" = "set-intent-disarm", \
 	"3" = "set-intent-grab", \
 	"4" = "set-intent-harm", \
-	"UP" = "move_up", \
-	"RIGHT" = "move_right", \
-	"DOWN" = "move_down", \
-	"LEFT" = "move_left", \
+	"North" = "move_up", \
+	"East" = "move_right", \
+	"South" = "move_down", \
+	"West" = "move_left", \
 	"Shift" = "sprint", \
 	"Alt" = "walk", \
 	"Ctrl" = "grab", \
 	"R" = "throw", \
 	"Q" = "drop", \
-	"C" = "sneak", \
+	"C" = "hold", \
+	"B" = "sneak", \
 	"E" = "examine_mode", \
 	"Z" = "quick_self", \
 	"Space" = "kick", \
@@ -185,15 +190,17 @@
 	"2" = "set-intent-disarm",\
 	"3" = "set-intent-grab",\
 	"4" = "set-intent-harm",\
-	"RIGHT" = "move_right",\
-	"DOWN" = "move_down",\
-	"LEFT" = "move_left",\
+	"North" = "move_up",\
+	"East" = "move_right",\
+	"South" = "move_down",\
+	"West" = "move_left",\
 	"Shift" = "sprint",\
 	"Alt" = "walk",\
 	"Ctrl" = "grab",\
 	"R" = "throw",\
 	"X" = "drop",\
-	"C" = "sneak",\
+	"C" = "hold",\
+	"B" = "sneak",\
 	"E" = "examine_mode",\
 	"F" = "quick_self",\
 	"Space" = "kick",\
@@ -204,3 +211,7 @@
 	"L" = "looc",\
 	"V" = "zoom",\
 )
+
+#define Z_LEVEL_STATION 1
+#define Z_LEVEL_BLUESPACE 2
+#define Z_LEVEL_MISSION 3

@@ -5,16 +5,24 @@
 	icon = 'icons/mob/living/simple/beepsky.dmi'
 	icon_state = "captain"
 
-	health_base = 1000 //I'm a god.
 	immortal = TRUE //How can you kill a god?
-	damage_received_multiplier = 0.1 //What a grand and intoxicating innocence.
-
 
 	ai = /ai/doorman
-	class = "beepsky"
+	class = /class/beepsky
 	damage_type = /damagetype/npc/captain_beepsky
 
 	iff_tag = "NanoTrasen"
 	loyalty_tag = "NanoTrasen"
 
 	mob_size = MOB_SIZE_BOSS
+
+	enable_medical_hud = FALSE
+	enable_security_hud = FALSE
+
+/mob/living/simple/npc/captain_beepsky/can_be_grabbed(var/atom/grabber,var/messages=FALSE)
+
+	if(messages && is_living(grabber))
+		var/mob/living/L = grabber
+		L.to_chat(span("warning","Beepsky instantly resists out of your grab!"))
+
+	return FALSE

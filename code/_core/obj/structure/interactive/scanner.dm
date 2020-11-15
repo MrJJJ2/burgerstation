@@ -5,6 +5,8 @@
 	icon = 'icons/obj/structure/scanner.dmi'
 	icon_state = "pad"
 
+	density = TRUE
+
 /obj/structure/interactive/scanner/iff
 	name = "\improper IFF body scanner"
 	desc = "YOU. SHALL NOT. PASS. Unless the conditions are met."
@@ -44,7 +46,7 @@
 	desc_extended = "A general proximity scanner that detects whether or not a person is present in the tile."
 	icon_state = "door"
 
-	plane = PLANE_WALL_ATTACHMENTS
+	plane = PLANE_OBJ
 
 /obj/structure/interactive/scanner/living/trigger(var/mob/caller,var/atom/source,var/signal_freq,var/signal_code)
 
@@ -56,3 +58,54 @@
 	flick("door_good",src)
 
 	return TRUE
+
+
+
+/obj/structure/interactive/scanner/anti_dead
+	name = "\improper living body scanner"
+	desc = "YOU. SHALL NOT. PASS. Unless the conditions are met."
+	desc_extended = "A very invasive full body scanner that magically blocks movement based on the conditions coded inside. This one is programmed to only allow living silicons and carbons."
+
+/obj/structure/interactive/scanner/anti_dead/Cross/(var/atom/movable/M)
+
+	if(!is_living(M))
+		return FALSE
+	var/mob/living/L = M
+	if(L.dead)
+		return FALSE
+
+	return ..()
+
+
+/obj/structure/interactive/scanner/crate_only
+	name = "\improper crate scanner"
+	desc = "YOU. SHALL NOT. PASS. Unless the conditions are met."
+	desc_extended = "A very invasive full body scanner that magically blocks movement based on the conditions coded inside. This one is programmed to only allow secure crates."
+
+/obj/structure/interactive/scanner/crate_only/Cross/(var/atom/movable/M)
+
+	if(!istype(M,/obj/structure/interactive/crate/secure))
+		return FALSE
+
+	return ..()
+
+
+
+/obj/structure/interactive/scanner/cop
+	name = "cop scanner"
+	desc = "Don't block the doors!"
+	desc_extended = "A general proximity scanner that detects whether or not a person is a cop"
+	icon_state = "door"
+
+	plane = PLANE_OBJ
+
+/obj/structure/interactive/scanner/cop/Cross/(var/atom/movable/M)
+
+	if(!is_living(M))
+		return FALSE
+
+	var/mob/living/L = M
+	if(L.loyalty_tag != "Space Cop")
+		return FALSE
+
+	return ..()

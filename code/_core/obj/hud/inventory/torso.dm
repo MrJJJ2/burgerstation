@@ -12,7 +12,7 @@
 	priority = 100
 
 /obj/hud/inventory/organs/torso_o
-	name = "coat slot"
+	name = "armor slot"
 	icon_state = "slot_torso_o"
 	id = BODY_TORSO_O
 	screen_loc = "LEFT,BOTTOM+2"
@@ -44,7 +44,7 @@
 	priority = 10
 
 /obj/hud/inventory/organs/torso_ob
-	name = "overwear belt slot"
+	name = "holster"
 	icon_state = "slot_torso_ob"
 	id = BODY_TORSO_OB
 	screen_loc = "CENTER-4,BOTTOM"
@@ -59,7 +59,6 @@
 	drop_on_death = TRUE
 
 	max_size = 1000
-	max_weight = 1000
 
 	drag_to_take = FALSE
 
@@ -68,3 +67,20 @@
 	)
 
 	priority = 1
+
+/obj/hud/inventory/organs/torso_ob/add_held_object(var/obj/item/I,var/messages = TRUE)
+	. = ..()
+	if(. && is_advanced(owner))
+		var/mob/living/advanced/A = owner
+		A.holster_item = I.defer_click_on_object(null,null,null)
+
+	return .
+
+/obj/hud/inventory/organs/torso_ob/remove_object(var/obj/item/I,var/turf/drop_loc,var/pixel_x_offset=0,var/pixel_y_offset=0)
+	. = ..()
+	if(. && is_advanced(owner))
+		var/mob/living/advanced/A = owner
+		if(A.holster_item == I)
+			A.holster_item = null
+
+	return .

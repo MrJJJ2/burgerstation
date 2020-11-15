@@ -22,8 +22,69 @@
 
 	crafting_id = "workbench"
 
-	value = 5
+	var/crafting_type = null
 
+	weight = 10
+
+/obj/item/crafting/click_self(caller,location,control,params)
+
+	if(!length(inventories))
+		return FALSE
+
+	var/mob/living/advanced/A = caller
+
+	if(inventory_user && is_advanced(inventory_user))
+		var/mob/living/advanced/A2 = inventory_user
+		for(var/obj/hud/button/crafting/B in A2.buttons)
+			B.alpha = 0
+			B.mouse_opacity = 0
+			B.stored_crafting_table = null
+
+	if(inventory_user != A)
+		for(var/obj/hud/button/crafting/B in A.buttons)
+			B.alpha = 0
+			B.mouse_opacity = 0
+			B.stored_crafting_table = null
+
+	var/opening = FALSE
+	for(var/obj/hud/inventory/crafting/I in A.inventory)
+		CHECK_TICK(100,FPS_SERVER*0.5)
+		I.alpha = 0
+		I.mouse_opacity = 0
+
+	for(var/obj/hud/inventory/crafting/I in inventories)
+		CHECK_TICK(100,FPS_SERVER*0.5)
+		I.update_owner(A)
+		if(opening || !I.alpha)
+			animate(I,alpha=255,time=4)
+			I.mouse_opacity = 2
+			opening = TRUE
+		else
+			animate(I,alpha=0,time=4)
+			I.mouse_opacity = 0
+			opening = FALSE
+
+	if(opening)
+		play(pick(inventory_sounds),src)
+
+	for(var/obj/hud/button/crafting/B in A.buttons)
+		if(opening)
+			animate(B,alpha=255,time=4)
+			B.mouse_opacity = 2
+			B.stored_crafting_table = src
+		else
+			animate(B,alpha=0,time=4)
+			B.mouse_opacity = 0
+			B.stored_crafting_table = null
+
+	inventory_user = caller
+
+	return TRUE
+
+
+
+
+/*
 /obj/item/crafting/click_self(caller,location,control,params)
 
 	if(!is_advanced(caller))
@@ -62,6 +123,7 @@
 			opening = FALSE
 
 	return TRUE
+*/
 
 
 /obj/item/crafting/proc/attempt_to_craft(var/mob/living/advanced/caller)
@@ -74,17 +136,20 @@
 			return FALSE
 		else
 			product_slot = R
+			break
 
 	var/list/item_table = generate_crafting_table(caller,src)
 
-	for(var/R_id in all_recipes)
-		var/recipe/R = all_recipes[R_id]
+	for(var/k in SSrecipe.all_recipes)
+		var/recipe/R = k
 
 		var/list/recipe_check = R.check_recipe(item_table,src)
 		if(length(recipe_check)) //We can craft
 
 			var/obj/item/I3 = new R.product(caller.loc)
 			INITIALIZE(I3)
+			GENERATE(I3)
+			FINALIZE(I3)
 			product_slot.add_held_object(I3,caller,FALSE,TRUE)
 
 			for(var/obj/item/I in recipe_check)

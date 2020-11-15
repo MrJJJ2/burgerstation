@@ -5,8 +5,14 @@
 
 	damage_type = "cult_blade"
 
-	ai = /ai/simple/karma_borg/
+	ai = /ai/
 
+	enable_medical_hud = FALSE
+	enable_security_hud = FALSE
+
+	blood_type = /reagent/blood/robot
+
+	value = 100
 
 /mob/living/simple/npc/silicon/engineer
 	name = "engineer cyborg"
@@ -15,9 +21,10 @@
 	damage_type = "cult_blade"
 
 
-/mob/living/simple/npc/silicon/engineer/Initialize()
-	..()
+/mob/living/simple/npc/silicon/engineer/PostInitialize()
+	. = ..()
 	flick("engineer_transform",src)
+	return .
 
 
 /mob/living/simple/npc/silicon/squats
@@ -26,68 +33,56 @@
 
 	damage_type = "squats_punch"
 
-	class = "squats"
+	health = /health/mob/living/simple/npc/squats/
+	class = /class/squats
 
-	movement_delay = DECISECONDS_TO_TICKS(1)
+	movement_delay = 2
+
+	health_base = 300
 
 	sprint_delay_mul = 1
 	jog_delay_mul = 3
 	walk_delay_mul = 3
 
-/mob/living/simple/npc/silicon/squats/post_death()
+	armor_base = list(
+		BLADE = 25,
+		BLUNT = 25,
+		PIERCE = 75,
+		LASER = 50,
+		ARCANE = -50,
+		HEAT = 75,
+		COLD = 75,
+		BOMB = 25,
+		BIO = INFINITY,
+		RAD = INFINITY,
+		HOLY = INFINITY,
+		DARK = INFINITY,
+		FATIGUE = INFINITY,
+		ION = 0
+	)
 
+	iff_tag = "Syndicate"
+	loyalty_tag = "Syndicate"
+
+	damage_type = /damagetype/squats/
+
+	status_immune = list(
+		FIRE = TRUE
+	)
+
+/mob/living/simple/npc/silicon/squats/post_death()
 	. = ..()
 	icon_state = "squats-dead"
-	update_icon()
 	return .
 
-
-/mob/living/simple/npc/silicon/squats/Initialize()
+/mob/living/simple/npc/silicon/squats/Finalize()
 	. = ..()
-	update_icon()
+	update_sprite()
 	return .
 
-/mob/living/simple/npc/silicon/squats/update_icon()
-
-	if(!health)
-		return ..()
-
-	if(icon_state == "squats-roll" || icon_state == "squats-dead")
-		icon = initial(icon)
-		return ..()
-
-	icon = initial(icon)
-
-	var/icon/new_icon = icon(icon,icon_state)
-	var/icon/shield_icon = icon(icon,"squats-shield")
-	new_icon.Blend(shield_icon,ICON_OVERLAY)
-	icon = new_icon
-
-	return ..()
-
-/mob/living/simple/npc/silicon/squats/on_sprint()
+/mob/living/simple/npc/silicon/squats/update_overlays()
 	. = ..()
-	if(.)
-		if(icon_state != "squats-roll")
-			icon_state = "squats-roll"
-			update_icon()
-
-	return .
-
-/mob/living/simple/npc/silicon/squats/on_jog()
-	. = ..()
-	if(.)
-		if(icon_state != "squats")
-			icon_state = "squats"
-			update_icon()
-
-	return .
-
-/mob/living/simple/npc/silicon/squats/on_walk()
-	. = ..()
-	if(.)
-		if(icon_state != "squats")
-			icon_state = "squats"
-			update_icon()
-
+	if(!dead && health && health.health_current >= health.health_max * 0.5)
+		var/icon/I = new/icon(initial(icon),"squats-shield")
+		add_overlay(I)
 	return .

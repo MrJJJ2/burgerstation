@@ -13,6 +13,8 @@ obj/structure/interactive/bed
 
 	bullet_block_chance = 50
 
+	interaction_flags = FLAG_INTERACTION_LIVING
+
 /obj/structure/interactive/bed/buckle(var/mob/living/victim,var/mob/caller,var/silent=FALSE)
 
 	. = ..()
@@ -36,25 +38,28 @@ obj/structure/interactive/bed
 
 	return .
 
-obj/structure/interactive/bed/clicked_on_by_object(var/mob/caller,object,location,control,params)
+obj/structure/interactive/bed/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	INTERACT_CHECK
 
-	if(is_living(caller))
+	if(buckled)
+		unbuckle(caller)
+		return TRUE
 
-		if(buckled)
-			if(buckled == caller)
-				return ..()
-			unbuckle(caller)
-			return TRUE
+	var/mob/living/L
+	for(var/mob/living/L2 in contents)
+		if(istype(L2,/mob/living/advanced/stand))
+			continue
+		L = L2
+		break
 
-		for(var/mob/living/L in loc.contents)
-			buckle(L,caller)
-			return TRUE
+	if(L)
+		buckle(L,caller)
+		return TRUE
 
-	return ..()
+	return FALSE
 
-obj/structure/interactive/bed/Initialize()
+obj/structure/interactive/bed/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .

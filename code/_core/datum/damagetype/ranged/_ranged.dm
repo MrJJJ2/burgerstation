@@ -1,4 +1,3 @@
-
 /damagetype/ranged/
 	name = "ranged weapon"
 
@@ -7,24 +6,24 @@
 	hit_effect = null //Handled elsewhere.
 
 	miss_sounds = list(
-		'sounds/weapons/bulletflyby.ogg',
-		'sounds/weapons/bulletflyby2.ogg',
-		'sounds/weapons/bulletflyby3.ogg'
+		'sound/weapons/bulletflyby.ogg',
+		'sound/weapons/bulletflyby2.ogg',
+		'sound/weapons/bulletflyby3.ogg'
 	)
 
 	impact_sounds = list(
-		'sounds/weapons/ric1.ogg',
-		'sounds/weapons/ric2.ogg',
-		'sounds/weapons/ric3.ogg',
-		'sounds/weapons/ric4.ogg',
-		'sounds/weapons/ric5.ogg'
+		'sound/weapons/ric1.ogg',
+		'sound/weapons/ric2.ogg',
+		'sound/weapons/ric3.ogg',
+		'sound/weapons/ric4.ogg',
+		'sound/weapons/ric5.ogg'
 	)
 
 	impact_sounds_flesh = list(
-		'sounds/effects/impacts/bullet_meat1.ogg',
-		'sounds/effects/impacts/bullet_meat2.ogg',
-		'sounds/effects/impacts/bullet_meat3.ogg',
-		'sounds/effects/impacts/bullet_meat4.ogg'
+		'sound/effects/impacts/bullet_meat1.ogg',
+		'sound/effects/impacts/bullet_meat2.ogg',
+		'sound/effects/impacts/bullet_meat3.ogg',
+		'sound/effects/impacts/bullet_meat4.ogg'
 	)
 
 	attribute_stats = list()
@@ -39,7 +38,7 @@
 
 	throw_mul = 0.25
 
-	allow_parry = FALSE
+	can_be_parried = FALSE
 
 /damagetype/ranged/get_block_power_penetration(var/atom/attacker,var/atom/victim,var/atom/weapon,var/atom/hit_object)
 	return 0.5
@@ -47,8 +46,8 @@
 /damagetype/ranged/get_attack_type()
 	return ATTACK_TYPE_RANGED
 
-/damagetype/ranged/do_attack_animation(var/atom/attacker,var/atom/victim,var/atom/weapon,var/atom/hit_object,var/was_critical_hit)
-	return
+/damagetype/ranged/do_attack_animation(var/atom/attacker,var/atom/victim,var/atom/weapon,var/atom/hit_object)
+	return FALSE
 
 /*
 /damagetype/ranged/get_attack_message_3rd(var/atom/attacker,var/atom/victim,var/atom/weapon,var/atom/hit_object)

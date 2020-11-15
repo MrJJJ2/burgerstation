@@ -2,7 +2,7 @@
 	name = "button"
 	desc = "This button does something, I think."
 
-	icon = 'icons/hud/new.dmi'
+	icon = 'icons/hud/hud.dmi'
 	icon_state = "slot"
 
 	var/is_static = TRUE //Is the button anchored?
@@ -20,6 +20,8 @@
 
 	has_quick_function = TRUE
 	quick_function_type =  FLAG_QUICK_INSTANT
+
+	interaction_flags = FLAG_INTERACTION_LIVING | FLAG_INTERACTION_DEAD | FLAG_INTERACTION_NO_DISTANCE
 
 /obj/hud/button/quick(var/mob/living/advanced/caller,var/atom/object,location,control,params)
 
@@ -55,16 +57,16 @@
 	if(owner && !desired_owner)
 		owner.remove_button(src)
 
-	if(desired_owner)
-		owner = desired_owner
-		owner.add_button(src)
-		update_sprite()
-	else
+	if(!desired_owner)
 		qdel(src)
+		return FALSE
 
+	owner = desired_owner
+	owner.add_button(src)
+	update_sprite()
 	return TRUE
 
-
-/obj/hud/button/clicked_on_by_object(var/mob/caller,object,location,control,params)
-	play('sounds/ui/tap-muted.ogg',caller, sound_setting = SOUND_SETTING_UI)
+/obj/hud/button/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+	play('sound/ui/tap-muted.ogg',caller, sound_setting = SOUND_SETTING_UI)
+	INTERACT_CHECK
 	return TRUE

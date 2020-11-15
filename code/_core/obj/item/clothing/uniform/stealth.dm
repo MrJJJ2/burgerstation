@@ -1,7 +1,8 @@
 /obj/item/clothing/uniform/stealth
-	name = "stealth uniform"
-	desc = "SM DELAM CALL THE SHUTTLE"
-	icon = 'icons/obj/items/clothing/uniforms/stealth.dmi'
+	name = "combat uniform"
+	desc = "Tacticool!"
+	desc = "A skintight uniform for combat purposes."
+	icon = 'icons/obj/item/clothing/uniforms/stealth.dmi'
 
 	item_slot = SLOT_TORSO | SLOT_GROIN
 
@@ -12,10 +13,10 @@
 		BLUNT = 15,
 		PIERCE = 25,
 		LASER = -15,
-		MAGIC = 25,
+		ARCANE = 25,
 		HEAT = 15,
 		COLD = 15,
 		BOMB = 15
 	)
 
-	value = 60
+	value = 300

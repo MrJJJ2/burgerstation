@@ -1,16 +1,28 @@
 /obj/item/device/timer
 	name = "timer"
+	desc = "Tick tock."
+	desc_extended = "A simple timer. Can be used to build totally innocuous and non-explosive things."
 	icon_state = "timer"
 
 	var/time_set = 50
 	var/time_min = 0
 	var/time_max = 300
 
-	var/active = FALSE
-
 	var/spam_fix_time = 0
 
 	var/mob/last_caller = null
+
+	value = 20
+
+/obj/item/device/timer/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	SAVEVAR("time_set")
+	return .
+
+/obj/item/device/timer/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+	. = ..()
+	LOADVAR("time_set")
+	return .
 
 /obj/item/device/timer/click_self(var/mob/caller)
 	trigger(caller,src,-1,-1)
@@ -20,7 +32,9 @@
 	last_caller = caller
 	start_thinking(src)
 	active = TRUE
-	play('sounds/weapons/timer/arm.ogg',src,alert = ALERT_LEVEL_NOISE, alert_source = last_caller)
+	var/turf/T = get_turf(src)
+	play('sound/weapons/timer/arm.ogg',T,last_interacted)
+	create_alert(VIEW_RANGE,T,src,ALERT_LEVEL_NOISE)
 	return ..()
 
 /obj/item/device/timer/think()
@@ -31,7 +45,8 @@
 		if( (time_set % clamp( FLOOR(1 + (time_set/10),1) ,1,30)) == 0)
 			var/turf/T = get_turf(src)
 			if(T)
-				play('sounds/weapons/timer/beep.ogg',src,alert = ALERT_LEVEL_NOISE, alert_source = last_caller)
+				play('sound/weapons/timer/beep.ogg',src)
+				create_alert(VIEW_RANGE,T,src,ALERT_LEVEL_NOISE)
 
 		if(time_set <= 0)
 			if(loc)

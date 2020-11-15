@@ -1,11 +1,9 @@
 /mob/living/advanced/proc/start_chargen()
 
-	Initialize()
+	INITIALIZE(src)
+	FINALIZE(src)
 	default_appearance()
-	if(sex == MALE)
-		equip_loadout("new_male",TRUE)
-	else
-		equip_loadout("new_female",TRUE)
+	equip_loadout(/loadout/new_player,TRUE)
 	stop_music_track(client)
 
 	nutrition *= RAND_PRECISE(0.5,0.75)
@@ -24,10 +22,10 @@
 			"They promise it won't be your last."
 		)
 
-		play_music_track("space_wayfarer",src.client)
+		play_music_track(/track/space_wayfarer,src.client)
 
 		client.disable_controls = TRUE
-		client.update_zoom(3) //300%
+		client.update_zoom(3)
 
 		var/obj/hud/screen/S = new()
 		S.icon = 'icons/hud/discovery.dmi' //320x320
@@ -103,8 +101,9 @@
 	if(keep_items)
 		kept_items = drop_all_items(src,FALSE,TRUE)
 	else
-		for(var/obj/hud/inventory/I in inventory)
-			I.remove_all_objects()
+		for(var/k in inventory)
+			var/obj/hud/inventory/I = k
+			I.delete_all_objects()
 
 	remove_all_organs()
 	remove_all_buttons()
@@ -118,6 +117,7 @@
 	handle_skincolor_chargen(S.default_color_skin,FALSE)
 	handle_eyecolor_chargen(S.default_color_eye,FALSE)
 	src.add_organ(/obj/item/organ/internal/implant/head/loyalty/nanotrasen)
+	src.add_organ(/obj/item/organ/internal/implant/hand/left/iff/nanotrasen)
 	update_all_blends()
 
 /mob/living/advanced/proc/post_perform_change(var/keep_items,var/chargen,var/list/kept_items = list())
@@ -127,20 +127,22 @@
 
 	apply_mob_parts(FALSE,FALSE,FALSE)
 	default_appearance()
+	add_species_buttons()
+	add_species_health_elements()
 
 	if(length(kept_items))
 		equip_objects_in_list(kept_items)
 	else
-		if(sex == MALE)
-			equip_loadout("new_male",TRUE)
-		else
-			equip_loadout("new_female",TRUE)
+		equip_loadout(/loadout/new_player,TRUE)
+
 
 	for(var/obj/hud/button/hide_show_inventory/B in buttons)
 		B.update_sprite()
 
 	update_all_blends()
 	update_health_element_icons(TRUE,TRUE,TRUE,TRUE)
+
+	show_hud(TRUE,FLAGS_HUD_ALL,FLAGS_HUD_SPECIAL,speed=3)
 
 
 

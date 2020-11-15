@@ -1,7 +1,7 @@
 /obj/hud/button/health/
 	name = "Health Element"
 	desc = "This is an element for health."
-	id = "none"
+	var/id = "none"
 
 	icon = 'icons/obj/health/base.dmi'
 
@@ -12,7 +12,7 @@
 
 	flags = FLAGS_HUD_MOB
 
-/obj/hud/button/health/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/health/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 	if(owner && caller.client)
 		caller.client.examine(owner)
 	return ..()

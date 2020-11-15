@@ -13,6 +13,9 @@
 	var/sex = MALE
 	gender = MALE
 
+	var/weight = 0 //Weight of worn items.
+	var/weight_max = 1 //Maxinmum weight of worn items.
+
 	var/draw_inventory = TRUE
 	var/list/obj/hud/inventory/inventory //List of inventory items
 	var/list/obj/item/worn_objects //List of worn items. For use in an easy read-only list.
@@ -20,26 +23,19 @@
 
 	var/obj/hud/inventory/left_hand
 	var/obj/hud/inventory/right_hand
+	var/obj/hud/inventory/holster
 
 	var/obj/item/left_item
 	var/obj/item/right_item
+	var/obj/item/holster_item
 
-	var/is_typing = FALSE
-
-	health_base = 200
+	health_base = 100
 	stamina_base = 100
 	mana_base = 100
-
-	var/talk_duration = 0
-	var/talk_type = 0
 
 	var/automatic_ticks = 0
 
 	var/obj/hud/inventory/active_inventory
-
-	var/health_regen_delay = 0
-	var/stamina_regen_delay = 0
-	var/mana_regen_delay = 0
 
 	var/mob/living/vehicle/driving
 
@@ -55,31 +51,18 @@
 
 	var/list/overlays_assoc
 
-	var/list/overlays_assoc_atom
-
 	var/list/protection_heat = TARGETABLE_LIMBS_KV
-
 	var/list/protection_cold = TARGETABLE_LIMBS_KV
-
 	var/list/protection_pressure = TARGETABLE_LIMBS_KV
 
 	var/list/known_wishgranters = list() //ID based.
 
 	health = /health/mob/living/advanced
 
-	//Read only values. Don't change these.
-	var/capacity = 0
-	var/max_capacity = 1
-
-	attack_delay = 2
-	attack_delay_max = 6
-
 	var/list/tracked_hidden_organs
 	var/tracked_hidden_clothing = 0x0
 
-	var/obj/effect/chat_overlay
-
-	value = 250
+	value = 500
 
 	stun_angle = -90
 
@@ -91,7 +74,34 @@
 
 	max_level = 100 //Max level for skills and attributes of the mob.
 
-	movement_delay = DECISECONDS_TO_TICKS(2)
+	death_threshold = -50
+
+	movement_delay = DECISECONDS_TO_TICKS(1.75)
+
+	var/handcuffed = FALSE
+	var/handcuff_break_counter = 0
+	var/obj/item/handcuffs/stored_handcuffs
+
+	armor_base = list()
+
+	armor_base = list(
+		BLADE = 0,
+		BLUNT = 0,
+		PIERCE = 0,
+		LASER = 0,
+		ARCANE = 0,
+		HEAT = 0,
+		COLD = 0,
+		BOMB = 0,
+		BIO = 0,
+		RAD = 0,
+		HOLY = 0,
+		DARK = 0,
+		FATIGUE = 0,
+		ION = 0
+	)
+
+	var/sanity = 100 //Lower values means more likely to be targed by ghosts. Only is relevant in special areas.
 
 /mob/living/advanced/Destroy()
 
@@ -100,26 +110,42 @@
 
 	inventory.Cut()
 	overlays_assoc.Cut()
-	overlays_assoc_atom.Cut()
 	tracked_hidden_organs.Cut()
-
-	QDEL_NULL(chat_overlay)
 
 	held_objects = null
 	worn_objects = null
 	left_hand = null
 	right_hand = null
+	holster = null
 	left_item = null
 	right_item = null
+	holster_item = null
 	active_inventory = null
 	driving = null
+
+	QDEL_NULL(stored_handcuffs)
+
+	return ..()
+
+/mob/living/advanced/Finalize()
+
+	if(blood_type == /reagent/blood) //Uninitialized blood.
+		var/species/S = all_species[species]
+		blood_type = S.generate_blood_type()
+
+	. = ..()
+
+	update_items(force=TRUE)
+
+	return .
+
+/mob/living/advanced/on_crush()
+	if(driving)
+		return FALSE
+	drop_all_items(get_turf(src))
 	return ..()
 
 /mob/living/advanced/proc/update_clothes()
-
-	if(!length(overlays_assoc_atom))
-		CRASH_SAFE("[src.get_debug_name()] did not have anything inside the overlays_assoc_atom list!")
-		return FALSE
 
 	tracked_hidden_organs = list()
 
@@ -132,107 +158,107 @@
 	var/do_organs = length(tracked_hidden_organs)
 	var/do_clothing = tracked_hidden_clothing != 0x0
 
-	for(var/k in overlays_assoc_atom)
-		var/atom/A = k
-		if(is_organ(A))
-			var/obj/item/organ/O = A
-			show_overlay(overlays_assoc_atom[k], (do_organs && tracked_hidden_organs[O.id]) ? FALSE : TRUE)
-		else if(is_clothing(A))
-			var/obj/item/clothing/C = A
-			show_overlay(overlays_assoc_atom[k], (do_clothing && C.item_slot & tracked_hidden_clothing) ? FALSE : TRUE)
+	for(var/k in overlays_assoc)
+		var/image/overlay/O = overlays_assoc[k]
+		var/obj/item/I = O.attached_object
+		if(is_organ(I))
+			var/obj/item/organ/OR = I
+			show_overlay(k, (do_organs && tracked_hidden_organs[OR.id]) ? FALSE : TRUE)
+		else if(is_clothing(I))
+			var/obj/item/clothing/C = I
+			show_overlay(k, (do_clothing && C.item_slot & tracked_hidden_clothing) ? FALSE : TRUE)
 
 	return TRUE
-
 
 /mob/living/advanced/update_eyes()
 
 	. = ..()
 
-	for(var/obj/item/organ/eye/E in labeled_organs)
+	for(var/obj/item/organ/eye/E in organs)
 		sight |= E.sight_mod
 		vision |= E.vision_mod
+		see_invisible = max(E.see_invisible,see_invisible)
+		see_in_dark = max(see_in_dark,E.see_in_dark)
 
 	for(var/obj/item/clothing/glasses/G in worn_objects)
 		sight |= G.sight_mod
 		vision |= G.vision_mod
+		see_invisible = max(G.see_invisible,see_invisible)
+		see_in_dark = max(see_in_dark,G.see_in_dark)
 
 	return .
 
-/* HERE LIES A FAILED PROJECT
 /mob/living/advanced/set_dir(var/desired_dir,var/force=FALSE)
+
+	if(driving)
+		desired_dir = driving.dir
+
+	if(!force && grabbing_hand)
+		return FALSE
 
 	. = ..()
 
-	if(.)
-		if(left_item && left_item.icon_state_held_single)
-			var/final_pixel_x = 0
-			var/final_pixel_y = -4
-			var/final_layer = 0
-			switch(dir)
-				if(NORTH)
-					final_layer = LAYER_MOB_ITEM_BEHIND
-					final_pixel_x = -8
-				if(SOUTH)
-					final_layer = LAYER_MOB_ITEM_FRONT
-					final_pixel_x = 8
-				if(EAST)
-					final_layer = LAYER_MOB_ITEM_BEHIND
-					final_pixel_x = 4
-				if(WEST)
-					final_layer = LAYER_MOB_ITEM_FRONT
-					final_pixel_x = -4
-			update_overlay(left_item, desired_icon = initial(left_item.icon), desired_icon_state = left_item.icon_state_held_single,  desired_layer = final_layer, desired_pixel_x = final_pixel_x, desired_pixel_y = final_pixel_y)
-
-		if(right_item && right_item.icon_state_held_single)
-			var/final_pixel_x = 0
-			var/final_pixel_y = -4
-			var/final_layer = 0
-			switch(dir)
-				if(NORTH)
-					final_layer = LAYER_MOB_ITEM_FRONT
-					final_pixel_x = 8
-				if(SOUTH)
-					final_layer = LAYER_MOB_ITEM_BEHIND
-					final_pixel_x = -8
-				if(EAST)
-					final_layer = LAYER_MOB_ITEM_FRONT
-					final_pixel_x = -4
-				if(WEST)
-					final_layer = LAYER_MOB_ITEM_BEHIND
-					final_pixel_x = 4
-			update_overlay(right_item, desired_icon = initial(right_item.icon), desired_icon_state = right_item.icon_state_held_single, desired_layer = final_layer, desired_pixel_x = final_pixel_x, desired_pixel_y = final_pixel_y)
+	if(. || force) //Dan updating.
+		if(left_hand && left_item && left_item.dan_mode)
+			left_hand.update_held_icon(left_item)
+		if(right_hand && right_item && right_item.dan_mode)
+			right_hand.update_held_icon(right_item)
+		if(holster && holster_item && holster_item.dan_mode)
+			holster.update_held_icon(holster_item)
 
 	return .
-*/
 
-/mob/living/advanced/proc/update_slowdown_mul()
 
-	capacity = 0
+/mob/living/advanced/proc/update_items(var/force=FALSE,var/should_update_weight=TRUE,var/should_update_slowdown=TRUE,var/should_update_eyes=TRUE,var/should_update_protection=TRUE,var/should_update_clothes=TRUE) //Sent when an item needs to update.
 
-	var/slow_mul = 1
+	if(qdeleting) //Bandaid fix.
+		return FALSE
 
-	for(var/obj/item/I in worn_objects)
-		slow_mul *= I.slowdown_mul_worn
-		capacity += I.weight
+	if(!force && !finalized)
+		return FALSE //Don't want to call this too much during initializations.
 
-	for(var/obj/item/I in held_objects)
-		if(is_inventory(I.loc))
-			var/obj/hud/inventory/I2 = I.loc
-			if(I2.click_flags & RIGHT_HAND || I2.click_flags & LEFT_HAND)
-				slow_mul *= I.slowdown_mul_held
-
-		capacity += I.weight
-
-	max_capacity = 100 + get_attribute_power(ATTRIBUTE_ENDURANCE)*400
-
-	var/carry_mod = 1 + (max(0,(capacity/max_capacity) - 0.5))**2
-
-	if(ai)
-		slowdown_mul = 1
-	else
-		slowdown_mul = clamp(slow_mul * carry_mod,0.75,4)
+	if(should_update_weight)
+		update_weight()
+	if(should_update_slowdown)
+		update_slowdown()
+	if(should_update_eyes)
+		update_eyes()
+	if(should_update_protection)
+		update_protection()
+	if(should_update_clothes)
+		update_clothes()
 
 	return TRUE
+
+
+
+/mob/living/advanced/proc/update_weight()
+
+	. = 0
+
+	for(var/obj/hud/inventory/organs/I in inventory)
+		. += I.get_weight()
+
+	weight = .
+
+	weight_max = CEILING(200 + get_attribute_power(ATTRIBUTE_ENDURANCE)*300,5) //Skyrim levels of memes.
+
+	return .
+
+/mob/living/advanced/proc/update_slowdown()
+	//https://www.desmos.com/calculator/9oyrocojgp
+	var/cucumber = (weight/weight_max)
+	cucumber = clamp(cucumber,0,0.99)
+	. = 2 - (1-cucumber)**0.2
+
+	for(var/obj/item/clothing/C in worn_objects)
+		. -= C.speed_bonus
+
+	. = FLOOR(.,0.05)
+
+	slowdown_mul = .
+
+	return .
 
 /mob/living/advanced/New(loc,desired_client,desired_level_multiplier)
 
@@ -247,20 +273,13 @@
 	worn_objects = list()
 	labeled_organs = list()
 	overlays_assoc = list()
-	overlays_assoc_atom = list()
 	tracked_hidden_organs = list()
 
 	. = ..()
 
-	chat_overlay = new(src.loc)
-	chat_overlay.layer = LAYER_EFFECT
-	chat_overlay.icon = 'icons/mob/living/advanced/overlays/talk.dmi'
-	chat_overlay.alpha = 0
-	//This is initialized somewhere else.
-
 	return .
 
-/mob/living/advanced/proc/drop_all_items(var/atom/drop_location = get_turf(src), var/exclude_soulbound=FALSE,var/exclude_containers=FALSE)
+/mob/living/advanced/proc/drop_all_items(var/atom/drop_location = get_turf(src), var/exclude_soulbound=FALSE,var/exclude_containers=TRUE)
 
 	var/dropped_objects = list()
 
@@ -279,7 +298,8 @@
 		O.delete_all_objects()
 
 /mob/living/advanced/proc/equip_objects_in_list(var/list/clothing_list)
-	for(var/obj/item/clothing/C in clothing_list)
+	for(var/k in clothing_list)
+		var/obj/item/clothing/C = k
 		C.quick_equip(src)
 
 mob/living/advanced/Login()
@@ -292,42 +312,53 @@ mob/living/advanced/Login()
 	return .
 
 /mob/living/advanced/proc/restore_local_machines()
-	for(var/obj/structure/interactive/localmachine/L in local_machines)
+	for(var/k in local_machines)
+		var/obj/structure/interactive/localmachine/L = k
 		L.update_for_mob(src)
 
 /mob/living/advanced/proc/apply_mob_parts(var/teleport=TRUE,var/do_load=TRUE,var/update_blends=TRUE)
 	add_species_languages()
 	add_species_organs()
 	add_species_colors()
-	if(client)
-		add_species_buttons()
-		add_species_health_elements()
 	return TRUE
 
 /mob/living/advanced/Initialize()
+
+	add_overlay_tracked("handcuffs", desired_icon = 'icons/mob/living/advanced/overlays/handcuffs.dmi', desired_icon_state = "none", desired_layer = 100)
 
 	. = ..()
 
 	apply_mob_parts(TRUE,TRUE,TRUE)
 
+	return .
+
+/mob/living/advanced/PostInitialize()
+
+	. = ..()
+
 	if(client)
 		update_health_element_icons(TRUE,TRUE,TRUE,TRUE)
+		add_species_buttons()
+		add_species_health_elements()
 
-	update_slowdown_mul()
+	return .
 
-	setup_name()
 
-	update_clothes()
-
+/mob/living/advanced/Finalize()
+	. = ..()
+	update_items()
 	return .
 
 /mob/living/advanced/setup_name()
 
-	if(name == DEFAULT_NAME) //Not unique.
+	if(name == DEFAULT_NAME) //Give a human name
 		name = "[gender == MALE ? FIRST_NAME_MALE : FIRST_NAME_FEMALE] [LAST_NAME]"
 		real_name = name
+		return TRUE
 
-	return TRUE
+	real_name = name
+
+	return ..()
 
 /mob/living/advanced/proc/equip_loadout(var/loadout_id,var/soul_bound=FALSE)
 
@@ -345,6 +376,7 @@ mob/living/advanced/Login()
 			spawning_outfit.pre_add(src,I)
 			INITIALIZE(I)
 			GENERATE(I)
+			FINALIZE(I)
 			if(spawning_outfit.on_add(src,I))
 				added_items += I
 		else
@@ -355,14 +387,16 @@ mob/living/advanced/Login()
 	return TRUE
 
 /mob/living/advanced/proc/add_worn_item(var/obj/item/C)
-	for(var/obj/hud/inventory/I in inventory)
+	for(var/k in inventory)
+		var/obj/hud/inventory/I = k
 		if(I.add_worn_object(C,FALSE))
 			return TRUE
 
 	return FALSE
 
 /mob/living/advanced/proc/remove_worn_item(var/obj/item/C)
-	for(var/obj/hud/inventory/I in inventory)
+	for(var/k in inventory)
+		var/obj/hud/inventory/I = k
 		if(I.remove_object(C))
 			return TRUE
 
@@ -389,7 +423,7 @@ mob/living/advanced/Login()
 
 	if(S.default_color_hair && S.default_icon_hair && S.default_icon_state_hair)
 		change_organ_visual("hair_head", desired_icon = S.default_icon_hair, desired_icon_state = S.default_icon_state_hair, desired_color = S.default_color_hair, desired_layer = LAYER_MOB_HAIR_HEAD)
-		change_organ_visual("hair_face", desired_color = S.default_color_hair, desired_layer = LAYER_MOB_HAIR_HEAD)
+		change_organ_visual("hair_face", desired_icon = S.default_icon_hair_face, desired_icon_state = S.default_icon_state_hair_face, desired_color = S.default_color_hair, desired_layer = LAYER_MOB_HAIR_HEAD)
 
 	if(S.default_color_detail)
 		change_organ_visual("skin_detail", desired_color = S.default_color_detail)
@@ -398,7 +432,8 @@ mob/living/advanced/Login()
 		change_organ_visual("skin_glow", desired_color = S.default_color_glow)
 
 /mob/living/advanced/proc/change_organ_visual(var/desired_id, var/desired_icon,var/desired_icon_state,var/desired_color,var/desired_blend, var/desired_type,var/desired_layer,var/debug_message)
-	for(var/obj/item/organ/O in organs)
+	for(var/k in organs)
+		var/obj/item/organ/O = k
 		if(!length(O.additional_blends))
 			continue
 		if(O.additional_blends[desired_id])
@@ -426,26 +461,33 @@ mob/living/advanced/Login()
 	if(health.stamina_current <= 0)
 		return FALSE
 
-	return ..()
+	var/list/organs_to_check = list(
+		BODY_FOOT_RIGHT,
+		BODY_FOOT_LEFT,
+		BODY_LEG_LEFT,
+		BODY_LEG_RIGHT
+	)
 
-/* OLD MOVEMENT
-/mob/living/advanced/do_move(var/turf/new_loc,var/movement_override = 0)
-	. = ..()
-	if(.)
-		add_skill_xp(,1)
-		stamina_current = max(0,stamina_current - 1)
-		return .
-	else
-		return FALSE
-*/
+	for(var/k in organs_to_check)
+		var/obj/item/organ/O = labeled_organs[k]
+		if(O.health && O.health.health_current <= 0)
+			return FALSE
+
+	return ..()
 
 /mob/living/advanced/proc/put_in_hands(var/obj/item/I,var/left = FALSE)
 
 	if(left_hand && right_hand)
-		if(left && left_hand.can_hold_object(I,FALSE))
-			return left_hand.add_object(I)
-		if(!left && right_hand.can_hold_object(I,FALSE))
-			return right_hand.add_object(I)
+		if(left)
+			if(left_hand.can_hold_object(I,FALSE))
+				return left_hand.add_object(I)
+			else if(right_hand.can_hold_object(I,FALSE))
+				return right_hand.add_object(I)
+		else
+			if(right_hand.can_hold_object(I,FALSE))
+				return right_hand.add_object(I)
+			else if(left_hand.can_hold_object(I,FALSE))
+				return left_hand.add_object(I)
 	else
 		if(left_hand)
 			return left_hand.add_object(I)
@@ -463,3 +505,25 @@ mob/living/advanced/Login()
 	if(right_hand)
 		return right_hand.get_top_held_object()
 	return null
+
+
+/mob/living/advanced/proc/parry(var/atom/attacker,var/atom/weapon,var/atom/hit_object,var/damagetype/DT)
+
+	if(last_hold && (world.time - last_hold <= 5))
+		return TRUE
+
+	return FALSE
+
+/mob/living/advanced/mod_speech(var/text)
+	var/species/S = all_species[species]
+	if(!S)
+		return text
+	return ..(S.mod_speech(src,text))
+
+
+
+/mob/living/advanced/can_use_controls()
+	if(handcuffed)
+		return FALSE
+
+	return ..()

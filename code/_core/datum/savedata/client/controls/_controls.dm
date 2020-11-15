@@ -6,24 +6,24 @@
 /savedata/client/controls/get_file(var/file_id)
 	return "controls.json"
 
-/savedata/client/controls/New(var/client/new_owner)
+/savedata/client/controls/New(var/desired_ckey)
 
 	. = ..()
 
-	owner = new_owner
+	var/client/owner = CLIENT(ckey)
 
 	var/full_path = "[get_folder(ckey)][get_file()]"
 
 	if(!fexists(full_path))
-		text2file(json_encode(owner.macros.macros),full_path)
+		rustg_file_append(json_encode(owner.macros.macros),full_path)
 	else
-		loaded_data = json_decode(file2text(full_path))
+		loaded_data = json_decode(rustg_file_read(full_path))
 		owner.macros.macros = loaded_data
 
 	return .
 
 /savedata/client/controls/proc/save()
+	var/client/owner = CLIENT(ckey)
 	var/full_path = "[get_folder(ckey)][get_file()]"
-	fdel(full_path)
-	text2file(json_encode(owner.macros.macros),full_path)
+	rustg_file_write(json_encode(owner.macros.macros),full_path)
 	owner.to_chat(span("notice","Your control scheme has been saved."))

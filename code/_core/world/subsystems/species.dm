@@ -1,11 +1,11 @@
 var/global/list/all_species = list()
 
-SUBSYSTEM_DEF(chargen)
+SUBSYSTEM_DEF(species)
 	name = "Chargen Subsystem"
 	desc = "Basically allows the chargen system not to be dumb."
 	priority = SS_ORDER_PRELOAD
 
-/subsystem/chargen/Initialize()
+/subsystem/species/Initialize()
 
 	for(var/k in subtypesof(/species/))
 		var/species/S = k
@@ -24,8 +24,8 @@ SUBSYSTEM_DEF(chargen)
 
 				log_subsystem(name,"Initialized [length(S.all_hair_head)] species hairstyles for [S.name].")
 
-			if(S.default_icon_face)
-				for(var/v in icon_states(S.default_icon_face))
+			if(S.default_icon_hair_face)
+				for(var/v in icon_states(S.default_icon_hair_face))
 
 					if(!v || v == "")
 						continue
@@ -38,3 +38,5 @@ SUBSYSTEM_DEF(chargen)
 
 
 	log_subsystem(name,"Initialized [length(all_species)] species.")
+
+	return ..()

@@ -1,14 +1,4 @@
 /ai/slime/
-	radius_find_enemy = 12
-
-	target_distribution_y = list(0,0,0,0,4,8)
-
-	objective_delay = 10
-	attack_delay = 1
-
-
-	stationary = FALSE
-
 	roaming_distance = 32
 
 /ai/slime/proc/can_absorb_slime(var/mob/living/simple/npc/slime/S)
@@ -42,11 +32,13 @@
 	var/mob/living/simple/npc/slime/self = owner
 
 	for(var/mob/living/advanced/A in view(radius_find_enemy,owner))
-		if(should_attack_mob(A) && is_enemy(A))
+		CHECK_TICK(75,FPS_SERVER)
+		if(should_attack_mob(A))
 			.[A] = TRUE
 
 	if(!length(.) && self.stored_slimes < self.stored_slimes_max)
 		for(var/mob/living/simple/npc/slime/S in view(radius_find_enemy,owner))
+			CHECK_TICK(75,FPS_SERVER)
 			if(can_absorb_slime(S))
 				.[S] = TRUE
 

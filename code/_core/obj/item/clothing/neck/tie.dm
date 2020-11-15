@@ -1,6 +1,6 @@
 /obj/item/clothing/neck/tie
 	name = "tie"
-	icon = 'icons/obj/items/clothing/neck/tie.dmi'
+	icon = 'icons/obj/item/clothing/neck/tie.dmi'
 	desc = "Clip-ons are for pussies."
 	desc_extended = "A sleek tie."
 	worn_layer = LAYER_MOB_CLOTHING_NECK_UNDER
@@ -8,11 +8,11 @@
 	protected_limbs = list(BODY_TORSO)
 
 	defense_rating = list(
-		MAGIC = 15
+		ARCANE = 15
 	)
 
 	size = SIZE_1
-	weight = WEIGHT_0
+
 
 	value = 5
 

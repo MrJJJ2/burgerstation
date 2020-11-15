@@ -1,10 +1,10 @@
-/mob/living/proc/add_health_element(var/obj/hud/button/H)
+/mob/living/proc/add_health_element(var/obj/hud/button/health/H)
 	health_elements[H.id] = H
 	if(client)
 		client.screen += H
 	update_health_elements()
 
-/mob/living/proc/remove_health_element(var/obj/hud/button/H)
+/mob/living/proc/remove_health_element(var/obj/hud/button/health/H)
 	health_elements -= H
 	if(client)
 		client.screen -= H
@@ -42,7 +42,8 @@
 		M.update_stats(src)
 
 	if(length(screen_blood))
-		for(var/obj/hud/screen_blood/SB in screen_blood)
+		for(var/k in screen_blood)
+			var/obj/hud/screen_blood/SB = k
 			SB.update_stats()
 
 	return TRUE
@@ -56,20 +57,23 @@
 	if(has_status_effect(ADRENALINE))
 		health_added = get_status_effect_magnitude(ADRENALINE)
 
-	if(health.health_current + health_added <= death_threshold)
+	if( (health.health_current + health_added) <= death_threshold)
 		return TRUE
 
 	return FALSE
 
-/mob/living/on_damage_received(var/atom/atom_damaged,var/atom/attacker,var/atom/weapon,var/list/damage_table,var/damage_amount)
+/mob/living/proc/should_bleed()
+	return TRUE
+
+/mob/living/on_damage_received(var/atom/atom_damaged,var/atom/attacker,var/atom/weapon,var/list/damage_table,var/damage_amount,var/critical_hit_multiplier,var/stealthy=FALSE)
 
 	. = ..()
 
-	var/total_bleed_damage = SAFENUM(damage_table[BLADE])*3 + SAFENUM(damage_table[BLUNT]) + SAFENUM(damage_table[PIERCE])*2
+	var/total_bleed_damage = SAFENUM(damage_table[BLADE])*4 + SAFENUM(damage_table[BLUNT]) + SAFENUM(damage_table[PIERCE])*2
 
-	if(total_bleed_damage && luck(src,total_bleed_damage,FALSE))
+	if(blood_type && total_bleed_damage && should_bleed() && (luck(src,total_bleed_damage,FALSE) || (atom_damaged && atom_damaged.health && luck(src,atom_damaged.health.get_brute_loss()*5,FALSE))))
 
-		if(reagents.volume_current > 0)
+		if(blood_volume > 0)
 			var/offset_x = (src.x - attacker.x)
 			var/offset_y = (src.y - attacker.y)
 
@@ -81,51 +85,43 @@
 			offset_x = (offset_x/norm_offset) * total_bleed_damage * 0.25
 			offset_y = (offset_y/norm_offset) * total_bleed_damage * 0.25
 
-			for(var/i=1,i<=clamp(round(total_bleed_damage/50),1,5),i++)
-				new /obj/effect/temp/blood/splatter(src.loc,SECONDS_TO_DECISECONDS(60),reagents.color,offset_x,offset_y)
+			var/reagent/R = REAGENT(blood_type)
 
-			reagents.remove_reagents(total_bleed_damage/5)
+			for(var/i=1,i<=clamp(round(total_bleed_damage/50),1,BLOOD_LIMIT),i++)
+				if(!create_blood(/obj/effect/cleanable/blood/splatter,get_turf(src),R.color,offset_x,offset_y))
+					break
+
+			for(var/i=1,i<=total_bleed_damage*0.1,i++)
+				create_blood(/obj/effect/cleanable/blood/splatter_small,get_turf(src),R.color,offset_x + rand(-32,32),offset_y + rand(-32,32))
+
+			if(health && total_bleed_damage)
+				blood_volume -= FLOOR(total_bleed_damage*0.2,1)
+				queue_health_update = TRUE
 
 		if(is_organ(atom_damaged))
 			var/obj/item/organ/O = atom_damaged
-			O.bleeding = TRUE
+			var/bleed_to_add = 1 + total_bleed_damage*0.002
+			O.bleeding += bleed_to_add
 
 	if(ai)
-		ai.on_damage_received(atom_damaged,attacker,weapon,damage_table,damage_amount)
+		ai.on_damage_received(atom_damaged,attacker,weapon,damage_table,damage_amount,stealthy)
 
 	if(dead && time_of_death + 30 <= world.time && length(butcher_contents) && is_living(attacker) && get_dist(attacker,src) <= 1)
 		var/mob/living/L = attacker
 		var/blade_damage = SAFENUM(damage_table[BLADE]) + SAFENUM(damage_table[LASER])
-		var/butcher_mod = (src.health.health_max + src.health.health_current)*0.1
-		if(blade_damage > max(10,butcher_mod))
-			if(L.can_butcher(weapon,src))
-				L.visible_message(span("danger","\The [L.name] starts to butcher \the [src.name]!"),span("danger","You start to butcher \the [src.name]!"))
-				PROGRESS_BAR(L,L,max(10,src.health.health_max*0.05),.proc/butcher,src)
-				PROGRESS_BAR_CONDITIONS(L,L,.proc/can_butcher,weapon,src)
-		else
-			L.to_chat("You weaken \the [src.name] for butchering...")
+		if(blade_damage > 0 && src.can_be_butchered(L,weapon))
+			L.visible_message(span("danger","\The [L.name] starts to butcher \the [src.name]!"),span("danger","You start to butcher \the [src.name]!"))
+			PROGRESS_BAR(L,L,max(10,src.health.health_max*0.05),.proc/butcher,src)
+			PROGRESS_BAR_CONDITIONS(L,src,.proc/can_be_butchered,L,weapon)
 
 	return .
 
-/mob/living/proc/can_butcher(var/obj/item/butcher_item,var/mob/living/butcher_target)
+/mob/living/proc/can_be_butchered(var/mob/caller,var/obj/item/butchering_item)
 
-	if(!butcher_item || !butcher_target)
-		to_chat(span("warning","You can't butcher that!"))
-		return FALSE
+	INTERACT_CHECK
+	INTERACT_CHECK_OTHER(butchering_item)
 
-	if(!is_inventory(butcher_item.loc))
-		to_chat(span("warning","You must be holding \the [butcher_item.name] to butcher \the [butcher_target.name]!"))
-		return FALSE
-
-	if(!isturf(butcher_target.loc))
-		to_chat(span("warning","You can't butcher \the [butcher_target.name] in there!"))
-		return FALSE
-
-	if(get_dist(src,butcher_target) > 1 || get_dist(src,butcher_item) > 1)
-		to_chat(span("warning","You're too far way to butcher \the [butcher_target.name]!"))
-		return FALSE
-
-	if(!butcher_target.dead)
+	if(!src.dead)
 		to_chat(span("danger","OH FUCK THEY'RE STILL ALIVE!"))
 		return FALSE
 
@@ -133,18 +129,29 @@
 
 /mob/living/proc/butcher(var/mob/living/target)
 
+	if(target.qdeleting)
+		return FALSE
+
 	src.visible_message(span("danger","\The [src.name] butchers \the [target.name]!"),span("danger","You butcher \the [target.name]."))
 
+	var/turf/T = get_turf(target)
+
 	for(var/k in target.butcher_contents)
-		var/obj/O = new k(target.loc)
+		var/obj/O = new k(T)
 		INITIALIZE(O)
 		GENERATE(O)
+		FINALIZE(O)
 
-	for(var/atom/movable/M in target.contents)
+	for(var/k in target.contents)
+		var/atom/movable/M = k
 		if(is_organ(M))
 			continue
-		M.force_move(target.loc)
+		M.force_move(T)
 
 	qdel(target)
 
 	return TRUE
+
+
+/mob/living/proc/get_damage_received_multiplier(var/atom/attacker,var/atom/victim,var/atom/weapon,var/atom/hit_object,var/atom/blamed,var/damagetype/DT)
+	return damage_received_multiplier

@@ -1,10 +1,3 @@
-#define SLEEPER_OPENED "open"
-#define SLEEPER_OPENING "opening"
-
-#define SLEEPER_CLOSED "closed"
-#define SLEEPER_CLOSING "closing"
-
-
 obj/structure/interactive/bed/sleeper
 	name = "sleeper"
 	icon_state = "sleeper"
@@ -31,9 +24,10 @@ obj/structure/interactive/bed/sleeper
 
 	collision_dir = NORTH | EAST | SOUTH | WEST
 
+	interaction_flags = FLAG_INTERACTION_LIVING
+
 obj/structure/interactive/bed/sleeper/Initialize()
 	new /obj/structure/interactive/blocker(get_step(loc,EAST),src)
-	update_sprite()
 	check_collisions()
 	return ..()
 
@@ -45,28 +39,34 @@ obj/structure/interactive/bed/sleeper/update_underlays()
 	underlays += I
 	return .
 
-obj/structure/interactive/bed/sleeper/clicked_on_by_object(var/mob/caller,object,location,control,params)
+obj/structure/interactive/bed/sleeper/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	INTERACT_CHECK
+
+	if(door_state == SLEEPER_CLOSING || door_state == SLEEPER_OPENING)
+		return TRUE
+
+	if(door_state == SLEEPER_CLOSED)
+		open(caller)
+		return TRUE
 
 	. = ..()
 
-	if(!.)
-		if(door_state == SLEEPER_CLOSED)
-			open()
-		else if(door_state == SLEEPER_OPENED)
-			close()
-
+	if(.)
 		return TRUE
 
-	return .
+	if(door_state == SLEEPER_OPENED)
+		close(caller)
+		return TRUE
+
+	return FALSE
 
 /obj/structure/interactive/bed/sleeper/buckle(var/mob/living/victim,var/mob/caller,var/silent=FALSE)
 
-	. = ..()
+	if(door_state != SLEEPER_OPENED)
+		return FALSE
 
-	if(. && door_state == SLEEPER_OPENED)
-		close(caller)
-
-	return .
+	return ..()
 
 obj/structure/interactive/bed/sleeper/unbuckle(var/mob/caller,var/silent=FALSE)
 
@@ -80,26 +80,35 @@ obj/structure/interactive/bed/sleeper/unbuckle(var/mob/caller,var/silent=FALSE)
 
 obj/structure/interactive/bed/sleeper/proc/open(var/mob/caller)
 	if(open_sound)
-		play(open_sound,src,alert = ALERT_LEVEL_NOISE, alert_source = caller)
+		play(open_sound,src)
+		create_alert(VIEW_RANGE,src.loc,caller,ALERT_LEVEL_NOISE)
 	door_state = SLEEPER_OPENING
 	update_icon()
-	spawn(open_time)
-		door_state = SLEEPER_OPENED
-		opened_time = 0
-		update_icon()
-		check_collisions()
+	CALLBACK("on_open_\ref[src]",open_time,src,.proc/on_open,caller)
+
+obj/structure/interactive/bed/sleeper/proc/on_open(var/mob/caller)
+	door_state = SLEEPER_OPENED
+	opened_time = 0
+	update_icon()
+	check_collisions()
 	start_thinking(src)
 
+obj/structure/interactive/bed/sleeper/proc/on_close(var/mob/caller)
+	door_state = SLEEPER_CLOSED
+	opened_time = 0
+	update_icon()
+	check_collisions()
+
 obj/structure/interactive/bed/sleeper/proc/close(var/mob/caller)
+	var/mob/living/advanced/A = locate() in get_turf(src)
+	if(A)
+		buckle(A,caller)
 	if(close_sound)
-		play(close_sound,src,alert = ALERT_LEVEL_NOISE, alert_source = caller)
+		play(close_sound,src)
+		create_alert(VIEW_RANGE,src.loc,caller,ALERT_LEVEL_NOISE)
 	door_state = SLEEPER_CLOSING
 	update_icon()
-	spawn(close_time)
-		door_state = SLEEPER_CLOSED
-		opened_time = 0
-		update_icon()
-		check_collisions()
+	CALLBACK("on_close_\ref[src]",close_time,src,.proc/on_close,caller)
 	stop_thinking(src)
 
 obj/structure/interactive/bed/sleeper/think()
@@ -160,6 +169,8 @@ obj/structure/interactive/bed/sleeper/backup/New(var/desired_loc)
 obj/structure/interactive/bed/sleeper/cryo
 	name = "hypersleep chamber"
 	base_color = "#AAAAAA"
+	desc = "Ah shit, i gotta cryo."
+	desc_extended = "Move inside here in order to save your character and log out."
 	secondary_color = "#00FF00"
 	var/spawnpoint = TRUE
 
@@ -175,15 +186,46 @@ obj/structure/interactive/bed/sleeper/cryo/New(var/desired_loc)
 
 obj/structure/interactive/bed/sleeper/medical
 	name = "medical sleeper"
+	desc = "Medical care in the future!"
+	desc_extended = "A special medical sleeper that automatically treats all manner of wounds when an occupant is inside and the door is closed. The door must be closed manually."
 	base_color = "#FFFFFF"
 	secondary_color = "#0094FF"
 
-obj/structure/interactive/bed/sleeper/syndicate
-	name = "syndicate sleeper"
+obj/structure/interactive/bed/sleeper/medical/think()
+	if(buckled || is_living(buckled))
+		var/mob/living/L = buckled
+		if(L.health)
+			L.health.adjust_loss_smart(brute=-1,burn=-1,tox=-1)
+		if(L.blood_type)
+			L.blood_volume = min(L.blood_volume + 1,L.blood_volume_max)
+	return TRUE
+
+obj/structure/interactive/bed/sleeper/medical/close(var/mob/caller)
+	var/mob/living/advanced/A = locate() in get_turf(src)
+	if(A)
+		buckle(A,caller)
+	if(close_sound)
+		play(close_sound,src)
+		create_alert(VIEW_RANGE,src.loc,caller,ALERT_LEVEL_NOISE)
+	door_state = SLEEPER_CLOSING
+	update_icon()
+	CALLBACK("on_close_\ref[src]",close_time,src,.proc/on_close,caller)
+
+obj/structure/interactive/bed/sleeper/medical/on_open(var/mob/caller)
+	door_state = SLEEPER_OPENED
+	opened_time = 0
+	update_icon()
+	check_collisions()
+	stop_thinking(src)
+
+obj/structure/interactive/bed/sleeper/medical/on_close(var/mob/caller)
+	door_state = SLEEPER_CLOSED
+	opened_time = 0
+	update_icon()
+	check_collisions()
+	start_thinking(src)
+
+obj/structure/interactive/bed/sleeper/medical/syndicate
+	name = "syndicate medical sleeper"
 	base_color = "#303030"
 	secondary_color = "#7F0000"
-
-obj/structure/interactive/bed/sleeper/chef
-	name = "chef sleeper"
-	base_color = "#AAAAAA"
-	secondary_color = "#00FF00"

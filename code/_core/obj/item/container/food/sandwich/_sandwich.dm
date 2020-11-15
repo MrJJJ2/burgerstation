@@ -1,6 +1,7 @@
 /obj/item/container/food/sandwich
 	name = "sandwich"
 	desc = "A clusterfuck of food."
+	desc_extended = "SANDWICH MAKES ME STRONG!"
 
 	size = 3
 
@@ -9,49 +10,26 @@
 
 	dynamic_inventory_count = 8
 
-	icon = 'icons/obj/items/consumable/food/dynamic_bread.dmi'
+	dynamic_inventory_type = /obj/hud/inventory/dynamic/sandwich/
+
+	icon = 'icons/obj/item/consumable/food/dynamic_bread.dmi'
 	icon_state = "bun_bottom"
 
 	scale_sprite = FALSE
+
+/obj/item/container/food/sandwich/Finalize()
+	update_sprite()
+	return ..()
+
 
 /obj/item/container/food/sandwich/Generate()
 	reagents.add_reagent(/reagent/nutrition/bread/flour/processed,5)
 	return ..()
 
-/obj/item/container/food/sandwich/get_reagents_to_eat()
+/obj/item/container/food/sandwich/update_sprite()
 
-	var/total_reagents = reagents.volume_current
-
-	for(var/i=1,i<=length(inventories),i++)
-		var/obj/hud/inventory/IN = inventories[i]
-		var/obj/item/IT = IN.get_top_held_object()
-		if(!IT || !IT.reagents)
-			continue
-		total_reagents += IT.reagents.volume_current
-
-	var/reagent_container/temp/T = new()
-
-	for(var/i=1,i<=length(inventories),i++)
-		var/obj/hud/inventory/IN = inventories[i]
-		var/obj/item/IT = IN.get_top_held_object()
-		if(!IT || !IT.reagents)
-			continue
-		IT.reagents.transfer_reagents_to(T, bite_size * (IT.reagents.volume_current/total_reagents), FALSE )
-		IT.reagents.update_container()
-
-	reagents.transfer_reagents_to(T, bite_size * (reagents.volume_current/total_reagents))
-
-	return T
-
-/obj/item/container/food/sandwich/update_icon()
-
-	icon = initial(icon)
-	icon_state = initial(icon_state)
-
-	var/icon/I = new/icon(icon,icon_state)
-	I.Blend(reagents.color,ICON_MULTIPLY)
-
-	icon = I
+	if(istype(reagents))
+		src.color = reagents.color
 
 	return ..()
 
@@ -67,8 +45,10 @@
 		if(!IT)
 			continue
 		var/image/IM = new/image(IT.icon,IT.icon_state)
+		IM.appearance = IT.appearance
+		IM.appearance_flags |= RESET_COLOR
 		IM.pixel_y = offset_y
-		IM.color = IT.color
+		IM.plane = src.plane
 		add_overlay(IM)
 		offset_y += IT.pixel_height
 
@@ -77,9 +57,9 @@
 
 /obj/item/container/food/sandwich/update_inventory()
 	. = ..()
-	update_sprite()
+	if(initialized)
+		update_sprite()
 	return .
-
 
 /obj/item/container/food/sandwich/burger
 	name = "burger"
@@ -88,4 +68,4 @@
 
 /obj/item/container/food/sandwich/bread
 	name = "sandwich"
-	icon_state = "bun_bottom"
+	icon_state = "bread_slice"

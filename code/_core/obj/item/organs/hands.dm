@@ -29,21 +29,29 @@
 
 	base_miss_chance = 20
 
-	attack_delay = 8
-	attack_delay_max = 15
-
 	health_base = 25
 
-	health_coefficient = 0.5
+	damage_coefficient = 0.5
 
-	block_difficulty = list( //Also affects parry. High values means more difficult to block. Generally 0 = level 0, 1 = level 100.
-		ATTACK_TYPE_MELEE = 0.5,
-		ATTACK_TYPE_RANGED = 0.95,
-		ATTACK_TYPE_MAGIC = 0.75,
-		ATTACK_TYPE_UNARMED = 0.25
-	)
+	has_pain = TRUE
 
-/obj/item/organ/hand/get_damage_type(var/atom/attacker,var/atom/victim,var/atom/target)
+/obj/item/organ/hand/on_pain()
+
+	. = ..()
+
+	var/turf/T = get_turf(src)
+	var/did_drop = FALSE
+	for(var/k in inventories)
+		var/obj/hud/inventory/I = k
+		if(length(I.drop_held_objects(T)))
+			did_drop = TRUE
+	if(did_drop && is_advanced(loc))
+		var/mob/living/advanced/A = loc
+		A.to_chat(span("danger","You cry in pain as your [src.name] recoils from your injury!"))
+
+	return . || did_drop
+
+/obj/item/organ/hand/get_damage_type(var/atom/attacker,var/atom/victim)
 
 	if(is_living(attacker))
 		var/mob/living/L = attacker
@@ -88,6 +96,7 @@
 		/obj/hud/inventory/organs/right_hand_held
 	)
 
+	defense_rating = REPTILE_ARMOR
 
 /obj/item/organ/hand/reptile/left
 	name = "left reptile hand"
@@ -116,6 +125,8 @@
 		/obj/hud/inventory/organs/right_hand_worn,
 		/obj/hud/inventory/organs/right_hand_held
 	)
+
+	defense_rating = REPTILE_ARMOR
 
 /obj/item/organ/hand/reptile_advanced/left
 	name = "left advanced reptile hand"
@@ -149,6 +160,8 @@
 	enable_glow = TRUE
 	enable_detail = TRUE
 
+	defense_rating = DIONA_ARMOR
+
 
 /obj/item/organ/hand/diona/left
 	name = "left diona hand"
@@ -178,6 +191,9 @@
 		/obj/hud/inventory/organs/right_hand_worn,
 		/obj/hud/inventory/organs/right_hand_held
 	)
+
+	defense_rating = CYBORG_ARMOR
+	health = /health/obj/item/organ/synthetic
 
 /obj/item/organ/hand/cyborg/left
 	name = "left cyborg hand"
@@ -209,7 +225,9 @@
 	)
 	damage_type = /damagetype/unarmed/beef/
 
-/obj/item/organ/hand/beefman/get_damage_type(var/atom/attacker,var/atom/victim,var/atom/target)
+	defense_rating = MEATMEN_ARMOR
+
+/obj/item/organ/hand/beefman/get_damage_type(var/atom/attacker,var/atom/victim)
 	return damage_type
 
 /obj/item/organ/hand/beefman/left
@@ -235,11 +253,108 @@
 /obj/item/organ/hand/stand
 	name = "right fast hand"
 
-	attack_delay = 1
-	attack_delay_max = 4
+/obj/item/organ/hand/stand/get_damage_type(var/atom/attacker,var/atom/victim)
+	return /damagetype/unarmed/fists/stand
 
 /obj/item/organ/hand/stand/left
 	name = "left fast hand"
+	id = BODY_HAND_LEFT
+	icon_state = BODY_HAND_LEFT
+	inventories = list(
+		/obj/hud/inventory/organs/left_hand_worn,
+		/obj/hud/inventory/organs/left_hand_held
+	)
+
+	attach_flag = BODY_ARM_LEFT
+
+	hud_id = "body_hand_left"
+
+	target_bounds_x_min = 21
+	target_bounds_x_max = 24
+
+	target_bounds_y_min = 11
+	target_bounds_y_max = 14
+
+
+//Skeleton
+/obj/item/organ/hand/skeleton
+	name = "right skeleton hand"
+	icon = 'icons/mob/living/advanced/species/skeleton.dmi'
+	inventories = list(
+		/obj/hud/inventory/organs/right_hand_worn,
+		/obj/hud/inventory/organs/right_hand_held
+	)
+
+	defense_rating = SKELETON_ARMOR
+
+/obj/item/organ/hand/skeleton/left
+	name = "left skeleton hand"
+	id = BODY_HAND_LEFT
+	icon_state = BODY_HAND_LEFT
+	inventories = list(
+		/obj/hud/inventory/organs/left_hand_worn,
+		/obj/hud/inventory/organs/left_hand_held
+	)
+
+	attach_flag = BODY_ARM_LEFT
+
+	hud_id = "body_hand_left"
+
+	target_bounds_x_min = 21
+	target_bounds_x_max = 24
+
+	target_bounds_y_min = 11
+	target_bounds_y_max = 14
+
+
+
+
+//Skeleton
+/obj/item/organ/hand/monkey
+	name = "right monkey hand"
+	icon = 'icons/mob/living/advanced/species/monkey.dmi'
+	inventories = list(
+		/obj/hud/inventory/organs/right_hand_worn,
+		/obj/hud/inventory/organs/right_hand_held
+	)
+
+/obj/item/organ/hand/monkey/left
+	name = "left monkey hand"
+	id = BODY_HAND_LEFT
+	icon_state = BODY_HAND_LEFT
+	inventories = list(
+		/obj/hud/inventory/organs/left_hand_worn,
+		/obj/hud/inventory/organs/left_hand_held
+	)
+
+	attach_flag = BODY_ARM_LEFT
+
+	hud_id = "body_hand_left"
+
+	target_bounds_x_min = 21
+	target_bounds_x_max = 24
+
+	target_bounds_y_min = 11
+	target_bounds_y_max = 14
+
+
+
+
+//Zombie
+/obj/item/organ/hand/zombie
+	name = "right zombie hand"
+	inventories = list(
+		/obj/hud/inventory/organs/right_hand_worn,
+		/obj/hud/inventory/organs/right_hand_held
+	)
+
+	damage_type = /damagetype/unarmed/bite/zombie
+
+/obj/item/organ/hand/zombie/get_damage_type(var/atom/attacker,var/atom/victim)
+	return damage_type
+
+/obj/item/organ/hand/zombie/left
+	name = "left zombie hand"
 	id = BODY_HAND_LEFT
 	icon_state = BODY_HAND_LEFT
 	inventories = list(

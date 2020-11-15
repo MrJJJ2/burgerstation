@@ -1,11 +1,15 @@
 var/global/list/area/all_areas_with_hazards = list()
 var/global/list/all_hazards = list()
 
+//TODO: REFACTOR THIS.
+
 SUBSYSTEM_DEF(hazard)
 	name = "Enviromental Hazard Subsystem"
 	desc = "Controls hazards, like extreme cold or extreme heat."
 	tick_rate = SECONDS_TO_TICKS(10)
 	priority = SS_ORDER_IMPORTANT
+
+	var/list/hazard_turfs = list()
 
 /subsystem/hazard/Initialize()
 
@@ -18,7 +22,7 @@ SUBSYSTEM_DEF(hazard)
 
 	log_subsystem(name,"Initialized [length(all_hazards)] hazards.")
 
-	return TRUE
+	return ..()
 
 /subsystem/hazard/on_life()
 
@@ -31,10 +35,11 @@ SUBSYSTEM_DEF(hazard)
 		var/hazard/H = all_hazards[A.hazard]
 		if(!H)
 			continue
-		if(A.players_inside)
-			for(var/mob/living/advanced/player/P in A.players_inside)
-				CHECK_TICK
-				H.process_player_tick(P)
+		if(!A.players_inside)
+			continue
+		for(var/mob/living/advanced/player/P in A.players_inside)
+			CHECK_TICK(tick_usage_max)
+			H.process_player_tick(P)
 
 	return TRUE
 

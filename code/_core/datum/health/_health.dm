@@ -25,7 +25,7 @@
 		BLUNT = 0,
 		PIERCE = 0,
 		LASER = 0,
-		MAGIC = 0,
+		ARCANE = 0,
 		HEAT = 0,
 		COLD = 0,
 		BOMB = 0,
@@ -35,6 +35,8 @@
 		DARK = 0,
 		FATIGUE = 0
 	)
+
+	var/organic = FALSE
 
 /health/New(var/desired_owner)
 	owner = desired_owner
@@ -50,10 +52,13 @@
 
 	update_health(update_hud = FALSE)
 
+	return ..()
+
 /health/Destroy()
 
 	/*
-	for(var/wound/W in wounds)
+	for(var/k in wounds)
+		var/wound/W = k
 		qdel(W)
 
 	wounds.Cut()
@@ -94,7 +99,7 @@
 
 /health/proc/restore()
 	damage = list(BRUTE = 0, BURN = 0, TOX = 0, OXY = 0, FATIGUE = 0)
-	update_health(TRUE)
+	update_health(update_hud = TRUE)
 	return TRUE
 
 /health/proc/adjust_loss_smart(var/brute,var/burn,var/tox,var/oxy,var/update=TRUE)
@@ -189,7 +194,13 @@
 /health/proc/get_loss(var/damage_type)
 	return damage[damage_type]
 
-/health/proc/update_health(var/damage_dealt,var/atom/attacker,var/update_hud=TRUE) //Update the health values.
+/health/proc/get_stamina_loss()
+	return stamina_max - stamina_current
+
+/health/proc/get_mana_loss()
+	return mana_max - mana_current
+
+/health/proc/update_health(var/atom/attacker,var/damage_dealt=0,var/update_hud=TRUE,var/check_death=TRUE) //Update the health values.
 	health_current = get_overall_health()
 	return TRUE
 
@@ -209,41 +220,20 @@
 			return adjust_fatigue_loss(amount)
 
 /health/proc/get_defense(var/atom/attacker,var/atom/hit_object)
-
-	var/returning_value = list()
-
-	for(var/damage_type in src.armor_base)
-		var/damage_amount = src.armor_base[damage_type]
-		returning_value[damage_type] = damage_amount
-
-	return returning_value
-
-
-/health/mob/living/get_defense(var/atom/attacker,var/atom/hit_object)
-
-	if(!is_living(owner))
-		return ..()
-
 	return armor_base.Copy()
 
-
 /health/proc/adjust_mana(var/adjust_value)
-
 	var/old_value = mana_current
 	var/new_value = clamp(mana_current + adjust_value,0,mana_max)
-
 	if(old_value != new_value)
 		mana_current = new_value
 		return new_value - old_value
-
 	return FALSE
 
 /health/proc/adjust_stamina(var/adjust_value)
 	var/old_value = stamina_current
 	var/new_value = clamp(stamina_current + adjust_value,0,stamina_max)
-
 	if(old_value != new_value)
 		stamina_current = new_value
 		return new_value - old_value
-
 	return FALSE

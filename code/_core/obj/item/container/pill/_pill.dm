@@ -2,7 +2,7 @@
 	name = "pill"
 	desc = "FLOORPILL"
 
-	icon = 'icons/obj/items/container/pills.dmi'
+	icon = 'icons/obj/item/container/pills.dmi'
 	icon_state = "rectangle"
 
 	desc_extended = "Hope you remember what the pill is."
@@ -10,13 +10,55 @@
 	var/double = FALSE
 
 	size = SIZE_0
-	weight = WEIGHT_0
 
 	var/reagent_container/reagents_2
 
-	value = 1
+	value = 0
 
-/obj/item/container/pill/calculate_value()
+	allow_reagent_transfer_from = FALSE
+
+	weight = 0.01
+
+/obj/item/container/pill/get_consume_verb()
+	return "swallow"
+
+/obj/item/container/pill/get_consume_sound()
+	return null
+
+/obj/item/container/pill/get_examine_list(var/mob/examiner)
+	return ..() + div("notice",reagents.get_contents_english())
+
+
+/obj/item/container/pill/save_item_data(var/save_inventory = TRUE)
+	. = ..()
+	.["double"] = double
+	if(reagents_2) .["reagents_2"] = reagents_2.stored_reagents
+	return .
+
+
+/obj/item/container/pill/load_item_data_pre(var/mob/living/advanced/player/P,var/list/object_data)
+
+	. = ..()
+
+	if(object_data["double"]) double = object_data["double"]
+
+	return .
+
+/obj/item/container/pill/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+
+	. = ..()
+
+	if(object_data["reagents_2"] && length(object_data["reagents_2"]))
+		for(var/r_id in object_data["reagents_2"])
+			r_id = text2path(r_id)
+			var/volume = object_data["reagents_2"][r_id]
+			reagents_2.add_reagent(r_id,volume,TNULL,FALSE)
+		reagents_2.update_container()
+
+	return .
+
+
+/obj/item/container/pill/get_value()
 
 	. = ..()
 
@@ -29,47 +71,46 @@
 	return .
 
 
+/obj/item/container/pill/get_reagents_to_consume()
+	var/reagent_container/temp/T = new(src,1000)
+	reagents?.transfer_reagents_to(T,reagents.volume_current)
+	reagents_2?.transfer_reagents_to(T,reagents_2.volume_current)
+	return T.qdeleting ? null : T
 
+/obj/item/container/pill/feed(var/mob/caller,var/mob/living/target)
+	. = ..()
+	if(.) qdel(src)
+	return .
+
+/*
 /obj/item/container/pill/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
+
+	if(!is_living(object))
+		return ..()
 
 	INTERACT_CHECK
 
-	if(!is_advanced(object))
-		return ..()
-
-	var/mob/living/advanced/A2 = object
-
-	if(!A2.labeled_organs[BODY_STOMACH])
-		A2.to_chat(span("warning","You don't know how you can swallow \the [src]!"))
-		return FALSE
-
-	var/obj/item/organ/internal/stomach/S = A2.labeled_organs[BODY_STOMACH]
-
-	if(reagents)
-		reagents.transfer_reagents_to(S.reagents,reagents.volume_current)
-
-	if(reagents_2)
-		reagents_2.transfer_reagents_to(S.reagents,reagents_2.volume_current)
-
-	A2.to_chat(span("notice","You swallow \the [src]."))
+	var/reagent_container/R = get_reagents_to_consume()
+	R.consume(caller,object)
 
 	qdel(src)
 
 	return TRUE
+*/
 
 /obj/item/container/pill/Generate()
 	. = ..()
 	update_sprite()
 	return .
 
-/obj/item/container/pill/update_icon()
+/obj/item/container/pill/update_sprite()
 
 	if(double)
 		color = null
 	else
 		color = reagents.color
 
-	return TRUE
+	return ..()
 
 /obj/item/container/pill/update_overlays()
 
@@ -88,11 +129,20 @@
 
 /obj/item/container/pill/New(var/desired_loc)
 
+	. = ..()
+
 	if(double)
-		reagents_2 = new/reagent_container/pill/half(src)
-		reagents = new/reagent_container/pill/half(src)
+		reagents_2 = /reagent_container/pill/half
+		reagents = /reagent_container/pill/half
 	else
-		reagents = /reagent_container/pill/
+		reagents = /reagent_container/pill
+
+	return .
+
+/obj/item/container/pill/Initialize()
+
+	if(reagents_2)
+		reagents_2 = new reagents(src)
 
 	return ..()
 

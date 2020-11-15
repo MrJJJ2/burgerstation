@@ -4,6 +4,9 @@ SUBSYSTEM_DEF(squad)
 	priority = SS_ORDER_PRELOAD
 	tick_rate = SECONDS_TO_TICKS(1)
 
+	tick_usage_max = 50
+	cpu_usage_max = 50
+
 /subsystem/squad/Initialize()
 
 	var/squad/red_team = new
@@ -22,12 +25,14 @@ SUBSYSTEM_DEF(squad)
 	green_team.name = "Green Squad"
 	green_team.never_delete = TRUE
 
-	return TRUE
+	return ..()
 
 /subsystem/squad/on_life()
 
 	for(var/squad/S in all_squads)
-		for(var/mob/living/advanced/player/M in S.members)
+		for(var/k in S.members)
+			var/mob/living/advanced/player/M = k
+			CHECK_TICK(tick_usage_max,FPS_SERVER)
 			M.update_squad_buttons()
 
 	return TRUE

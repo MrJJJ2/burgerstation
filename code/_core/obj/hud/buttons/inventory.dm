@@ -10,23 +10,35 @@
 
 	has_quick_function = FALSE
 
-/obj/hud/button/close_inventory/clicked_on_by_object(var/mob/caller,object,location,control,params)
+	interaction_flags = FLAG_INTERACTION_LIVING | FLAG_INTERACTION_DEAD | FLAG_INTERACTION_NO_DISTANCE
 
-	if(!is_advanced(caller))
-		return TRUE
 
-	var/mob/living/advanced/A = caller
+/obj/hud/button/close_inventory/proc/close(var/mob/caller)
 
-	for(var/obj/hud/inventory/I in A.inventory)
-		if(!(I.flags & FLAGS_HUD_CONTAINER))
-			continue
-		animate(I,alpha=0,time=4)
-		I.mouse_opacity = 0
+	if(is_advanced(caller))
 
-	animate(src,alpha=0,time=4)
-	src.mouse_opacity = 0
+		var/mob/living/advanced/A = caller
 
-	return ..()
+		for(var/k in A.inventory)
+			var/obj/hud/inventory/I = k
+			if(!(I.flags & FLAGS_HUD_CONTAINER))
+				continue
+			animate(I,alpha=0,time=4)
+			I.mouse_opacity = 0
+
+		animate(src,alpha=0,time=4)
+		src.mouse_opacity = 0
+
+	return TRUE
+
+/obj/hud/button/close_inventory/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
+
+	. = ..()
+
+	if(.)
+		close(caller)
+
+	return .
 
 /*
 /obj/hud/button/drop
@@ -43,7 +55,7 @@
 	screen_loc = "CENTER+1.5,BOTTOM"
 	left = 1
 
-/obj/hud/button/drop/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/drop/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
 	if(!is_advanced(caller))
 		return TRUE
@@ -72,17 +84,16 @@
 
 	has_quick_function = FALSE
 
-/obj/hud/button/hide_show_inventory/clicked_on_by_object(var/mob/caller,object,location,control,params)
+/obj/hud/button/hide_show_inventory/clicked_on_by_object(var/mob/caller,var/atom/object,location,control,params)
 
-	if(!is_advanced(owner))
-		return ..()
+	. = ..()
 
-	var/mob/living/advanced/A = owner
-	A.toggle_inventory(FLAGS_HUD_WORN,FLAGS_HUD_SPECIAL,0.1)
+	if(. && is_advanced(owner))
+		var/mob/living/advanced/A = owner
+		A.toggle_inventory(FLAGS_HUD_WORN,FLAGS_HUD_SPECIAL,0.1)
+		update_sprite()
 
-	update_sprite()
-
-	return ..()
+	return .
 
 /obj/hud/button/hide_show_inventory/update_icon()
 

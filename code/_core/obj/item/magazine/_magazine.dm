@@ -1,6 +1,7 @@
 /obj/item/magazine/
 	name = "weapon magazine"
 	desc = "IT'S NOT A CLIP. IT'S A MAGAZINE."
+	desc_extended = "Contains ammunition for a ranged weapon. Make sure you're trying to use the right caliber."
 	var/bullet_count_max = 30 //How many bullets can this store
 	var/list/obj/item/bullet_cartridge/stored_bullets
 
@@ -9,9 +10,6 @@
 	var/ammo
 
 	size = SIZE_2
-	weight = WEIGHT_2
-
-	value = 4
 
 	var/bullet_length_min = -1
 	var/bullet_length_best = -1
@@ -21,27 +19,79 @@
 	var/bullet_diameter_best = -1
 	var/bullet_diameter_max = -1
 
+	var/icon_states = 1
+
+	weight = 0.25
+
+
+/obj/item/magazine/update_icon()
+
+	var/icon_num = 1
+
+	if(icon_states)
+		var/bullet_num = length(stored_bullets)
+		icon_num = min(bullet_num/bullet_count_max,1)*icon_states
+		icon_num = FLOOR(icon_num,1)
+		if(!icon_num && bullet_num)
+			icon_num = 1
+		icon_state = "[initial(icon_state)]_[icon_num]"
+	else
+		icon_state = initial(icon_states)
+
+	return ..()
+
+/obj/item/magazine/save_item_data(var/save_inventory = TRUE)
+
+	. = ..()
+
+	if(length(stored_bullets))
+		.["stored_bullets"] = list()
+		for(var/i=1,i<=length(stored_bullets),i++)
+			var/obj/item/bullet_cartridge/B = stored_bullets[i]
+			if(B) .["stored_bullets"][B.type] += 1
+
+	return .
+
+/obj/item/magazine/load_item_data_post(var/mob/living/advanced/player/P,var/list/object_data)
+
+	. = ..()
+
+	if(object_data["stored_bullets"])
+		for(var/k in object_data["stored_bullets"])
+			var/v = object_data["stored_bullets"][k]
+			for(var/i=1,i<=v,i++)
+				var/obj/item/bullet_cartridge/B = new k(src)
+				INITIALIZE(B)
+				FINALIZE(B)
+				stored_bullets += B
+
+	return .
+
 /obj/item/magazine/Generate()
 
-	for(var/i=1, i <= bullet_count_max, i++)
-		var/obj/item/bullet_cartridge/B = new ammo(src)
-		INITIALIZE(B)
-		stored_bullets += B
+	if(ammo)
+		for(var/i=1, i <= bullet_count_max, i++)
+			var/obj/item/bullet_cartridge/B = new ammo(src)
+			INITIALIZE(B)
+			FINALIZE(B)
+			stored_bullets += B
 
-	update_sprite()
+		update_sprite()
 
 	return ..()
 
 /obj/item/magazine/Destroy()
 
-	for(var/obj/item/bullet_cartridge/B in stored_bullets)
+	for(var/k in stored_bullets)
+		if(!k) continue
+		var/obj/item/bullet_cartridge/B = k
 		qdel(B)
 
 	stored_bullets.Cut()
 
 	return ..()
 
-/obj/item/magazine/Initialize()
+/obj/item/magazine/PostInitialize()
 	. = ..()
 	update_sprite()
 	return .
@@ -86,6 +136,8 @@
 
 /obj/item/magazine/clicked_on_by_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
+	INTERACT_CHECK
+
 	object = object.defer_click_on_object(location,control,params)
 
 	if(is_inventory(object) && !(is_dynamic_inventory(src.loc) || is_pocket(src.loc)) && length(stored_bullets))
@@ -94,6 +146,18 @@
 		if(I.add_held_object(B))
 			B.update_sprite()
 			stored_bullets -= B
+			update_sprite()
+		return TRUE
+
+	return ..()
+
+/obj/item/magazine/click_self(var/mob/caller)
+
+	if(length(stored_bullets))
+		var/obj/item/bullet_cartridge/B = stored_bullets[length(stored_bullets)]
+		B.drop_item(get_turf(caller))
+		B.update_sprite()
+		stored_bullets -= B
 		update_sprite()
 		return TRUE
 
@@ -101,10 +165,10 @@
 
 
 /obj/item/magazine/proc/get_magazine_insert_sound()
-	return length(stored_bullets) ? 'sounds/weapons/gun/general/magazine_remove_full.ogg' : 'sounds/weapons/gun/general/magazine_remove_empty.ogg'
+	return length(stored_bullets) ? 'sound/weapons/gun/general/magazine_insert_full.ogg' : 'sound/weapons/gun/general/magazine_insert_empty.ogg'
 
 /obj/item/magazine/proc/get_magazine_eject_sound()
-	return length(stored_bullets) ? 'sounds/weapons/gun/general/magazine_insert_full.ogg' : 'sounds/weapons/gun/general/magazine_insert_empty.ogg'
+	return length(stored_bullets) ? 'sound/weapons/gun/general/magazine_remove_full.ogg' : 'sound/weapons/gun/general/magazine_remove_empty.ogg'
 
 /obj/item/magazine/click_on_object(var/mob/caller as mob,var/atom/object,location,control,params)
 
@@ -118,7 +182,6 @@
 		if(G.stored_magazine)
 			G.eject_magazine(caller)
 		src.drop_item(G)
-		src.force_move(G)
 		G.stored_magazine = src
 		G.open = FALSE
 		play(get_magazine_insert_sound(),src)

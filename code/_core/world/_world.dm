@@ -3,6 +3,8 @@ var/global/ticks = 0
 var/global/rollovers = 0
 var/global/world_state = STATE_STARTING
 
+#define REBOOT_TIME 60 //In seconds
+
 /world/
 	fps = FPS_SERVER
 	icon_size = TILE_SIZE
@@ -16,64 +18,105 @@ var/global/world_state = STATE_STARTING
 
 	cache_lifespan = 5
 
-	//maxx = WORLD_SIZE
-	//maxy = WORLD_SIZE
-	//maxz = 1
-
 	turf = /turf/unsimulated/space
-	area = /area/space
+	area = /area/
 
+	maxx = WORLD_SIZE
+	maxy = WORLD_SIZE
+	maxz = 3
 
+	loop_checks = 1
 
 /world/New()
+	__detect_rust_g()
 	..()
 	life()
 
-/world/proc/update_status()
+/world/proc/update_server_status()
 
-	var/server_name = "Burgerstation 13"
-	var/server_link = "https://discord.gg/yEaV92a"
-	var/github_name = "Space Station 13 <b>FROM SCRATCH</b>"
+	if(world_state == STATE_STARTING)
+		return FALSE
+
+	var/server_name = CONFIG("SERVER_NAME","Unofficial Burgerstation 13 Server")
+	var/server_link = CONFIG("SERVER_DISCORD","https://discord.gg/a2wHSqu")
+	var/github_name = "SS13 <b>FROM SCRATCH</b>"
 
 	var/minutes = FLOOR(world.time / 600, 1)
 	var/hours = FLOOR(world.time / 36000, 1)
-
 	if(minutes < 10)
 		minutes = "0[minutes]"
-
 	var/duration = "[hours]:[minutes]"
-	var/map = "Biomes (255x255x3)"
+
+	var/description = "Gamemode: <b>[SSgamemode.active_gamemode ? SSgamemode.active_gamemode.name : "Lobby" ]</b><br>Map: <b>[SSdmm_suite.map_name ? SSdmm_suite.map_name : "Loading..."]</b><br>Duration: <b>[duration]</b>"
 
 	//Format it.
-	status = "<a href='[server_link]'><b>[server_name]</b></a>] ([github_name])<br><br>"
-	status += "Map: <b>[map]</b><br>"
-	status += "Round Duration: <b>[duration]</b>"
-
-/*
-/world/Error(var/exception/e)
-	var/name = e.name
-	var/file = e.file
-	var/line = e.line
-	var/desc = e.desc
-
-	broadcast_to_role("<span class='system error'>Runtime Error!<br>[name] at line [line] at [file]<br>[desc]</span>",TEXT_OOC,FLAG_PERMISSION_DEVELOPER)
+	status = "<b><a href='[server_link]'>[server_name]</a>\]</b> ([github_name])<br>[description]"
 
 	return TRUE
-*/
+
+
+/world/Error(var/exception/e)
+	log_error("[e.name] in [e.file]:[e.line].\n[e.desc]")
+
+	for(var/k in all_runtimes)
+		var/mob/living/simple/npc/cat/runtime/R = k
+		if(!R || R.qdeleting)
+			continue
+		R.reproduce()
+
+	return TRUE
+
+/world/Del()
+	SSdiscord.send_message("Shutting down world...")
+	return ..()
 
 /world/proc/shutdown_server()
+	save()
 	world_state = STATE_SHUTDOWN
-	for(var/client/C in all_clients)
+	for(var/k in all_clients)
+		var/client/C = all_clients[k]
 		C << "Shutting down world..."
+	sleep(30)
 	shutdown()
 	return TRUE
 
-
 /world/proc/reboot_server()
+	save()
 	world_state = STATE_SHUTDOWN
-	for(var/client/C in all_clients)
+	for(var/k in all_clients)
+		var/client/C = all_clients[k]
 		C << "Rebooting world. Stick around to automatically rejoin."
+	sleep(30)
 	Reboot(0)
+	return TRUE
+
+/proc/save_all_globals()
+	for(var/k in all_clients)
+		var/client/C = CLIENT(k)
+		if(!C)
+			log_error("FATAL ERROR: COULD NOT SAVE THE GLOBALS OF CKEY [k] AS THEY HAD A CKEY ISSUE.")
+			continue
+		var/savedata/client/globals/G = GLOBALDATA(k)
+		if(!G)
+			log_error("FATAL ERROR: COULD NOT SAVE THE GLOBALS OF CKEY [k] AS THEY DID NOT HAVE A GLOBAL ASSIGNED.")
+			continue
+		G.save()
+
+/world/proc/save()
+	var/chosen_sound = pick(SSsound.round_end_sounds)
+	play(chosen_sound,all_mobs_with_clients)
+	save_all_globals()
+	save_all_mechs()
+	save_all_globals()
+	for(var/k in all_players)
+		var/mob/living/advanced/player/P = k
+		if(P.dead)
+			P.to_chat("Could not save your character because you were dead.")
+			continue
+		var/savedata/client/mob/mobdata = MOBDATA(P.ckey_last)
+		mobdata.save_character(P,force = TRUE)
+		P.to_chat("Your character was automatically saved.")
+		sleep(1)
 	return TRUE
 
 /world/proc/end(var/reason,var/shutdown=FALSE)
@@ -98,23 +141,17 @@ var/global/world_state = STATE_STARTING
 			nice_reason = "Syndicate Victory"
 			announce("Central Command","Fission Mailed","Mission failed, we'll get them next time.")
 
-	play('sounds/meme/apcdestroyed.ogg',all_mobs_with_clients)
+	play('sound/meme/apcdestroyed.ogg',all_mobs_with_clients)
 
-	for(var/mob/living/advanced/player/P in all_players)
-		CHECK_TICK
-		if(P.dead)
-			P.to_chat("Could not save your character because you were dead.")
-			continue
-		P.mobdata.save_current_character(force = TRUE)
-		P.to_chat("Your character was automatically saved.")
-		sleep(1)
+	SSvote.create_vote(/vote/map)
 
 	if(shutdown)
-		broadcast_to_clients(span("notice","Shutting down world in 60 seconds down the world due to [nice_reason]."))
-		CALLBACK("shutdown_world",SECONDS_TO_DECISECONDS(60),src,.proc/shutdown_server)
+		broadcast_to_clients(span("notice","Shutting down world in [REBOOT_TIME] seconds due to [nice_reason]. Characters will be saved when the server shuts down."))
+		CALLBACK("shutdown_world",SECONDS_TO_DECISECONDS(REBOOT_TIME),src,.proc/shutdown_server)
 	else
-		broadcast_to_clients(span("notice","Rebooting world in 60 seconds down the world due to [nice_reason]."))
-		CALLBACK("reboot_world",SECONDS_TO_DECISECONDS(60),src,.proc/reboot_server)
+		broadcast_to_clients(span("notice","Rebooting world in [REBOOT_TIME] seconds due to [nice_reason]. Characters will be saved when the server reboots."))
+		CALLBACK("reboot_world",SECONDS_TO_DECISECONDS(REBOOT_TIME),src,.proc/reboot_server)
 
+	SSdiscord.send_message("Round ended due to [nice_reason].")
 
 	return TRUE

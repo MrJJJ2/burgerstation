@@ -1,7 +1,7 @@
 /obj/item/organ/
 	name = "ORGAN"
 	desc = "An organ."
-	id = null
+	var/id = null
 
 	icon = 'icons/mob/living/advanced/species/human.dmi'
 	icon_state = null
@@ -51,19 +51,41 @@
 
 	var/base_miss_chance = 0
 
-	health_base = 200
+	health_base = 100
 
 	health = /health/obj/item/organ
 
-	value = 100
-
 	var/damage_layer = LAYER_MOB_INJURY
 
-	var/bleeding = FALSE
+	var/bleeding = 0 //How much blood to use per second.
 
-	var/health_coefficient = 1 //How much should this contribute to the overall health value of an advanced mob?
+	var/damage_coefficient = 1 //How much should this contribute to the overall health value of an advanced mob?
 
 	var/has_life = TRUE
+
+	var/has_pain = FALSE
+
+	var/list/defense_rating = HUMAN_ARMOR
+
+	var/robotic = FALSE //Set to true if the limb is robotic.
+
+/obj/item/organ/proc/get_defense_rating()
+	return defense_rating
+
+/obj/item/organ/on_damage_received(var/atom/atom_damaged,var/atom/attacker,var/atom/weapon,var/list/damage_table,var/damage_amount,var/critical_hit_multiplier,var/stealthy=FALSE)
+
+	if(is_advanced(loc) && has_pain && atom_damaged == src && ((src.health && src.health.health_current <= 0) || critical_hit_multiplier > 1))
+		var/mob/living/advanced/A = loc
+		if(!A.dead && A.send_pain(80))
+			on_pain()
+			for(var/k in attached_organs)
+				var/obj/item/organ/O = k
+				O.on_pain()
+
+	return ..()
+
+/obj/item/organ/proc/on_pain() //What happens if this organ is shot while broken. Other things can cause pain as well.
+	return FALSE
 
 /obj/item/organ/Destroy()
 	attached_organ = null
@@ -87,7 +109,8 @@
 /* HEALTH TODO: FIX THIS
 /obj/item/organ/get_examine_text(var/mob/examiner)
 	. = ..()
-	for(var/wound/W in wounds)
+	for(var/k in wounds)
+		var/wound/W = k
 		W.update_name()
 		. += span("notice",W.name)
 
@@ -116,9 +139,10 @@
 	attached_organs = list()
 	return .
 
-/obj/item/organ/Initialize()
+/obj/item/organ/PostInitialize()
+	. = ..()
 	initialize_blends()
-	return ..()
+	return .
 
 /obj/item/organ/proc/unattach_from_parent(var/turf/T)
 
@@ -131,20 +155,21 @@
 		attached_organ.attached_organs -= src
 		attached_organ = null
 
-	for(var/obj/item/organ/O in attached_organs)
+	for(var/k in attached_organs)
+		var/obj/item/organ/O = k
 		O.unattach_from_parent(T)
 
 	if(T)
 		if(is_advanced(src.loc))
 			var/mob/living/advanced/A = src.loc
 			A.remove_organ(src,FALSE)
-		src.force_move(T)
+		src.drop_item(T)
 
 	update_sprite()
-	queue_delete(src,ITEM_DELETION_TIME_DROPPED,TRUE)
 
 /obj/item/organ/proc/unattach_children(var/turf/T)
-	for(var/obj/item/organ/O in attached_organs)
+	for(var/k in attached_organs)
+		var/obj/item/organ/O = k
 		O.unattach_from_parent(T)
 
 /obj/item/organ/proc/gib()
@@ -187,20 +212,23 @@
 	if(reagents)
 		reagents.metabolize()
 
-	if(bleeding && is_advanced(src.loc) && prob(10))
+	if(bleeding >= 1 && is_advanced(src.loc))
 		var/mob/living/advanced/A = src.loc
-		if(A.reagents.volume_current)
-			new /obj/effect/temp/blood/drip(A.loc,SECONDS_TO_DECISECONDS(60),A.reagents.color,rand(-TILE_SIZE*0.25,TILE_SIZE*0.25),rand(-TILE_SIZE*0.25,TILE_SIZE*0.25))
-			A.reagents.remove_reagents(1)
+		if(A.blood_type && A.health && A.blood_volume && A.should_bleed() && prob(80)) //Blood optimizations!
+			var/bleed_amount = bleeding*DECISECONDS_TO_SECONDS(LIFE_TICK_SLOW)
+			var/reagent/R = REAGENT(A.blood_type)
+			create_blood(/obj/effect/cleanable/blood/drip,get_turf(A),R.color,rand(-TILE_SIZE*0.25,TILE_SIZE*0.25),rand(-TILE_SIZE*0.25,TILE_SIZE*0.25))
+			A.blood_volume = clamp(A.blood_volume - bleed_amount,0,A.blood_volume_max)
+			bleeding = CEILING(max(0,bleeding - (0.01 + bleed_amount*0.05)),0.01)
+			A.queue_health_update = TRUE
 
 	return TRUE
 
 obj/item/organ/proc/on_organ_remove(var/mob/living/advanced/old_owner)
 	return TRUE
 
-obj/item/organ/proc/on_organ_add(var/mob/living/advanced/old_owner)
+obj/item/organ/proc/on_organ_add(var/mob/living/advanced/new_owner)
 	return TRUE
-
 
 obj/item/organ/proc/get_damage_description()
 
@@ -229,7 +257,7 @@ obj/item/organ/proc/get_damage_description()
 		if(50 to INFINITY)
 			damage_desc += "charred"
 
-	if(bleeding)
+	if(bleeding >= 1)
 		damage_desc += "<b>bleeding</b>"
 
 	/*
@@ -245,6 +273,7 @@ obj/item/organ/proc/get_damage_description()
 
 	return damage_desc
 
+/*
 /obj/item/organ/get_block_power(var/atom/victim,var/atom/attacker,var/atom/weapon,var/atom/object_to_damage,var/damagetype/DT)
 
 	if(is_living(victim))
@@ -274,3 +303,4 @@ obj/item/organ/proc/get_damage_description()
 		return (V.get_skill_power(SKILL_UNARMED)*V.get_skill_power(SKILL_PARRY)) >= block_difficulty[DT.get_attack_type()] ? src : null
 
 	return null
+*/

@@ -1,6 +1,8 @@
 /obj/item/clothing/uniform/chemist
 	name = "\improper Chemist's uniform"
-	icon = 'icons/obj/items/clothing/uniforms/chemist.dmi'
+	desc = "Who wants to try my Polytrinic Acid flavored Candy?"
+	desc_extended = "The uniform of druglord- I mean, chemists."
+	icon = 'icons/obj/item/clothing/uniforms/chemist.dmi'
 
 	item_slot = SLOT_TORSO | SLOT_GROIN
 
@@ -11,7 +13,7 @@
 		BLUNT = 10,
 		PIERCE = 10,
 		LASER = 10,
-		MAGIC = 25,
+		ARCANE = 25,
 		HEAT = 15,
 		COLD = 15,
 		BOMB = 25,

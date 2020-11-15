@@ -323,7 +323,6 @@
 		update = TRUE
 
 	if (!light_range || !light_power)
-		log_error("!light_range || !light_power: lighting object has neither.")
 		update = TRUE
 
 	if (isturf(top_atom))
@@ -406,7 +405,7 @@
 
 	FOR_DVIEW(T, CEILING(actual_range,1), source_turf, 0)
 
-		CHECK_TICK
+		CHECK_TICK(50,FPS_SERVER*10)
 
 		if (light_angle && !facing_opaque)	// Directional lighting coordinate filter.
 			test_x = T.x - test_x_offset
@@ -458,7 +457,7 @@
 	LAZYINITLIST(effect_str)
 	if (needs_update == LIGHTING_VIS_UPDATE)
 		for (thing in corners - effect_str)
-			CHECK_TICK
+			CHECK_TICK(50,FPS_SERVER*10)
 			C = thing
 			LAZYADD(C.affecting, src)
 			if (!C.active)
@@ -469,7 +468,7 @@
 	else
 		L = corners - effect_str
 		for (thing in L)
-			CHECK_TICK
+			CHECK_TICK(50,FPS_SERVER*10)
 			C = thing
 			LAZYADD(C.affecting, src)
 			if (!C.active)
@@ -479,7 +478,7 @@
 			APPLY_CORNER_BY_HEIGHT(now)
 
 		for (thing in corners - L)
-			CHECK_TICK
+			CHECK_TICK(50,FPS_SERVER*10)
 			C = thing
 			if (!C.active)
 				effect_str[C] = 0
@@ -489,7 +488,7 @@
 
 	L = effect_str - corners
 	for (thing in L)
-		CHECK_TICK
+		CHECK_TICK(50,FPS_SERVER*10)
 		C = thing
 		REMOVE_CORNER(C, now)
 		LAZYREMOVE(C.affecting, src)

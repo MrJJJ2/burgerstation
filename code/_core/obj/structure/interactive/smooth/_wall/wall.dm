@@ -15,10 +15,15 @@
 
 	bullet_block_chance = 50
 
+	density = TRUE
+
 /obj/structure/smooth/wall/wood
 	name = "short wood wall"
 	color = "#4C3323"
 	corner_category = "wood_wall"
+
+/obj/structure/smooth/wall/wood/starting
+	color = "#60402C"
 
 /obj/structure/smooth/wall/brick
 	name = "short stone wall"

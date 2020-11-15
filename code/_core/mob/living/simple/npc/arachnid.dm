@@ -1,9 +1,13 @@
 /mob/living/simple/npc/arachnid
 	name = "giant arachnid"
+	desc = "Might as well be a miniboss."
+	desc_extended = "A giant quadreped carniverous creature."
 	icon = 'icons/mob/living/simple/jungle/arachnid.dmi'
 	icon_state = "living"
 	damage_type = /damagetype/unarmed/claw/
-	class = "arachnid"
+	class = /class/arachnid
+
+	value = 1000
 
 	ai = /ai/
 
@@ -14,41 +18,38 @@
 	armor_base = list(
 		BLADE = 50,
 		BLUNT = 25,
-		PIERCE = 75,
-		LASER = 0,
-		MAGIC = 25,
-		HEAT = 50,
-		COLD = 0,
+		PIERCE = 50,
+		LASER = -25,
+		ARCANE = 25,
+		HEAT = 25,
+		COLD = -50,
 		BOMB = 25,
-		BIO = INFINITY,
-		RAD = INFINITY,
-		HOLY = 100,
-		DARK = 100,
-		FATIGUE = INFINITY
+		BIO = 75,
+		HOLY = 50,
+		DARK = 50,
+		FATIGUE = 25,
+		ION = INFINITY
 	)
 
-	iff_tag = "jungle"
-	loyalty_tag = "jungle"
+	iff_tag = "Jungle"
+	loyalty_tag = "Jungle"
 
-	health_base = 1000
+	health_base = 500
 
-	movement_delay = DECISECONDS_TO_TICKS(1)
+	movement_delay = DECISECONDS_TO_TICKS(2)
 
 	status_immune = list(
-		STUN = TRUE,
+		STUN = STAGGER,
 		SLEEP = STAGGER,
 		PARALYZE = STAGGER,
 		FATIGUE = STAGGER,
-		STAGGER = FALSE,
-		CONFUSED = FALSE,
-		CRIT = FALSE,
-		REST = FALSE,
-		ADRENALINE = FALSE,
-		DISARM = FALSE,
-		DRUGGY = FALSE
+		DISARM = TRUE
 	)
 
 	mob_size = MOB_SIZE_GIANT
+
+	enable_medical_hud = FALSE
+	enable_security_hud = FALSE
 
 /mob/living/simple/npc/arachnid/post_death()
 	. = ..()

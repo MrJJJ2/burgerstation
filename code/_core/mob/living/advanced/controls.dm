@@ -1,21 +1,21 @@
 //An up is after a press.
 mob/living/advanced/on_left_up(var/atom/object,location,control,params) //THIS ONLY WORKS ON NON-INVENTORIES.
 
+	. = ..()
+
 	if(!can_use_controls(object,location,control,params))
 		return FALSE
 
+	if(right_hand)
+		right_hand.on_mouse_up(src,object,location,control,params)
+		return TRUE
 
-	if(src.attack_flags & ATTACK_BLOCK)
-
-	else
-		if(right_hand)
-			right_hand.on_mouse_up(src,object,location,control,params)
-			return TRUE
-
-	return FALSE
+	return .
 
 //An up is after a press.
 mob/living/advanced/on_right_up(var/atom/object,location,control,params)  //THIS ONLY WORKS ON NON-INVENTORIES
+
+	. = ..()
 
 	if(!can_use_controls(object,location,control,params))
 		return FALSE
@@ -23,14 +23,11 @@ mob/living/advanced/on_right_up(var/atom/object,location,control,params)  //THIS
 	if(is_inventory(object)) //THIS IS VERY IMPORTANT
 		return FALSE
 
-	if(src.attack_flags & ATTACK_BLOCK)
+	if(left_hand)
+		left_hand.on_mouse_up(src,object,location,control,params)
+		return TRUE
 
-	else
-		if(left_hand)
-			left_hand.on_mouse_up(src,object,location,control,params)
-			return TRUE
-
-	return FALSE
+	return .
 
 //A down is just a press.
 mob/living/advanced/on_left_down(var/atom/object,location,control,params) //THIS ONLY WORKS ON NON-INVENTORIES.
@@ -47,9 +44,7 @@ mob/living/advanced/on_left_down(var/atom/object,location,control,params) //THIS
 	if(is_inventory(object)) //THIS IS VERY IMPORTANT
 		return TRUE
 
-	if(src.attack_flags & ATTACK_BLOCK)
-		return FALSE
-	else if(right_hand)
+	if(right_hand)
 		if(is_button(object))
 			return object.clicked_on_by_object(src,right_hand,location,control,params)
 		return right_hand.click_on_object(src,object,location,control,params)
@@ -73,9 +68,9 @@ mob/living/advanced/on_right_down(var/atom/object,location,control,params)  //TH
 		return TRUE
 
 
-	if(src.attack_flags & ATTACK_BLOCK)
+	//if(src.attack_flags & ATTACK_HOLD)
 
-	else if(left_hand)
+	if(left_hand)
 		if(is_button(object))
 			return object.clicked_on_by_object(src,left_hand,location,control,params)
 		return left_hand.click_on_object(src,object,location,control,params)
@@ -93,9 +88,9 @@ mob/living/advanced/on_left_click(var/atom/object,location,control,params) //THI
 		return FALSE
 
 
-	if(src.attack_flags & ATTACK_BLOCK)
+	//if(src.attack_flags & ATTACK_HOLD)
 
-	else if(right_hand)
+	if(right_hand)
 		return right_hand.click_on_object(src,object,location,control,params)
 
 
@@ -111,15 +106,18 @@ mob/living/advanced/on_right_click(var/atom/object,location,control,params)  //T
 	if(!is_inventory(object)) //THIS IS VERY IMPORTANT
 		return TRUE
 
-	if(src.attack_flags & ATTACK_BLOCK)
+	//if(src.attack_flags & ATTACK_HOLD)
 
-	else if(left_hand)
+	if(left_hand)
 		return left_hand.click_on_object(src,object,location,control,params)
 
 	return FALSE
 
 
 /mob/living/advanced/on_left_drop(var/atom/src_object,var/atom/over_object,src_location,over_location,src_control,over_control,params)
+
+	if(!can_use_controls(src_object,src_location,src_control,params))
+		return FALSE
 
 	. = ..()
 
@@ -131,6 +129,9 @@ mob/living/advanced/on_right_click(var/atom/object,location,control,params)  //T
 	return .
 
 /mob/living/advanced/on_right_drop(var/atom/src_object,var/atom/over_object,src_location,over_location,src_control,over_control,params)
+
+	if(!can_use_controls(src_object,src_location,src_control,params))
+		return FALSE
 
 	. = ..()
 
